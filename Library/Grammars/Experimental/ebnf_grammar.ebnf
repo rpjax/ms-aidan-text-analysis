@@ -1,0 +1,17 @@
+syntax         = { production } ;
+production     = identifier "=" expression ";" ;
+expression     = term { "|" term } ;
+term           = factor { factor } ;
+factor         = identifier
+               | literal
+               | "[" expression "]"     (* optional sequence *)
+               | "{" expression "}"     (* repetition *)
+               | "(" expression ")"     (* grouping *) ;
+identifier     = letter { letter | digit | "_" } ;
+literal        = "'" character { character } "'" 
+               | '"' character { character } '"' ;
+letter         = "A" | "B" | ... | "Z" | "a" | "b" | ... | "z" ;
+digit          = "0" | "1" | ... | "9" ;
+character      = letter | digit | symbol | escape ;
+symbol         = "[" | "]" | "{" | "}" | "(" | ")" | "<" | ">" | "'" | '"' | "=" | "|" | "." | "," | ";" | ":" ;
+escape         = "\\" ( ["'"] | ["\""] | ["n"] | ["t"] | ["\\"] ) ;

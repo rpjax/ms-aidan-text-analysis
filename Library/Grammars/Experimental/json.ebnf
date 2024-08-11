@@ -1,0 +1,38 @@
+(*
+    JSON grammar in EBNF
+    Copyright (C) 2023 Rodrigo Jacques
+    License: MIT
+*)
+
+json
+    = object
+    | array ;
+
+object
+    = '{' , [ members ] , '}' ;
+
+members
+    = pair , { ',' , pair } ;
+
+pair
+    = _string , ':' , value ;
+
+array
+    = '[' , [ elements ] , ']' ;
+
+elements
+    = value , { ',' , value } ;
+
+value
+    = _string
+    | number
+    | object
+    | array
+    | "true"
+    | "false"
+    | "null" ;
+
+number
+    = _int
+    | _float
+    | _hex ;

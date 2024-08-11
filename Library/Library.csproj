@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Aidan.TextAnalysis</RootNamespace>
+    <PackageId>Aidan.TextAnalysis</PackageId>
+    <Version>1.0.0</Version>
+    <Company>Aidan</Company>
+    <Authors>Rodrigo Pazzini Jacques</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\Libraries\C Sharp\ModularSystem\Webql\docs.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aidan.Core" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

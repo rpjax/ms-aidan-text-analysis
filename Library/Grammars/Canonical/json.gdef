@@ -1,0 +1,56 @@
+/*
+	lexer stuff
+*/
+
+start
+	: json 
+	;
+
+json
+	: object
+	| array
+	;
+
+object
+	: '{' { members } '}' 
+	;
+
+members
+	: pair  { ',' members } 
+	;
+
+pair
+	: $string ':' value 
+	;
+
+array
+	: '[' [ elements ] ']'
+	;
+
+elements
+	: value { ',' value }
+	;
+
+value 
+	: number 
+	| object 
+	| array
+	| $string
+	| bool
+	| null 
+	;
+
+bool
+	: 'true' 
+	| 'false' 
+	;
+
+null
+	: 'null' 
+	;
+
+number
+	: $int 
+	| $float 
+	| $hex 
+	;
