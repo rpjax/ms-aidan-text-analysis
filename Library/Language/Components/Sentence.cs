@@ -1,225 +1,224 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Aidan.TextAnalysis.Language.Components
+namespace Aidan.TextAnalysis.Language.Components;
+
+/// <summary>
+/// Represents an immutable sequence of <see cref="Symbol"/> that form a sentence.
+/// </summary>
+public struct Sentence : 
+    IEnumerable<Symbol>, 
+    IEquatable<Sentence>, 
+    IEqualityComparer<Sentence>
 {
-    /// <summary>
-    /// Represents an immutable sequence of <see cref="Symbol"/> that form a sentence.
-    /// </summary>
-    public struct Sentence :
-        IEnumerable<Symbol>,
-        IEquatable<Sentence>,
-        IEqualityComparer<Sentence>
+    private Symbol[] Symbols { get; }
+
+    public Sentence()
     {
-        private Symbol[] Symbols { get; }
+        Symbols = Array.Empty<Symbol>();
+    }
 
-        public Sentence()
+    public Sentence(params Symbol[] symbols)
+    {
+        Symbols = ExpandPipeMacros(symbols);
+    }
+
+    public Sentence(Symbol symbol, params Symbol[] symbols)
+    {
+        symbols = Array.Empty<Symbol>()
+            .Append(symbol)
+            .Concat(symbols)
+            .ToArray();
+        Symbols = ExpandPipeMacros(symbols);
+    }
+
+    public Sentence(IEnumerable<Symbol> firstSegment, IEnumerable<Symbol> secondSegment)
+    {
+        var symbols = Array.Empty<Symbol>()
+            .Concat(firstSegment)
+            .Concat(secondSegment)
+            .ToArray();
+        Symbols = ExpandPipeMacros(symbols);
+    }
+
+    public int Length => Symbols.Length;
+
+    public Symbol this[int index]
+    {
+        get => Symbols[index];
+    }
+
+    public static bool operator ==(Sentence left, Sentence right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Sentence left, Sentence right)
+    {
+        return !left.Equals(right);
+    }
+
+    public static implicit operator Symbol[](Sentence sentence)
+    {
+        return sentence.Symbols.ToArray();
+    }
+
+    public static implicit operator List<Symbol>(Sentence sentence)
+    {
+        return sentence;
+    }
+
+    public static implicit operator Sentence(Symbol[] productions)
+    {
+        return new Sentence(productions);
+    }
+
+    public static implicit operator Sentence(List<Symbol> productions)
+    {
+        return new Sentence(productions.ToArray());
+    }
+
+    private static Symbol[] ExpandPipeMacros(Symbol[] symbols)
+    {
+        if (symbols.All(x => x is not AlternativeMacro))
         {
-            Symbols = Array.Empty<Symbol>();
+            return symbols;
         }
 
-        public Sentence(params Symbol[] symbols)
+        var pipeIndexes = symbols
+            .Select((x, i) => (x, i))
+            .Where(x => x.x is AlternativeMacro)
+            .Select(x => x.i)
+            .ToList();
+
+        var alternatives = new List<Sentence>();
+        var start = 0;
+
+        pipeIndexes.Add(symbols.Length);
+
+        foreach (var index in pipeIndexes)
         {
-            Symbols = ExpandPipeMacros(symbols);
+            var end = index;
+            var length = end - start;
+
+            var alternative = new Sentence(symbols.Skip(start).Take(length).ToArray());
+            alternatives.Add(alternative);
+
+            start = end + 1;
         }
 
-        public Sentence(Symbol symbol, params Symbol[] symbols)
-        {
-            symbols = Array.Empty<Symbol>()
-                .Append(symbol)
-                .Concat(symbols)
-                .ToArray();
-            Symbols = ExpandPipeMacros(symbols);
-        }
+        var alternationMacro = new ExpandedAlternativeMacro(alternatives.ToArray());
 
-        public Sentence(IEnumerable<Symbol> firstSegment, IEnumerable<Symbol> secondSegment)
-        {
-            var symbols = Array.Empty<Symbol>()
-                .Concat(firstSegment)
-                .Concat(secondSegment)
-                .ToArray();
-            Symbols = ExpandPipeMacros(symbols);
-        }
+        return new Symbol[] { alternationMacro };
+    }
 
-        public int Length => Symbols.Length;
+    public IEnumerator<Symbol> GetEnumerator()
+    {
+        return Symbols.AsEnumerable().GetEnumerator();
+    }
 
-        public Symbol this[int index]
-        {
-            get => Symbols[index];
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return Symbols.GetEnumerator();
+    }
 
-        public static bool operator ==(Sentence left, Sentence right)
-        {
-            return left.Equals(right);
-        }
+    public override string ToString()
+    {
+        return ToNotation(NotationType.Sentential);
+    }
 
-        public static bool operator !=(Sentence left, Sentence right)
-        {
-            return !left.Equals(right);
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is Sentence sentence
+            && sentence.SequenceEqual(this);
+    }
 
-        public static implicit operator Symbol[](Sentence sentence)
+    public override int GetHashCode()
+    {
+        unchecked
         {
-            return sentence.Symbols.ToArray();
-        }
+            int hash = (int)2166136261;
 
-        public static implicit operator List<Symbol>(Sentence sentence)
-        {
-            return sentence;
-        }
-
-        public static implicit operator Sentence(Symbol[] productions)
-        {
-            return new Sentence(productions);
-        }
-
-        public static implicit operator Sentence(List<Symbol> productions)
-        {
-            return new Sentence(productions.ToArray());
-        }
-
-        private static Symbol[] ExpandPipeMacros(Symbol[] symbols)
-        {
-            if (symbols.All(x => x is not AlternativeMacro))
+            foreach (var symbol in this)
             {
-                return symbols;
+                hash = (hash * 16777619) ^ symbol.GetHashCode();
             }
 
-            var pipeIndexes = symbols
-                .Select((x, i) => (x, i))
-                .Where(x => x.x is AlternativeMacro)
-                .Select(x => x.i)
-                .ToList();
+            return hash;
+        }
+    }
 
-            var alternatives = new List<Sentence>();
-            var start = 0;
-
-            pipeIndexes.Add(symbols.Length);
-
-            foreach (var index in pipeIndexes)
-            {
-                var end = index;
-                var length = end - start;
-
-                var alternative = new Sentence(symbols.Skip(start).Take(length).ToArray());
-                alternatives.Add(alternative);
-
-                start = end + 1;
-            }
-
-            var alternationMacro = new ExpandedAlternativeMacro(alternatives.ToArray());
-
-            return new Symbol[] { alternationMacro };
+    public bool Equals(Sentence other)
+    {
+        if(Length != other.Length)
+        {
+            return false;
         }
 
-        public IEnumerator<Symbol> GetEnumerator()
+        for (int i = 0; i < Length; i++)
         {
-            return Symbols.AsEnumerable().GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return Symbols.GetEnumerator();
-        }
-
-        public override string ToString()
-        {
-            return ToNotation(NotationType.Sentential);
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is Sentence sentence
-                && sentence.SequenceEqual(this);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hash = (int)2166136261;
-
-                foreach (var symbol in this)
-                {
-                    hash = (hash * 16777619) ^ symbol.GetHashCode();
-                }
-
-                return hash;
-            }
-        }
-
-        public bool Equals(Sentence other)
-        {
-            if (Length != other.Length)
+            if (!this[i].Equals(other[i]))
             {
                 return false;
             }
-
-            for (int i = 0; i < Length; i++)
-            {
-                if (!this[i].Equals(other[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
-        public bool Equals(Sentence x, Sentence y)
-        {
-            return x.Symbols.SequenceEqual(y.Symbols);
-        }
-
-        public int GetHashCode([DisallowNull] Sentence obj)
-        {
-            return obj.GetHashCode();
-        }
-
-        public Sentence Copy()
-        {
-            return new Sentence(Symbols.ToArray());
-        }
-
-        public string ToNotation(NotationType notation)
-        {
-            switch (notation)
-            {
-                case NotationType.Sentential:
-                    return ToSententialNotation();
-
-                case NotationType.Bnf:
-                    return ToBnfNotation();
-
-                case NotationType.Ebnf:
-                    return ToEbnfNotation();
-
-                case NotationType.EbnfKleene:
-                    return ToEbnfKleeneNotation();
-            }
-
-            throw new InvalidOperationException("Invalid notation type.");
-        }
-
-        private string ToSententialNotation()
-        {
-            return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Sentential)));
-        }
-
-        private string ToBnfNotation()
-        {
-            return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Bnf)));
-        }
-
-        private string ToEbnfNotation()
-        {
-            return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Ebnf)));
-        }
-
-        private string ToEbnfKleeneNotation()
-        {
-            return string.Join(" ", this.Select(x => x.ToNotation(NotationType.EbnfKleene)));
-        }
-
+        return true;
     }
+
+    public bool Equals(Sentence x, Sentence y)
+    {
+        return x.Symbols.SequenceEqual(y.Symbols);
+    }
+
+    public int GetHashCode([DisallowNull] Sentence obj)
+    {
+        return obj.GetHashCode();
+    }
+
+    public Sentence Copy()
+    {
+        return new Sentence(Symbols.ToArray());
+    }
+
+    public string ToNotation(NotationType notation)
+    {
+        switch (notation)
+        {
+            case NotationType.Sentential:
+                return ToSententialNotation();
+
+            case NotationType.Bnf:
+                return ToBnfNotation();
+
+            case NotationType.Ebnf:
+                return ToEbnfNotation();
+
+            case NotationType.EbnfKleene:
+                return ToEbnfKleeneNotation();
+        }
+
+        throw new InvalidOperationException("Invalid notation type.");
+    }
+
+    private string ToSententialNotation()
+    {
+        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Sentential)));
+    }
+
+    private string ToBnfNotation()
+    {
+        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Bnf)));
+    }
+
+    private string ToEbnfNotation()
+    {
+        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Ebnf)));
+    }
+
+    private string ToEbnfKleeneNotation()
+    {
+        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.EbnfKleene)));
+    }
+
 }

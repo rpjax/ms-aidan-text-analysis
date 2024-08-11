@@ -1,24 +1,23 @@
-namespace Aidan.TextAnalysis.Language.Graph.Renderization
+namespace Aidan.TextAnalysis.Language.Graph.Renderization;
+
+public class RenderContext
 {
-    public class RenderContext
+    public LL1GraphNode Node { get; }
+
+    public RenderContext(LL1GraphNode node)
     {
-        public LL1GraphNode Node { get; }
+        Node = node;
+    }
 
-        public RenderContext(LL1GraphNode node)
+    public LL1GraphNode? Parent => Node.Parent;
+
+    public RenderContext CreateChildContext(LL1GraphNode node)
+    {
+        if(Node.GetChildren().All(n => n != node))
         {
-            Node = node;
+            throw new InvalidOperationException("The node is not a child of the current node.");
         }
 
-        public LL1GraphNode? Parent => Node.Parent;
-
-        public RenderContext CreateChildContext(LL1GraphNode node)
-        {
-            if (Node.GetChildren().All(n => n != node))
-            {
-                throw new InvalidOperationException("The node is not a child of the current node.");
-            }
-
-            return new RenderContext(node);
-        }
+        return new RenderContext(node);
     }
 }

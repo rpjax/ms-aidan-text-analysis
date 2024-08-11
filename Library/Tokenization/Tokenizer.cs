@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Tokenization;
 
+
 /// <summary>
 /// Represents a tokenizer that converts a source code string into a sequence of tokens.
 /// </summary>

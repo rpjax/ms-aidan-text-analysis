@@ -1,9 +1,8 @@
 using Aidan.TextAnalysis.Language.Components;
 
-namespace Aidan.TextAnalysis.Language.Transformations
+namespace Aidan.TextAnalysis.Language.Transformations;
+
+public interface ISetTransformer
 {
-    public interface ISetTransformer
-    {
-        SetTransformationCollection ExecuteTransformations(ProductionSet set);
-    }
+    SetTransformationCollection ExecuteTransformations(ProductionSet set);
 }

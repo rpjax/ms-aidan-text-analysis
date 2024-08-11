@@ -1,253 +1,252 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
 
-namespace Aidan.TextAnalysis.Language.Extensions
+namespace Aidan.TextAnalysis.Language.Extensions;
+
+public static class SentenceExtensions
 {
-    public static class SentenceExtensions
+    /// <summary>
+    /// Gets the index of the specified symbol in the sentence. If the symbol is not found, -1 is returned. <br/>
+    /// Equality is determined by reference equality. So, two symbols are considered equal if they are the same object.
+    /// </summary>
+    /// <param name="symbol"></param>
+    /// <returns></returns>
+    public static int IndexOfSymbol(this Sentence self, Symbol symbol)
     {
-        /// <summary>
-        /// Gets the index of the specified symbol in the sentence. If the symbol is not found, -1 is returned. <br/>
-        /// Equality is determined by reference equality. So, two symbols are considered equal if they are the same object.
-        /// </summary>
-        /// <param name="symbol"></param>
-        /// <returns></returns>
-        public static int IndexOfSymbol(this Sentence self, Symbol symbol)
-        {
-            var index = -1;
+        var index = -1;
 
-            foreach (var item in self)
+        foreach (var item in self)
+        {
+            index++;
+
+            if (ReferenceEquals(item, symbol))
             {
-                index++;
-
-                if (ReferenceEquals(item, symbol))
-                {
-                    break;
-                }
+                break;
             }
-
-            return index;
         }
 
-        /*
-            read helper methods section.
-         */
+        return index;
+    }
 
-        public static Symbol GetLeftmostSymbol(this Sentence self)
+    /*
+        read helper methods section.
+     */
+
+    public static Symbol GetLeftmostSymbol(this Sentence self)
+    {
+        return self.First();
+    }
+
+    public static Symbol GetRightmostSymbol(this Sentence self)
+    {
+        return self.Last();
+    }
+
+    public static NonTerminal? GetLeftmostNonTerminal(this Sentence self)
+    {
+        return self
+            .OfType<NonTerminal>()
+            .FirstOrDefault();
+    }
+
+    public static NonTerminal? GetRightmostNonTerminal(this Sentence self)
+    {
+        return self
+            .OfType<NonTerminal>()
+            .LastOrDefault();
+    }
+
+    public static Terminal? GetLeftmostTerminal(this Sentence self)
+    {
+        return self
+            .OfType<Terminal>()
+            .FirstOrDefault();
+    }
+
+    public static Terminal? GetRightmostTerminal(this Sentence self)
+    {
+        return self
+            .OfType<Terminal>()
+            .LastOrDefault();
+    }
+
+    /*
+        derivation helper methods section.
+     */
+
+    public static Derivation Derive(this Sentence self, int index, ProductionRule production)
+    {
+        if (index < 0 || index >= self.Length)
         {
-            return self.First();
+            throw new ArgumentOutOfRangeException(nameof(index), "The index is out of range.");
         }
 
-        public static Symbol GetRightmostSymbol(this Sentence self)
+        if (self[index] is not NonTerminal nonTerminal)
         {
-            return self.Last();
+            throw new InvalidOperationException("The symbol at the specified index is not a non-terminal symbol. Derivations can only be performed on non-terminal symbols.");
         }
 
-        public static NonTerminal? GetLeftmostNonTerminal(this Sentence self)
+        if (nonTerminal != production.Head)
         {
-            return self
-                .OfType<NonTerminal>()
-                .FirstOrDefault();
+            throw new InvalidOperationException("The non-terminal at the specified index does not match the head of the production rule.");
         }
 
-        public static NonTerminal? GetRightmostNonTerminal(this Sentence self)
+        var derivedSentence = self;
+
+        derivedSentence = RemoveAt(derivedSentence, index);
+        derivedSentence = InsertAt(derivedSentence, index, production.Body);
+
+        return new Derivation(
+            production: production,
+            originalSentence: self,
+            nonTerminal: nonTerminal,
+            derivedSentence: derivedSentence
+        );
+    }
+
+    public static Derivation DeriveLeftmostNonTerminal(this Sentence self, ProductionRule production)
+    {
+        var nonTerminal = GetLeftmostNonTerminal(self);
+
+        if (nonTerminal is null)
         {
-            return self
-                .OfType<NonTerminal>()
-                .LastOrDefault();
+            throw new InvalidOperationException("There are no non-terminals in the sentence.");
         }
 
-        public static Terminal? GetLeftmostTerminal(this Sentence self)
+        if (nonTerminal != production.Head)
         {
-            return self
-                .OfType<Terminal>()
-                .FirstOrDefault();
+            throw new InvalidOperationException("The leftmost non-terminal in the sentence does not match the head of the production rule.");
         }
 
-        public static Terminal? GetRightmostTerminal(this Sentence self)
+        var index = IndexOfSymbol(self, nonTerminal);
+
+        if (index == -1)
         {
-            return self
-                .OfType<Terminal>()
-                .LastOrDefault();
+            throw new InvalidOperationException("The non-terminal was not found in the sentence.");
         }
 
-        /*
-            derivation helper methods section.
-         */
+        return Derive(self, index, production);
+    }
 
-        public static Derivation Derive(this Sentence self, int index, ProductionRule production)
+    public static Derivation DeriveRightmostNonTerminal(this Sentence self, ProductionRule production)
+    {
+        var nonTerminal = GetRightmostNonTerminal(self);
+
+        if (nonTerminal is null)
         {
-            if (index < 0 || index >= self.Length)
+            throw new InvalidOperationException("There are no non-terminals in the sentence.");
+        }
+
+        if (nonTerminal != production.Head)
+        {
+            throw new InvalidOperationException("The rightmost non-terminal in the sentence does not match the head of the production rule.");
+        }
+
+        var index = IndexOfSymbol(self, nonTerminal);
+
+        if (index == -1)
+        {
+            throw new InvalidOperationException("The non-terminal was not found in the sentence.");
+        }
+
+        return Derive(self, index, production);
+    }
+
+    public static int[] GetIndexesOfNonTerminal(this Sentence self, NonTerminal nonTerminal)
+    {
+        var indexes = new List<int>();
+
+        for (var i = 0; i < self.Length; i++)
+        {
+            if (self[i] == nonTerminal)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), "The index is out of range.");
+                indexes.Add(i);
             }
-
-            if (self[index] is not NonTerminal nonTerminal)
-            {
-                throw new InvalidOperationException("The symbol at the specified index is not a non-terminal symbol. Derivations can only be performed on non-terminal symbols.");
-            }
-
-            if (nonTerminal != production.Head)
-            {
-                throw new InvalidOperationException("The non-terminal at the specified index does not match the head of the production rule.");
-            }
-
-            var derivedSentence = self;
-
-            derivedSentence = RemoveAt(derivedSentence, index);
-            derivedSentence = InsertAt(derivedSentence, index, production.Body);
-
-            return new Derivation(
-                production: production,
-                originalSentence: self,
-                nonTerminal: nonTerminal,
-                derivedSentence: derivedSentence
-            );
         }
 
-        public static Derivation DeriveLeftmostNonTerminal(this Sentence self, ProductionRule production)
+        return indexes.ToArray();
+    }
+
+    /*
+        helper methods section.
+    */
+
+    public static Sentence Add(this Sentence self, Symbol symbol)
+    {
+        var list = new List<Symbol>(self.ToArray());
+        list.Add(symbol);
+        return list;
+    }
+
+    public static Sentence Add(this Sentence self, IEnumerable<Symbol> symbols)
+    {
+        var list = new List<Symbol>(self.ToArray());
+        list.AddRange(symbols);
+        return list;
+    }
+
+    public static Sentence InsertAt(this Sentence self, int index, Symbol symbol)
+    {
+        var list = new List<Symbol>(self.ToArray());
+        list.Insert(index, symbol);
+        return list;
+    }
+
+    public static Sentence InsertTerminalAt(this Sentence self, int index, string value)
+    {
+        var list = new List<Symbol>(self.ToArray());
+        list.Insert(index, Terminal.From(value));
+        return list;
+    }
+
+    public static Sentence InsertAt(this Sentence self, int index, IEnumerable<Symbol> symbols)
+    {
+        var list = new List<Symbol>(self.ToArray());
+        list.InsertRange(index, symbols);
+        return list;
+    }
+
+    public static Sentence RemoveAt(this Sentence self, int index)
+    {
+        var list = new List<Symbol>(self.ToArray());
+        list.RemoveAt(index);
+        return list;
+    }
+
+    public static Sentence Replace(this Sentence self, Symbol symbol, params Symbol[] replacement)
+    {
+        var symbols = new List<Symbol>();
+
+        foreach (var item in self)
         {
-            var nonTerminal = GetLeftmostNonTerminal(self);
-
-            if (nonTerminal is null)
+            if (item == symbol)
             {
-                throw new InvalidOperationException("There are no non-terminals in the sentence.");
+                symbols.AddRange(replacement);
             }
-
-            if (nonTerminal != production.Head)
+            else
             {
-                throw new InvalidOperationException("The leftmost non-terminal in the sentence does not match the head of the production rule.");
+                symbols.Add(item);
             }
-
-            var index = IndexOfSymbol(self, nonTerminal);
-
-            if (index == -1)
-            {
-                throw new InvalidOperationException("The non-terminal was not found in the sentence.");
-            }
-
-            return Derive(self, index, production);
         }
 
-        public static Derivation DeriveRightmostNonTerminal(this Sentence self, ProductionRule production)
+        return symbols;
+    }
+
+    public static Sentence GetRange(this Sentence self, int start, int count)
+    {
+        if(start < 0 || start >= self.Length)
         {
-            var nonTerminal = GetRightmostNonTerminal(self);
-
-            if (nonTerminal is null)
-            {
-                throw new InvalidOperationException("There are no non-terminals in the sentence.");
-            }
-
-            if (nonTerminal != production.Head)
-            {
-                throw new InvalidOperationException("The rightmost non-terminal in the sentence does not match the head of the production rule.");
-            }
-
-            var index = IndexOfSymbol(self, nonTerminal);
-
-            if (index == -1)
-            {
-                throw new InvalidOperationException("The non-terminal was not found in the sentence.");
-            }
-
-            return Derive(self, index, production);
+            throw new ArgumentOutOfRangeException(nameof(start), "The start index is out of range.");
         }
-
-        public static int[] GetIndexesOfNonTerminal(this Sentence self, NonTerminal nonTerminal)
+        if(count < 0 || start + count > self.Length)
         {
-            var indexes = new List<int>();
-
-            for (var i = 0; i < self.Length; i++)
-            {
-                if (self[i] == nonTerminal)
-                {
-                    indexes.Add(i);
-                }
-            }
-
-            return indexes.ToArray();
+            throw new ArgumentOutOfRangeException(nameof(count), "The count is out of range.");
         }
 
-        /*
-            helper methods section.
-        */
-
-        public static Sentence Add(this Sentence self, Symbol symbol)
-        {
-            var list = new List<Symbol>(self.ToArray());
-            list.Add(symbol);
-            return list;
-        }
-
-        public static Sentence Add(this Sentence self, IEnumerable<Symbol> symbols)
-        {
-            var list = new List<Symbol>(self.ToArray());
-            list.AddRange(symbols);
-            return list;
-        }
-
-        public static Sentence InsertAt(this Sentence self, int index, Symbol symbol)
-        {
-            var list = new List<Symbol>(self.ToArray());
-            list.Insert(index, symbol);
-            return list;
-        }
-
-        public static Sentence InsertTerminalAt(this Sentence self, int index, string value)
-        {
-            var list = new List<Symbol>(self.ToArray());
-            list.Insert(index, Terminal.From(value));
-            return list;
-        }
-
-        public static Sentence InsertAt(this Sentence self, int index, IEnumerable<Symbol> symbols)
-        {
-            var list = new List<Symbol>(self.ToArray());
-            list.InsertRange(index, symbols);
-            return list;
-        }
-
-        public static Sentence RemoveAt(this Sentence self, int index)
-        {
-            var list = new List<Symbol>(self.ToArray());
-            list.RemoveAt(index);
-            return list;
-        }
-
-        public static Sentence Replace(this Sentence self, Symbol symbol, params Symbol[] replacement)
-        {
-            var symbols = new List<Symbol>();
-
-            foreach (var item in self)
-            {
-                if (item == symbol)
-                {
-                    symbols.AddRange(replacement);
-                }
-                else
-                {
-                    symbols.Add(item);
-                }
-            }
-
-            return symbols;
-        }
-
-        public static Sentence GetRange(this Sentence self, int start, int count)
-        {
-            if (start < 0 || start >= self.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(start), "The start index is out of range.");
-            }
-            if (count < 0 || start + count > self.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(count), "The count is out of range.");
-            }
-
-            return self
-                .Skip(start)
-                .Take(count)
-                .ToArray();
-        }
-
+        return self
+            .Skip(start)
+            .Take(count)
+            .ToArray();
     }
 
 }
+

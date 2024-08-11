@@ -1,8 +1,7 @@
-﻿namespace Aidan.TextAnalysis.Grammars
+﻿namespace Aidan.TextAnalysis.Grammars;
+
+public static class CanonicalGrammars
 {
-    public static class CanonicalGrammars
-    {
-        public static GdefGrammar Gdef { get; } = new GdefGrammar();
-        public static JsonGrammar Json { get; } = new JsonGrammar();
-    }
+    public static GdefGrammar Gdef { get; } = new GdefGrammar();
+    public static JsonGrammar Json { get; } = new JsonGrammar();
 }

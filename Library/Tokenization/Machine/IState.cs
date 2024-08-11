@@ -1,7 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Tokenization.Machine
+﻿namespace Aidan.TextAnalysis.Tokenization.Machine;
+
+public interface IState
 {
-    public interface IState
-    {
-        ITransitionResult GetStateTransition(char? c);
-    }
+    ITransitionResult GetStateTransition(char? c);
 }

@@ -1,61 +1,60 @@
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 
-namespace Aidan.TextAnalysis.Language.Transformations
+namespace Aidan.TextAnalysis.Language.Transformations;
+
+public class RemoveUnreachableProductions : ISetTransformer
 {
-    public class RemoveUnreachableProductions : ISetTransformer
+    public SetTransformationCollection ExecuteTransformations(ProductionSet set)
     {
-        public SetTransformationCollection ExecuteTransformations(ProductionSet set)
+        var reachable = new HashSet<NonTerminal>();
+        var visited = new HashSet<NonTerminal>();
+        var start = set.Start;
+
+        set.EnsureNoMacros();
+        set.ResetTransformationsTracker();
+
+        if (start is null)
         {
-            var reachable = new HashSet<NonTerminal>();
-            var visited = new HashSet<NonTerminal>();
-            var start = set.Start;
+            throw new InvalidOperationException("The start symbol is not set.");
+        }
 
-            set.EnsureNoMacros();
-            set.ResetTransformationsTracker();
+        reachable.Add(start);
 
-            if (start is null)
+        void Visit(NonTerminal nonTerminal)
+        {
+            if (visited.Contains(nonTerminal))
             {
-                throw new InvalidOperationException("The start symbol is not set.");
+                return;
             }
 
-            reachable.Add(start);
+            visited.Add(nonTerminal);
 
-            void Visit(NonTerminal nonTerminal)
+            foreach (var production in set.Lookup(nonTerminal))
             {
-                if (visited.Contains(nonTerminal))
+                foreach (var symbol in production.Body)
                 {
-                    return;
-                }
-
-                visited.Add(nonTerminal);
-
-                foreach (var production in set.Lookup(nonTerminal))
-                {
-                    foreach (var symbol in production.Body)
+                    if (symbol is NonTerminal nt)
                     {
-                        if (symbol is NonTerminal nt)
-                        {
-                            reachable.Add(nt);
-                            Visit(nt);
-                        }
+                        reachable.Add(nt);
+                        Visit(nt);
                     }
                 }
             }
-
-            Visit(start);
-
-            var unreachableProductions = set.Copy()
-                .Where(x => !reachable.Contains(x.Head));
-
-            foreach (var production in unreachableProductions)
-            {
-                set.GetTransformationBuilder($"Unreachable Production Removal")
-                    .RemoveProductions(production)
-                    .Build();
-            }
-
-            return set.GetTrackedTransformations();
         }
+
+        Visit(start);
+
+        var unreachableProductions = set.Copy()
+            .Where(x => !reachable.Contains(x.Head));
+
+        foreach (var production in unreachableProductions)
+        {
+            set.GetTransformationBuilder($"Unreachable Production Removal")
+                .RemoveProductions(production)
+                .Build();
+        }
+
+        return set.GetTrackedTransformations();
     }
 }

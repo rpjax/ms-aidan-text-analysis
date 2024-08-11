@@ -2,59 +2,58 @@ using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.Components;
 using Aidan.TextAnalysis.Tokenization;
 
-namespace Aidan.TextAnalysis.Parsing.LL1.Components
+namespace Aidan.TextAnalysis.Parsing.LL1.Components;
+
+public class LL1SyntaxContext
 {
-    public class LL1SyntaxContext
+    private Stack<CstBuilder> TreeBuilderStack { get; }
+
+    public LL1SyntaxContext()
     {
-        private Stack<CstBuilder> TreeBuilderStack { get; }
+        TreeBuilderStack = new();
+    }
 
-        public LL1SyntaxContext()
+    public void CreateBranch(NonTerminal state)
+    {
+        TreeBuilderStack.Push(new CstBuilder());
+    }
+
+    public void AddAttribute(Token token)
+    {
+        if (!TreeBuilderStack.TryPeek(out var builder))
         {
-            TreeBuilderStack = new();
+            throw new InvalidOperationException("No tree builder on the stack.");
         }
 
-        public void CreateBranch(NonTerminal state)
+        builder.CreateLeaf(token);
+    }
+
+    public void FinilizeBranch()
+    {
+        //if (TreeBuilderStack.Count == 0)
+        //{
+        //    throw new InvalidOperationException("The tree builder stack must contain at least one builder.");
+        //}
+
+        //var child = TreeBuilderStack.Pop();
+
+        //if (TreeBuilderStack.TryPeek(out var parent))
+        //{
+        //    parent.Execute(state, child.AccumulatorCount);
+        //}
+        //else
+        //{
+        //    TreeBuilderStack.Push(child);
+        //}
+    }
+
+    public CstNode BuildConcreteSyntaxTree()
+    {
+        if (TreeBuilderStack.Count != 1)
         {
-            TreeBuilderStack.Push(new CstBuilder());
+            throw new InvalidOperationException("The tree builder stack must contain exactly one builder.");
         }
 
-        public void AddAttribute(Token token)
-        {
-            if (!TreeBuilderStack.TryPeek(out var builder))
-            {
-                throw new InvalidOperationException("No tree builder on the stack.");
-            }
-
-            builder.CreateLeaf(token);
-        }
-
-        public void FinilizeBranch()
-        {
-            //if (TreeBuilderStack.Count == 0)
-            //{
-            //    throw new InvalidOperationException("The tree builder stack must contain at least one builder.");
-            //}
-
-            //var child = TreeBuilderStack.Pop();
-
-            //if (TreeBuilderStack.TryPeek(out var parent))
-            //{
-            //    parent.Execute(state, child.AccumulatorCount);
-            //}
-            //else
-            //{
-            //    TreeBuilderStack.Push(child);
-            //}
-        }
-
-        public CstNode BuildConcreteSyntaxTree()
-        {
-            if (TreeBuilderStack.Count != 1)
-            {
-                throw new InvalidOperationException("The tree builder stack must contain exactly one builder.");
-            }
-
-            return TreeBuilderStack.Pop().Build();
-        }
+        return TreeBuilderStack.Pop().Build();
     }
 }

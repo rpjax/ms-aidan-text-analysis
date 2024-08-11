@@ -1,11 +1,9 @@
-﻿using Aidan.TextAnalysis.Tokenization;
+﻿namespace Aidan.TextAnalysis.Tests;
 
-namespace Aidan.TextAnalysis.Tests;
-
-class Program
+public class Program
 {
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
-        var tokenizer = new Tokenizer();
+        Console.WriteLine("Hello World!");
     }
 }

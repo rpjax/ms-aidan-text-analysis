@@ -1,7 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Tokenization.Machine
+﻿namespace Aidan.TextAnalysis.Tokenization.Machine;
+
+public interface ITokenResult : ITransitionResult
 {
-    public interface ITokenResult : ITransitionResult
-    {
-        TokenType TokenType { get; }
-    }
+    TokenType TokenType { get; }
 }

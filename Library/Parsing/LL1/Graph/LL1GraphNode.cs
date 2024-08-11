@@ -1,162 +1,161 @@
-using Aidan.TextAnalysis.Language.Components;
 using System.Collections;
 using System.Text;
+using Aidan.TextAnalysis.Language.Components;
 
-namespace Aidan.TextAnalysis.Language.Graph
+namespace Aidan.TextAnalysis.Language.Graph;
+
+public class LL1GraphNode : IEnumerable<LL1GraphNode>
 {
-    public class LL1GraphNode : IEnumerable<LL1GraphNode>
+    public Symbol Symbol { get; }
+    public ProductionRule? Production { get; }
+    public LL1GraphNode? Parent { get; internal set; }
+    public RecursionType RecursionType { get; internal set; }
+    public int Position { get; }
+
+    internal List<LL1GraphNode> Children { get; set; } 
+
+    public LL1GraphNode(
+        Symbol symbol, 
+        ProductionRule? production = null, 
+        LL1GraphNode? parent = null,
+        RecursionType recursionType = RecursionType.None,
+        IEnumerable<LL1GraphNode>? children = null)
     {
-        public Symbol Symbol { get; }
-        public ProductionRule? Production { get; }
-        public LL1GraphNode? Parent { get; internal set; }
-        public RecursionType RecursionType { get; internal set; }
-        public int Position { get; }
+        Symbol = symbol;
+        Production = production;
+        Parent = parent;
+        RecursionType = recursionType;
+        Children = children?.ToList() ?? new();
+        Position = GetPosition();
+    }
 
-        internal List<LL1GraphNode> Children { get; set; }
+    public bool IsRecursive => RecursionType != RecursionType.None;
 
-        public LL1GraphNode(
-            Symbol symbol,
-            ProductionRule? production = null,
-            LL1GraphNode? parent = null,
-            RecursionType recursionType = RecursionType.None,
-            IEnumerable<LL1GraphNode>? children = null)
+    public LL1GraphNode this[int index]
+    {
+        get
         {
-            Symbol = symbol;
-            Production = production;
-            Parent = parent;
-            RecursionType = recursionType;
-            Children = children?.ToList() ?? new();
-            Position = GetPosition();
-        }
-
-        public bool IsRecursive => RecursionType != RecursionType.None;
-
-        public LL1GraphNode this[int index]
-        {
-            get
+            if (index < 0 || index >= Children.Count)
             {
-                if (index < 0 || index >= Children.Count)
-                {
-                    throw new IndexOutOfRangeException();
-                }
-
-                return Children[index];
-            }
-            set
-            {
-                if (index < 0 || index >= Children.Count)
-                {
-                    throw new IndexOutOfRangeException();
-                }
-
-                Children[index] = value;
-                value.Parent = this;
-            }
-        }
-
-        public bool IsRoot => Parent is null;
-        public int ChildrenCount => Children.Count;
-
-        public override string ToString()
-        {
-            if (Production is not null)
-            {
-                return $"({Symbol}) At {Position} From ({Production})";
+                throw new IndexOutOfRangeException();
             }
 
-            return $"{Symbol}";
+            return Children[index];
         }
-
-        public IEnumerator<LL1GraphNode> GetEnumerator()
+        set
         {
-            return Children.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public int IndexOf(Symbol symbol)
-        {
-            for (var i = 0; i < Children.Count; i++)
+            if (index < 0 || index >= Children.Count)
             {
-                if (ReferenceEquals(Children[i].Symbol, symbol))
-                {
-                    return i;
-                }
+                throw new IndexOutOfRangeException();
             }
 
+            Children[index] = value;
+            value.Parent = this;
+        }
+    }
+
+    public bool IsRoot => Parent is null;
+    public int ChildrenCount => Children.Count;
+
+    public override string ToString()
+    {
+        if(Production is not null)
+        {
+            return $"({Symbol}) At {Position} From ({Production})";
+        }
+
+        return $"{Symbol}";
+    }
+
+    public IEnumerator<LL1GraphNode> GetEnumerator()
+    {
+        return Children.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public int IndexOf(Symbol symbol)
+    {
+        for (var i = 0; i < Children.Count; i++)
+        {
+            if (ReferenceEquals(Children[i].Symbol, symbol))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private int GetPosition()
+    {
+        if(Production is null)
+        {
             return -1;
         }
 
-        private int GetPosition()
+        for (var i = 0; i < Production.Value.Body.Length; i++)
         {
-            if (Production is null)
+            if (ReferenceEquals(Production.Value.Body[i], Symbol))
             {
-                return -1;
+                return i;
             }
-
-            for (var i = 0; i < Production.Value.Body.Length; i++)
-            {
-                if (ReferenceEquals(Production.Value.Body[i], Symbol))
-                {
-                    return i;
-                }
-            }
-
-            return -1;
         }
 
-        public bool IsLeftmostNonTerminal()
+        return -1;
+    }
+
+    public bool IsLeftmostNonTerminal()
+    {
+        if (Production is null)
         {
-            if (Production is null)
-            {
-                return false;
-            }
-            if (!Symbol.IsNonTerminal)
-            {
-                return false;
-            }
-
-            for (var i = 0; i < Production.Value.Body.Length; i++)
-            {
-                if (ReferenceEquals(Production.Value.Body[i], Symbol))
-                {
-                    return true;
-                }
-                if (Production.Value.Body[i].IsNonTerminal)
-                {
-                    return false;
-                }
-            }
-
+            return false;
+        }
+        if (!Symbol.IsNonTerminal)
+        {
             return false;
         }
 
-        public Sentence GetPrefix()
+        for (var i = 0; i < Production.Value.Body.Length; i++)
         {
-            var prefix = new List<Symbol>();
-
-            for (var i = 0; i < Position; i++)
+            if (ReferenceEquals(Production.Value.Body[i], Symbol))
             {
-                prefix.Add(Production!.Value.Body[i]);
+                return true;
             }
-
-            return new Sentence(prefix.ToArray());
+            if (Production.Value.Body[i].IsNonTerminal)
+            {
+                return false;
+            }
         }
 
-        public Sentence GetSuffix()
+        return false;
+    }       
+
+    public Sentence GetPrefix()
+    {
+        var prefix = new List<Symbol>();
+
+        for (var i = 0; i < Position; i++)
         {
-            var suffix = new List<Symbol>();
-
-            for (var i = Position + 1; i < Production!.Value.Body.Length; i++)
-            {
-                suffix.Add(Production.Value.Body[i]);
-            }
-
-            return new Sentence(suffix.ToArray());
+            prefix.Add(Production!.Value.Body[i]);
         }
 
+        return new Sentence(prefix.ToArray());
     }
+
+    public Sentence GetSuffix()
+    {
+        var suffix = new List<Symbol>();
+
+        for (var i = Position + 1; i < Production!.Value.Body.Length; i++)
+        {
+            suffix.Add(Production.Value.Body[i]);
+        }
+
+        return new Sentence(suffix.ToArray());
+    }
+
 }

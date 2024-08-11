@@ -1,7 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Parsing.Components
+﻿namespace Aidan.TextAnalysis.Parsing.Components;
+
+public interface ICstReducer
 {
-    public interface ICstReducer
-    {
-        CstNode Reduce(CstNode[] children);
-    }
+    CstNode Reduce(CstNode[] children);
 }

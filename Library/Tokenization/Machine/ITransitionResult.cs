@@ -1,8 +1,7 @@
-﻿namespace Aidan.TextAnalysis.Tokenization.Machine
+﻿namespace Aidan.TextAnalysis.Tokenization.Machine;
+
+public interface ITransitionResult
 {
-    public interface ITransitionResult
-    {
-        TokenizerState NextState { get; }
-        TokenizerAction Action { get; }
-    }
+    TokenizerState NextState { get; }
+    TokenizerAction Action { get; }
 }

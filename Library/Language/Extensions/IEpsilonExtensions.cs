@@ -1,7 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Language.Extensions
-{
-    public static class IEpsilonExtensions
-    {
+﻿namespace Aidan.TextAnalysis.Language.Extensions;
 
-    }
+public static class IEpsilonExtensions
+{
+    
 }

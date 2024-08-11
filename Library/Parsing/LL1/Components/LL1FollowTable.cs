@@ -1,31 +1,30 @@
 using Aidan.TextAnalysis.Language.Components;
 
-namespace Aidan.TextAnalysis.Parsing.LL1.Components
+namespace Aidan.TextAnalysis.Parsing.LL1.Components;
+
+public class LL1FollowTable
 {
-    public class LL1FollowTable
+    private Dictionary<NonTerminal, LL1FollowSet> Table { get; }
+
+    public LL1FollowTable(LL1FollowSet[] sets)
     {
-        private Dictionary<NonTerminal, LL1FollowSet> Table { get; }
+        Table = sets.ToDictionary(x => x.Symbol);
+    }
 
-        public LL1FollowTable(LL1FollowSet[] sets)
+    public LL1FollowSet Lookup(NonTerminal symbol)
+    {
+        if (!Table.ContainsKey(symbol))
         {
-            Table = sets.ToDictionary(x => x.Symbol);
+            throw new InvalidOperationException("The symbol is not in the table.");
         }
 
-        public LL1FollowSet Lookup(NonTerminal symbol)
-        {
-            if (!Table.ContainsKey(symbol))
-            {
-                throw new InvalidOperationException("The symbol is not in the table.");
-            }
+        return Table[symbol];
+    }
 
-            return Table[symbol];
-        }
-
-        public override string ToString()
-        {
-            return string.Join("\n", Table.Values.Select(x => x.ToString()));
-        }
-
+    public override string ToString()
+    {
+        return string.Join("\n", Table.Values.Select(x => x.ToString()));
     }
 
 }
+

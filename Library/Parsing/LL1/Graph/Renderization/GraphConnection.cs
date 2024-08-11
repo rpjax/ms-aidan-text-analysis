@@ -1,19 +1,18 @@
-namespace Aidan.TextAnalysis.Language.Graph.Renderization
+namespace Aidan.TextAnalysis.Language.Graph.Renderization;
+
+public class GraphConnection
 {
-    public class GraphConnection
+    public Vec2 Position { get; }
+    public ConnectionOrientation Orientation { get; }
+
+    public GraphConnection(Vec2 position, ConnectionOrientation orientation)
     {
-        public Vec2 Position { get; }
-        public ConnectionOrientation Orientation { get; }
+        Position = position;
+        Orientation = orientation;
+    }
 
-        public GraphConnection(Vec2 position, ConnectionOrientation orientation)
-        {
-            Position = position;
-            Orientation = orientation;
-        }
-
-        public void Offset(int x, int y)
-        {
-            Position.Offset(x, y);
-        }
+    public void Offset(int x, int y)
+    {
+        Position.Offset(x, y);
     }
 }

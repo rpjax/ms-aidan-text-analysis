@@ -1,36 +1,35 @@
 using Aidan.TextAnalysis.Language.Components;
 
-namespace Aidan.TextAnalysis.Language.Graph
+namespace Aidan.TextAnalysis.Language.Graph;
+
+public class GraphBranch
 {
-    public class GraphBranch
+    public IReadOnlyList<LL1GraphNode> Nodes { get; }
+
+    public GraphBranch(IEnumerable<LL1GraphNode> nodes)
     {
-        public IReadOnlyList<LL1GraphNode> Nodes { get; }
+        Nodes = nodes.ToArray();
 
-        public GraphBranch(IEnumerable<LL1GraphNode> nodes)
+        if(Nodes.Count == 0)
         {
-            Nodes = nodes.ToArray();
+            throw new InvalidOperationException("The list of nodes is empty.");
+        }
+    }
 
-            if (Nodes.Count == 0)
+    public LL1GraphNode Root => Nodes.First();
+
+    public ProductionSet ToProductionSet()
+    {
+        var builder = new ProductionSetBuilder();
+
+        foreach (var node in Nodes)
+        {
+            if (node.Production is not null)
             {
-                throw new InvalidOperationException("The list of nodes is empty.");
+                builder.Add(node.Production.Value);
             }
         }
 
-        public LL1GraphNode Root => Nodes.First();
-
-        public ProductionSet ToProductionSet()
-        {
-            var builder = new ProductionSetBuilder();
-
-            foreach (var node in Nodes)
-            {
-                if (node.Production is not null)
-                {
-                    builder.Add(node.Production.Value);
-                }
-            }
-
-            return builder.Build();
-        }
+        return builder.Build();
     }
 }

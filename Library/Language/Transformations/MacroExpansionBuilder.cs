@@ -1,36 +1,35 @@
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 
-namespace Aidan.TextAnalysis.Language.Transformations
+namespace Aidan.TextAnalysis.Language.Transformations;
+
+public class MacroExpansion : ISetTransformer
 {
-    public class MacroExpansion : ISetTransformer
+    public SetTransformationCollection ExecuteTransformations(ProductionSet set)
     {
-        public SetTransformationCollection ExecuteTransformations(ProductionSet set)
+        set.ResetTransformationsTracker();
+
+        while (set.ContainsMacro())
         {
-            set.ResetTransformationsTracker();
-
-            while (set.ContainsMacro())
+            foreach (var production in set.Copy())
             {
-                foreach (var production in set.Copy())
+                if (!production.ContainsMacro())
                 {
-                    if (!production.ContainsMacro())
-                    {
-                        continue;
-                    }
-
-                    var expandedProductions = production.ExpandMacros(set).ToArray();
-
-                    set.GetTransformationBuilder("MacroSymbol Expansion")
-                        .RemoveProductions(production)
-                        .AddProductions(expandedProductions)
-                        .Build();
+                    continue;
                 }
-            }
 
-            return set.GetTrackedTransformations();
+                var expandedProductions = production.ExpandMacros(set).ToArray();
+
+                set.GetTransformationBuilder("MacroSymbol Expansion")
+                    .RemoveProductions(production)
+                    .AddProductions(expandedProductions)
+                    .Build();
+            }
         }
 
+        return set.GetTrackedTransformations();
     }
 
-
 }
+
+

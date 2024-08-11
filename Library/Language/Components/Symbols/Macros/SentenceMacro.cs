@@ -1,57 +1,56 @@
-namespace Aidan.TextAnalysis.Language.Components
+namespace Aidan.TextAnalysis.Language.Components;
+
+public interface ISentenceMacro : IMacroSymbol
 {
-    public interface ISentenceMacro : IMacroSymbol
+    Sentence Sentence { get; }
+}
+
+public abstract class SentenceMacro : MacroSymbol, ISentenceMacro
+{
+    public Sentence Sentence { get; }
+
+    public SentenceMacro(Sentence sentence)
     {
-        Sentence Sentence { get; }
+        Sentence = sentence;
+
+        if (Sentence.Length == 0)
+        {
+            throw new ArgumentException("The production macro must contain at least one symbol.");
+        }
     }
 
-    public abstract class SentenceMacro : MacroSymbol, ISentenceMacro
+    public override int GetHashCode()
     {
-        public Sentence Sentence { get; }
-
-        public SentenceMacro(Sentence sentence)
+        unchecked
         {
-            Sentence = sentence;
+            int hash = (int)2166136261;
 
-            if (Sentence.Length == 0)
+            foreach (var symbol in Sentence)
             {
-                throw new ArgumentException("The production macro must contain at least one symbol.");
+                hash = (hash * 16777619) ^ symbol.GetHashCode();
             }
+
+            return hash;
         }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hash = (int)2166136261;
-
-                foreach (var symbol in Sentence)
-                {
-                    hash = (hash * 16777619) ^ symbol.GetHashCode();
-                }
-
-                return hash;
-            }
-        }
-
-        public override bool Equals(object? obj)
-        {
-            return obj is SentenceMacro macro
-                && macro.Sentence.SequenceEqual(Sentence);
-        }
-
-        public override bool Equals(Symbol? other)
-        {
-            return other is SentenceMacro macro
-                && macro.Sentence.SequenceEqual(Sentence);
-        }
-
-        public override bool Equals(ISymbol? other)
-        {
-            return other is SentenceMacro macro
-                && macro.MacroType == MacroType
-                && macro.Sentence.SequenceEqual(Sentence);
-        }
-
     }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is SentenceMacro macro
+            && macro.Sentence.SequenceEqual(Sentence);
+    }
+
+    public override bool Equals(Symbol? other)
+    {
+        return other is SentenceMacro macro
+            && macro.Sentence.SequenceEqual(Sentence);
+    }
+
+    public override bool Equals(ISymbol? other)
+    {
+        return other is SentenceMacro macro
+            && macro.MacroType == MacroType
+            && macro.Sentence.SequenceEqual(Sentence);
+    }
+
 }

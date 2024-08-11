@@ -1,0 +1,110 @@
+%{
+/* Code definitions if any */
+%}
+
+%token ID STRING EPSILON
+
+%start grammar
+
+%%
+
+grammar
+    : lexer_settings production_list
+    | production_list
+    ;
+
+lexer_settings
+    : LEXER_START lexer_statements LEXER_END
+    ;
+
+lexer_statements
+    : lexer_statements lexer_statement
+    | lexer_statement
+    ;
+
+lexer_statement
+    : USE ID SEMICOLON
+    | LEXEME ID regex SEMICOLON
+    ;
+
+regex
+    : STRING
+    ;
+
+production_list
+    : production_list production
+    | production
+    ;
+
+production
+    : ID COLON production_body SEMICOLON
+    ;
+
+production_body
+    : symbols optional_semantic_action
+    ;
+
+symbols
+    : symbols symbol
+    | symbol
+    ;
+
+symbol
+    : terminal
+    | non_terminal
+    | macro
+    ;
+
+terminal
+    : STRING
+    | lexeme
+    | epsilon
+    ;
+
+non_terminal
+    : ID
+    ;
+
+epsilon
+    : EPSILON
+    ;
+
+macro
+    : group
+    | option
+    | repetition
+    | alternative
+    ;
+
+group
+    : LPAREN symbols RPAREN
+    ;
+
+option
+    : LBRACKET symbols RBRACKET
+    ;
+
+repetition
+    : LBRACE symbols RBRACE
+    ;
+
+alternative
+    : ALTERNATIVE
+    ;
+
+lexeme
+    : DOLLAR ID
+    ;
+
+optional_semantic_action
+    : /* empty */
+    | semantic_action
+    ;
+
+semantic_action
+    : LBRACE DOLLAR semantic_value RBRACE
+    ;
+
+semantic_value
+    : DOLLAR INT
+    ;

@@ -1,7 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Tokenization.Machine
+﻿namespace Aidan.TextAnalysis.Tokenization.Machine;
+
+public enum TokenizerErrorType
 {
-    public enum TokenizerErrorType
-    {
-        UnexpectedEndOfInput
-    }
+    UnexpectedEndOfInput
 }

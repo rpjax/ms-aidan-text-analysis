@@ -1,0 +1,83 @@
+grammar 
+    : [ lexer_settings ] production_list 
+    ;
+
+lexer_settings
+    : '<lexer>' { lexer_statement } '</lexer>'
+    ;
+
+lexer_statement
+    : 'use' $id ';'
+    | 'lexeme' $id regex ';'
+    ;
+
+regex
+    : $string
+    ;
+
+production_list
+    : production { production }
+    ;
+
+production
+    : $id ':' production_body ';'
+    ;
+
+production_body
+    : symbol { symbol } [ semantic_action ]
+    ;
+
+symbol
+    : terminal
+    | non_terminal
+    | macro
+    ;
+
+terminal 
+    : $string
+    | lexeme
+    | epsilon
+    ;
+
+non_terminal
+    : $id
+    ;
+
+epsilon
+    : 'ε'
+    ;
+
+macro
+    : group
+    | option
+    | repetition
+    | alternative
+    ;
+
+group
+    : '(' symbol { symbol } ')'
+    ;
+
+option
+    : '[' symbol { symbol } ']'
+    ;
+
+repetition
+    : '{' symbol { symbol } '}'
+    ;
+
+alternative
+    : '|'
+    ;
+
+lexeme
+    : '$' $id 
+    ;
+
+semantic_action
+    : '{' '$' semantic_value '}'
+    ;
+
+semantic_value
+    : '$' $int
+    ;

@@ -1,10 +1,9 @@
-﻿namespace Aidan.TextAnalysis.Language.Graph
+﻿namespace Aidan.TextAnalysis.Language.Graph;
+
+public enum RecursionType
 {
-    public enum RecursionType
-    {
-        None,
-        Normal,
-        Left,
-        IndirectLeft,
-    }
+    None,
+    Normal,
+    Left,
+    IndirectLeft,
 }
