@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Tokenization;
 using System.Collections;
 using System.Runtime.CompilerServices;
@@ -45,8 +44,6 @@ public class CstBuilder
     private List<CstNode> NodeAccumulator { get; }
     private bool IncludeEpsilons { get; set; }
 
-    private Token[] SingleTokenBuffer { get; }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="CstBuilder"/> class.
     /// </summary>
@@ -56,7 +53,6 @@ public class CstBuilder
         TokenAccumulator = new List<TokenCollection>(50);
         NodeAccumulator = new List<CstNode>(50);
         IncludeEpsilons = includeEpsilons;
-        SingleTokenBuffer = new Token[1];
     }
 
     /// <summary>

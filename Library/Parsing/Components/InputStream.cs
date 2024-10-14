@@ -1,5 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Tokenization;
+﻿using Aidan.TextAnalysis.Tokenization;
 
 namespace Aidan.TextAnalysis.Parsing.Components;
 
@@ -12,8 +11,14 @@ public class InputStream : IDisposable
     private bool IsEndReached { get; set; }
     private TokenType[] IgnoreSet { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InputStream"/> class.
+    /// </summary>
+    /// <param name="input">The input string to tokenize.</param>
+    /// <param name="tokenizer">The tokenizer to use for tokenizing the input string.</param>
+    /// <param name="ignoreSet">The set of token types to ignore.</param>
     public InputStream(
-        string input, 
+        string input,
         Tokenizer tokenizer,
         TokenType[]? ignoreSet = null)
     {
@@ -29,8 +34,14 @@ public class InputStream : IDisposable
     /// </summary>
     public Token? LookaheadToken => Peek();
 
+    /// <summary>
+    /// Gets a value indicating whether the end of the input stream has been reached.
+    /// </summary>
     public bool IsEoi => IsEndReached;
 
+    /// <summary>
+    /// Disposes the input stream.
+    /// </summary>
     public void Dispose()
     {
         TokenStream.Dispose();
@@ -39,7 +50,7 @@ public class InputStream : IDisposable
     /// <summary>
     /// Peeks the next token.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The next token if the end of the input stream has not been reached; otherwise, <c>null</c>.</returns>
     public Token? Peek()
     {
         if (IsEndReached)
@@ -51,12 +62,12 @@ public class InputStream : IDisposable
     }
 
     /// <summary>
-    /// Consumes the current token and moves to the next one. 
+    /// Consumes the current token and moves to the next one.
     /// </summary>
-    /// <remarks> 
-    /// It skips the tokens in the ignore set. 
+    /// <remarks>
+    /// It skips the tokens in the ignore set.
     /// </remarks>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <exception cref="InvalidOperationException">Thrown when the end of the input stream has been reached.</exception>
     public void Consume()
     {
         if (IsEndReached)
@@ -72,11 +83,15 @@ public class InputStream : IDisposable
         }
     }
 
+    /// <summary>
+    /// Initializes the input stream by moving to the first non-ignored token.
+    /// </summary>
     private void Init()
     {
         IsEndReached = !TokenStream.MoveNext();
 
-        var ignoreToken = IgnoreSet.Any(x => x == TokenStream.Current.Type);
+        var ignoreToken = IgnoreSet
+            .Any(x => x == TokenStream.Current.Type);
 
         if (!ignoreToken)
         {

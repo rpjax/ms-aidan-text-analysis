@@ -10,6 +10,11 @@ namespace Aidan.TextAnalysis.Parsing.LR1.Tools;
 /// </summary>
 public class LR1Tool
 {
+    /// <summary>
+    /// Computes the LR(1) states for a given production set.
+    /// </summary>
+    /// <param name="set">The production set to compute states for.</param>
+    /// <returns>An array of LR(1) states.</returns>
     public static LR1State[] ComputeStates(
         ProductionSet set)
     {
@@ -19,9 +24,9 @@ public class LR1Tool
         var initialState = ComputeInitialState(set);
 
         var states = new List<LR1State>
-        {
-            initialState
-        };
+                        {
+                            initialState
+                        };
 
         var proccessedStates = new List<LR1State>();
 
@@ -31,7 +36,7 @@ public class LR1Tool
 
             foreach (var state in states.ToArray())
             {
-                if(proccessedStates.Any(x => x.Equals(state)))
+                if (proccessedStates.Any(x => x.Equals(state)))
                 {
                     continue;
                 }
@@ -73,12 +78,22 @@ public class LR1Tool
         return states.ToArray();
     }
 
+    /// <summary>
+    /// Computes the LR(1) state collection for a given production set.
+    /// </summary>
+    /// <param name="set">The production set to compute the state collection for.</param>
+    /// <returns>An LR(1) state collection.</returns>
     public static LR1StateCollection ComputeStatesCollection(
         ProductionSet set)
     {
         return new LR1StateCollection(ComputeStates(set));
     }
 
+    /// <summary>
+    /// Computes the initial state for a given production set.
+    /// </summary>
+    /// <param name="set">The production set to compute the initial state for.</param>
+    /// <returns>The initial LR(1) state.</returns>
     private static LR1State ComputeInitialState(
         ProductionSet set)
     {
@@ -108,6 +123,13 @@ public class LR1Tool
         );
     }
 
+    /// <summary>
+    /// Computes the next states for a given state and production set.
+    /// </summary>
+    /// <param name="set">The production set to compute the next states for.</param>
+    /// <param name="state">The current state.</param>
+    /// <param name="kernelBlacklist">The kernel blacklist to prevent duplicate computations.</param>
+    /// <returns>An array of the next LR(1) states.</returns>
     private static LR1State[] ComputeNextStates(
         ProductionSet set,
         LR1State state,
@@ -140,9 +162,12 @@ public class LR1Tool
         return states.ToArray();
     }
 
-    /*
-     * Closure rewritten to use a stack instead of recursion.
-     */
+    /// <summary>
+    /// Computes the closure of an LR(1) item.
+    /// </summary>
+    /// <param name="set">The production set to compute the closure for.</param>
+    /// <param name="item">The LR(1) item to compute the closure for.</param>
+    /// <returns>The closure of the LR(1) item.</returns>
     private static LR1Closure ComputeItemClosure(
         ProductionSet set,
         LR1Item item)
@@ -184,6 +209,12 @@ public class LR1Tool
         return new LR1Closure(items.ToArray());
     }
 
+    /// <summary>
+    /// Computes the closure of an LR(1) kernel.
+    /// </summary>
+    /// <param name="set">The production set to compute the closure for.</param>
+    /// <param name="kernel">The LR(1) kernel to compute the closure for.</param>
+    /// <returns>The closure of the LR(1) kernel.</returns>
     private static LR1Closure ComputeKernelClosure(
         ProductionSet set,
         LR1Kernel kernel)
@@ -255,6 +286,13 @@ public class LR1Tool
         return new LR1Closure(uniqueItems.ToArray());
     }
 
+    /// <summary>
+    /// Computes the lookaheads for a given beta sentence and original lookaheads.
+    /// </summary>
+    /// <param name="set">The production set to compute the lookaheads for.</param>
+    /// <param name="beta">The beta sentence.</param>
+    /// <param name="originalLookaheads">The original lookaheads.</param>
+    /// <returns>An array of computed lookaheads.</returns>
     private static Terminal[] ComputeLookaheads(
         ProductionSet set,
         Sentence beta,
@@ -319,7 +357,8 @@ public class LR1Tool
 
                 if (newSentence.Length == 0)
                 {
-                    Console.WriteLine();
+                    // i don't remember why i added this, but it seems to be working.
+                    //Console.WriteLine();
                 }
 
                 stack.Push(newSentence);
@@ -331,6 +370,12 @@ public class LR1Tool
             .ToArray();
     }
 
+    /// <summary>
+    /// Computes the GOTO dictionary for a given state and kernel blacklist.
+    /// </summary>
+    /// <param name="state">The current state.</param>
+    /// <param name="kernelBlacklist">The kernel blacklist to prevent duplicate computations.</param>
+    /// <returns>A dictionary mapping symbols to LR(1) kernels.</returns>
     private static Dictionary<Symbol, LR1Kernel> ComputeGotoDictionary(
         LR1State state,
         LR1Kernel[] kernelBlacklist)

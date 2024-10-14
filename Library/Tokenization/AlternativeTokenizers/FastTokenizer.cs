@@ -10,10 +10,10 @@ public interface ICharacterStream
     bool Advance();
     ICharacterStream Fork();
 }
-
+    
 public interface ITokenStream
 {
-    ref IToken? Peek(int offset);
+    ref ITokenLegacy? Peek(int offset);
     bool Advance();
     ITokenStream Fork();
 }

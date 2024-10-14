@@ -25,7 +25,18 @@ public struct TokenPosition
     /// </summary>
     public int Column { get; }
 
-    public TokenPosition(int startIndex, int endIndex, int line, int column)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TokenPosition"/> struct.
+    /// </summary>
+    /// <param name="startIndex">The character index position in the source text where the token starts.</param>
+    /// <param name="endIndex">The character index position in the source text where the token ends.</param>
+    /// <param name="line">The line number in which the token is located in the source text.</param>
+    /// <param name="column">The column number in which the token is located in the source text.</param>
+    public TokenPosition(
+        int startIndex, 
+        int endIndex, 
+        int line, 
+        int column)
     {
         StartIndex = startIndex;
         EndIndex = endIndex;
