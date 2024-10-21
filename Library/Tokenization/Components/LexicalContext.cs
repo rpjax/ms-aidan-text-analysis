@@ -134,8 +134,8 @@ public class LexicalContext : IDisposable
     internal TokenPosition GetTokenPosition()
     {
         return new TokenPosition(
-            startIndex: Position - AccumulatorLength,
-            endIndex: Position,
+            start: Position - AccumulatorLength,
+            end: Position,
             line: Line,
             column: Column
         );

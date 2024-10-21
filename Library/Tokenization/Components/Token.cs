@@ -65,7 +65,7 @@ public class Token : ITokenLegacy
 /// <summary>
 /// Represents a new token produced by the lexical Analyzer, using a lexeme production rule.
 /// </summary>
-public class TokenNew : IToken
+public class TokenNewApi : IToken
 {
     /// <summary>
     /// Gets the type of the token. (e.g. Identifier, Number, String, etc.)
@@ -83,13 +83,13 @@ public class TokenNew : IToken
     public TokenMetadata Metadata { get; }
 
     /// <summary>
-    /// Creates a new instance of the <see cref="TokenNew"/> class.
+    /// Creates a new instance of the <see cref="TokenNewApi"/> class.
     /// </summary>
     /// <param name="type"> The type of the token. </param>
     /// <param name="value"> The value of the token. </param>
     /// <param name="metadata"> The information associated with the token. </param>
     /// <exception cref="ArgumentException"> Thrown when the value of the token is empty. </exception>
-    public TokenNew(
+    public TokenNewApi(
         string type,
         ReadOnlyMemory<char> value,
         TokenMetadata metadata)

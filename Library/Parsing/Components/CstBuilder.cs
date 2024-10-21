@@ -235,12 +235,12 @@ public class CstBuilder
     {
         var position = new SyntaxElementPosition(
             start: new LexicalCoordinate(
-                index: token.Metadata.Position.StartIndex,
+                index: token.Metadata.Position.Start,
                 line: token.Metadata.Position.Line,
                 column: token.Metadata.Position.Column - token.Value.Length + 1
             ),
             end: new LexicalCoordinate(
-                index: token.Metadata.Position.EndIndex,
+                index: token.Metadata.Position.End,
                 line: token.Metadata.Position.Line,
                 column: token.Metadata.Position.Column + 1
             )
@@ -264,12 +264,12 @@ public class CstBuilder
 
         var position = new SyntaxElementPosition(
             start: new LexicalCoordinate(
-                index: firstToken.Metadata.Position.StartIndex,
+                index: firstToken.Metadata.Position.Start,
                 line: firstToken.Metadata.Position.Line,
                 column: firstToken.Metadata.Position.Column - firstToken.Value.Length + 1
             ),
             end: new LexicalCoordinate(
-                index: lastToken.Metadata.Position.EndIndex,
+                index: lastToken.Metadata.Position.End,
                 line: lastToken.Metadata.Position.Line,
                 column: lastToken.Metadata.Position.Column + 1
             )
@@ -287,12 +287,12 @@ public class CstBuilder
 
         var position = new SyntaxElementPosition(
             start: new LexicalCoordinate(
-                index: lastToken?.Metadata.Position.EndIndex ?? 0,
+                index: lastToken?.Metadata.Position.End ?? 0,
                 line: lastToken?.Metadata.Position.Line ?? 0,
                 column: lastToken?.Metadata.Position.Column - lastToken?.Value.Length + 1 ?? 0
             ),
             end: new LexicalCoordinate(
-                index: lastToken?.Metadata.Position.EndIndex ?? 0,
+                index: lastToken?.Metadata.Position.End ?? 0,
                 line: lastToken?.Metadata.Position.Line ?? 0,
                 column: lastToken?.Metadata.Position.Column + 1 ?? 0
             )
