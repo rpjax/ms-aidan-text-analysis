@@ -5,7 +5,7 @@ namespace Aidan.TextAnalysis.Tokenization.StateMachine;
 /// <summary>
 /// A state machine for tokenizing strings.
 /// </summary>
-public class TokenizerMachine : IStringTokenizer
+public class TokenizerMachine : IStringLexer
 {
     /// <summary>
     /// The end of input character.
@@ -15,7 +15,7 @@ public class TokenizerMachine : IStringTokenizer
     /// <summary>
     /// The default name for the end of input token.
     /// </summary>
-    public const string EoiDefaultName = "EOI";
+    public const string EoiDefaultName = "\0";
 
     /* Cached values */
     private static ReadOnlyMemory<char> EoiReadOnlyMemory { get; } = $"{EoiChar}".AsMemory();
@@ -35,7 +35,7 @@ public class TokenizerMachine : IStringTokenizer
     /// <param name="eoiName">The name of the end of input token.</param>
     public TokenizerMachine(
         ITokenizerTable table,
-        bool includeEoi = true,
+        bool includeEoi = false,
         string eoiName = EoiDefaultName)
     {
         Table = table;
@@ -109,7 +109,7 @@ public class TokenizerMachine : IStringTokenizer
 
             if (nextState is null)
             {
-                throw new Exception($"No state found for character '{character}' in state {currentState}.");
+                throw new Exception($"No state found for character '{character}' in state {currentState.Name}.");
             }
 
             /* next state declarations */

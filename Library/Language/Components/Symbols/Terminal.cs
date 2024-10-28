@@ -1,185 +1,102 @@
-using Aidan.TextAnalysis.Language.Extensions;
-using Aidan.TextAnalysis.Tokenization;
-
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
-/// Represents a terminal symbol in a context-free grammar.
+/// Represents a terminal symbol in the language.
 /// </summary>
 public interface ITerminal : ISymbol, IComparable<ITerminal>
 {
     /// <summary>
-    /// Gets the token type associated with the terminal symbol.
+    /// Gets the value of the terminal symbol.
     /// </summary>
-    TokenType Type { get; }
-
-    /// <summary>
-    /// Gets the value associated with the terminal symbol.
-    /// </summary>
-    string? Value { get; }
+    ReadOnlyMemory<char> Value { get; }
 }
 
 /// <summary>
-/// Represents a terminal symbol in a context-free grammar.
+/// Represents a concrete implementation of a terminal symbol.
 /// </summary>
-public class Terminal : Symbol, ITerminal, IComparable<Terminal>
+public class Terminal : ITerminal
 {
-    /// <inheritdoc/>
-    public override bool IsTerminal => true;
-
-    /// <inheritdoc/>
-    public override bool IsNonTerminal => false;
-
-    /// <inheritdoc/>
-    public override bool IsEpsilon => false;
-
-    /// <inheritdoc/>
-    public override bool IsMacro => false;
-
-    /// <inheritdoc/>
-    public override bool IsEoi => false;
-
-    /// <inheritdoc/>
-    public TokenType Type { get; }
-
-    /// <inheritdoc/>
-    public string? Value { get; }
+    /// <summary>
+    /// Gets the type of the symbol.
+    /// </summary>
+    public SymbolType Type { get; protected set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Terminal"/> class with the specified token type and value.
+    /// Gets the name of the symbol.
     /// </summary>
-    /// <param name="tokenType">The token type associated with the terminal symbol.</param>
-    /// <param name="value">The value associated with the terminal symbol.</param>
-    public Terminal(TokenType tokenType, string? value = null)
+    public string Name { get; }
+
+    /// <summary>
+    /// Gets the value of the terminal symbol.
+    /// </summary>
+    public ReadOnlyMemory<char> Value { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
+    /// </summary>
+    /// <param name="name">The name of the terminal symbol.</param>
+    /// <param name="value">The value of the terminal symbol.</param>
+    public Terminal(string name, ReadOnlyMemory<char> value)
     {
-        Type = tokenType;
-        Value = value;
-
-        if (value is not null && string.IsNullOrEmpty(value))
-        {
-            throw new InvalidOperationException("The value cannot be empty.");
-        }
-    }
-
-    public Terminal(string value)
-    {
-        var tokens = Tokenizer.Instance.Tokenize(value, includeEoi: false).ToArray();
-
-        if (tokens.Length != 1)
-        {
-            throw new InvalidOperationException("The value must be a single token.");
-        }
-        if (tokens[0] is null)
-        {
-            throw new InvalidOperationException("The value must be a valid token.");
-        }
-
-        Type = tokens[0]!.Type;
+        Type = SymbolType.Terminal;
+        Name = name;
         Value = value;
     }
 
-    public static bool operator ==(Terminal left, Terminal right)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
+    /// </summary>
+    /// <param name="name">The name of the terminal symbol.</param>
+    /// <param name="value">The value of the terminal symbol as a string.</param>
+    public Terminal(string name, string value)
     {
-        return left.Type == right.Type
-            && left.Value == right.Value;
-    }
-
-    public static bool operator !=(Terminal left, Terminal right)
-    {
-        return !(left == right);
-    }
-
-    public static Terminal From(string value)
-    {
-        return new Terminal(TokenType.Unknown, value);
-    }
-
-    /*
-     * instance methods.
-     */
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            int hash = (int)2166136261;
-
-            hash = (hash * 16777619) ^ Type.GetHashCode();
-            hash = (hash * 16777619) ^ (Value?.GetHashCode() ?? 0);
-            return hash;
-        }
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as Symbol);
-    }
-
-    public override bool Equals(Symbol? other)
-    {
-        return other is Terminal terminal
-            && terminal.Type == Type
-            && terminal.Value == Value;
-    }
-
-    public int CompareTo(Terminal? other)
-    {
-        var thisStr = ToNotation(NotationType.Sentential);
-        var otherStr = other?.ToNotation(NotationType.Sentential);
-
-        return string.Compare(thisStr, otherStr, StringComparison.Ordinal);
-    }
-
-    /*
-     * ISymbol interface transition additions.
-     */
-
-    public override bool Equals(ISymbol? other)
-    {
-        return other is ITerminal terminal
-            && terminal.Type == Type
-            && terminal.Value == Value;
-    }
-
-    public int CompareTo(ITerminal? other)
-    {
-        var thisStr = ToNotation(NotationType.Sentential);
-        var otherStr = other?.ToNotation(NotationType.Sentential);
-
-        return string.Compare(thisStr, otherStr, StringComparison.Ordinal);
-    }
-
-    /*
-     * Stringification methods.
-     */
-
-    public override string ToNotation(NotationType notation)
-    {
-        switch (notation)
-        {
-            case NotationType.Sentential:
-                return this.ToSententialNotation();
-
-            case NotationType.Bnf:
-                return this.ToBnfNotation();
-
-            case NotationType.Ebnf:
-                return this.ToEbnfNotation();
-
-            case NotationType.EbnfKleene:
-                return this.ToEbnfKleeneNotation();
-        }
-
-        throw new InvalidOperationException("Invalid notation type.");
+        Type = SymbolType.Terminal;
+        Name = name;
+        Value = value.AsMemory();
     }
 
     /// <summary>
-    /// Returns a string representation of the terminal symbol.
+    /// Initializes a new instance of the <see cref="Terminal"/> class with the specified value.
     /// </summary>
-    /// <returns>A string representation of the terminal symbol.</returns>
+    /// <param name="name">The value of the terminal symbol.</param>
+    public Terminal(string name)
+    {
+        Type = SymbolType.Terminal;
+        Name = name;
+        Value = string.Empty.AsMemory();
+    }
+
+    /// <summary>
+    /// Returns a string that represents the current terminal symbol.
+    /// </summary>
+    /// <returns>A string that represents the current terminal symbol.</returns>
     public override string ToString()
     {
-        return this.ToSententialNotation();
+        return $"\"{Name}\"";
     }
 
+    /// <summary>
+    /// Determines whether the specified symbol is equal to the current terminal symbol.
+    /// </summary>
+    /// <param name="other">The symbol to compare with the current terminal symbol.</param>
+    /// <returns>true if the specified symbol is equal to the current terminal symbol; otherwise, false.</returns>
+    public virtual bool Equals(ISymbol? other)
+    {
+        return other is ITerminal terminal
+            && Type == terminal.Type
+            && Value.Equals(terminal.Value);
+    }
+
+    /// <summary>
+    /// Compares the current terminal symbol with another terminal symbol.
+    /// </summary>
+    /// <param name="other">The terminal symbol to compare with the current terminal symbol.</param>
+    /// <returns>A value that indicates the relative order of the terminal symbols being compared.</returns>
+    public int CompareTo(ITerminal? other)
+    {
+        var thisStr = ToString();
+        var otherStr = other?.ToString();
+
+        return string.Compare(thisStr, otherStr, StringComparison.Ordinal);
+    }
 }

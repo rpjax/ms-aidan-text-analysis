@@ -1,62 +1,135 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Parsing.LL1.Components;
+﻿using Aidan.Core.Extensions;
+using Aidan.TextAnalysis.Language.Components;
 
 namespace Aidan.TextAnalysis.Language.Extensions;
 
-public static class GrammarExtensions
+/// <summary>
+/// Provides extension methods for the <see cref="IGrammar"/> interface.
+/// </summary>
+public static class IGrammarExtensions
 {
-    public static bool IsLeftRecursive(this Grammar grammar)
+    /// <summary>
+    /// Gets all symbols (terminals and non-terminals) in the grammar.
+    /// </summary>
+    /// <param name="grammar">The grammar to get the symbols from.</param>
+    /// <returns>An array of all symbols in the grammar.</returns>
+    public static ISymbol[] GetAllSymbols(
+        this IGrammar grammar)
     {
-        return grammar.Productions
-            .Any(x => x.IsLeftRecursive());
+        return grammar.NonTerminals
+            .Cast<ISymbol>()
+            .Concat(grammar.Terminals)
+            .Distinct()
+            .ToArray();
     }
 
-    public static bool IsRightRecursive(this Grammar grammar)
+    /// <summary>
+    /// Gets all production rules for a specified non-terminal symbol.
+    /// </summary>
+    /// <param name="grammar">The grammar to get the production rules from.</param>
+    /// <param name="nonTerminal">The non-terminal symbol to get the production rules for.</param>
+    /// <returns>An array of production rules for the specified non-terminal symbol.</returns>
+    public static IProductionRule[] GetProductionRulesForNonTerminal(
+        this IGrammar grammar,
+        INonTerminal nonTerminal)
     {
-        return grammar.Productions
-            .Any(x => x.IsRightRecursive());
+        return grammar.ProductionRules
+            .Where(x => x.Head.Equals(nonTerminal))
+            .ToArray();
     }
 
-    public static bool IsNonDeterministic(this Grammar grammar)
+    /// <summary>
+    /// Ensures that the grammar does not contain any macros.
+    /// </summary>
+    /// <param name="grammar">The grammar to check for macros.</param>
+    /// <exception cref="Exception">Thrown when the grammar contains macros.</exception>
+    public static void EnsureNoMacros(
+        this IGrammar grammar)
     {
-        return grammar.Productions
-            .Where(x => x.GetTerminalPrefix() is not null)
-            .GroupBy(x => x.Head.Name)
-            .Any(x => x.GroupBy(y => y.GetTerminalPrefix()).Count() > 1);
+        if (grammar.ProductionRules.Any(x => x.Body.Any(x => x.IsMacro())))
+        {
+            throw new Exception("Grammar contains macros.");
+        }
     }
 
-    public static Grammar ExpandMacros(this Grammar self)
+    public static bool ContainsMacro(this IGrammar grammar)
     {
-        self.Productions.ExpandMacros();
-        return self;
+        return grammar.ProductionRules
+            .Any(x => x.Body.Any(x => x.IsMacro()));
     }
 
-    public static Grammar AutoClean(this Grammar self)
+    public static NonTerminal CreateNonTerminalPrime(
+        this IGrammar grammar,
+        INonTerminal nonTerminal)
     {
-        self.Productions.RecursiveAutoClean();
-        return self;
+        var name = nonTerminal.Name + "′";
+
+        while (grammar.ProductionRules.Any(p => p.Head.Name == name))
+        {
+            name += "′";
+        }
+
+        return new NonTerminal(name);
     }
 
-    public static Grammar AutoFix(this Grammar self)
+    public static IGrammar ExpandMacros(this IGrammar grammar)
     {
-        self.Productions.RecursiveAutoFix();
-        return self;
+        var start = grammar.StartSymbol;
+        var productions = new List<IProductionRule>(grammar.ProductionRules);
+
+        /* Expand all other macros */
+        while (true)
+        {
+            var macroProductions = productions
+                .Where(x => x.Body.Any(x => x.IsMacro()))
+                .ToArray();
+
+            if (macroProductions.IsEmpty())
+            {
+                break;
+            }
+
+            foreach (var macroProduction in macroProductions)
+            {
+                var expandedProductions = macroProduction.ExpandMacros(productions)
+                    .ToArray();
+
+                productions.Remove(macroProduction);
+                productions.AddRange(expandedProductions);
+            }
+        }
+
+        return new Grammar(start, productions);
     }
 
-    public static Grammar AutoTransformLL1(this Grammar self)
+    private static IGrammar ExpandPipeMacros(this IGrammar grammar)
     {
-        self.Productions.AutoTransformLL1();
-        return self;
+        var start = grammar.StartSymbol;
+        var productions = new List<IProductionRule>(grammar.ProductionRules);
+
+        /* Expand all other macros */
+        while (true)
+        {
+            var macroProductions = productions
+                .Where(x => x.Body.Any(x => x.IsPipeMacro()))
+                .ToArray();
+
+            if (macroProductions.IsEmpty())
+            {
+                break;
+            }
+
+            foreach (var macroProduction in macroProductions)
+            {
+                var expandedProductions = macroProduction.ExpandMacros(productions)
+                    .ToArray();
+
+                productions.Remove(macroProduction);
+                productions.AddRange(expandedProductions);
+            }
+        }
+
+        return new Grammar(start, productions);
     }
 
-    public static Grammar AutoTransformLR1(this Grammar self)
-    {
-        self.Productions.AutoTransformLR1();
-        return self;
-    }
-
-    public static LL1Grammar ToLL1(this Grammar self)
-    {
-        return new LL1Grammar(self.Start, self.Productions);
-    }
 }

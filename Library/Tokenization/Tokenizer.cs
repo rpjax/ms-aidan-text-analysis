@@ -127,7 +127,7 @@ public class Tokenizer
                     {
                         yield return new Token(
                             type: TokenType.Eoi,
-                            value: Eoi.SententialRepresentation.AsMemory(),
+                            value: Eoi.Instance.Value,
                             metadata: context.GetMetadata()
                         );
                     }

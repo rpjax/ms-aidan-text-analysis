@@ -1,5 +1,4 @@
 using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Tokenization;
 
 namespace Aidan.TextAnalysis.Grammars;
 
@@ -9,98 +8,105 @@ public class JsonGrammar : Grammar
     {
     }
 
+    private static NonTerminal GetStart()
+    {
+        return new NonTerminal("start");
+    }
+
     private static ProductionRule[] GetProductions()
     {
         return new ProductionRule[]
         {
+            // start:
+            new ProductionRule(
+                new NonTerminal("start"),
+                new NonTerminal("json")
+            ),
+
             // json:
             new ProductionRule(
-                "json",
+                new NonTerminal("json"),
                 new NonTerminal("object"),
-                new AlternativeMacro(),
+                new PipeMacro(),
                 new NonTerminal("array")
             ),
 
             // object:
             new ProductionRule(
-                "object",
-                new Terminal(TokenType.Punctuation, "{"),
+                new NonTerminal("object"),
+                new Terminal("{"),
                 new OptionMacro(
                     new NonTerminal("members")
                 ),
-                new Terminal(TokenType.Punctuation, "}")
+                new Terminal("}")
             ),
 
             // members:
             new ProductionRule(
-                "members",
+                new NonTerminal("members"),
                 new NonTerminal("pair"),
                 new RepetitionMacro(
-                    new Terminal(TokenType.Punctuation, ","),
+                    new Terminal(","),
                     new NonTerminal("pair")
                 )
             ),
 
             // pair:
             new ProductionRule(
-                "pair",
-                new Terminal(TokenType.String),
-                new Terminal(TokenType.Punctuation, ":"),
+                new NonTerminal("pair"),
+                new Terminal("string"),
+                new Terminal(":"),
                 new NonTerminal("value")
             ),
 
             // array:
             new ProductionRule(
-                "array",
-                new Terminal(TokenType.Punctuation, "["),
+                new NonTerminal("array"),
+                new Terminal("["),
                 new OptionMacro(
                     new NonTerminal("elements")
                 ),
-                new Terminal(TokenType.Punctuation, "]")
+                new Terminal("]")
             ),
 
             // elements:
             new ProductionRule(
-                "elements",
+                new NonTerminal("elements"),
                 new NonTerminal("value"),
                 new RepetitionMacro(
-                    new Terminal(TokenType.Punctuation, ","),
+                    new Terminal(","),
                     new NonTerminal("value")
                 )
             ),
 
             // value:
             new ProductionRule(
-                "value",
-                new Terminal(TokenType.String),
-                new AlternativeMacro(),
+                new NonTerminal("value"),
+                new Terminal("string"),
+                new PipeMacro(),
                 new NonTerminal("number"),
-                new AlternativeMacro(),
+                new PipeMacro(),
                 new NonTerminal("object"),
-                new AlternativeMacro(),
+                new PipeMacro(),
                 new NonTerminal("array"),
-                new AlternativeMacro(),
-                new Terminal(TokenType.Identifier, "true"),
-                new AlternativeMacro(),
-                new Terminal(TokenType.Identifier, "false"),
-                new AlternativeMacro(),
-                new Terminal(TokenType.Identifier, "null")
+                new PipeMacro(),
+                new Terminal("true"),
+                new PipeMacro(),
+                new Terminal("false"),
+                new PipeMacro(),
+                new Terminal("null")
             ),
 
             // number:
             new ProductionRule(
-                "number",
-                new Terminal(TokenType.Integer),
-                new AlternativeMacro(),
-                new Terminal(TokenType.Float),
-                new AlternativeMacro(),
-                new Terminal(TokenType.Hexadecimal)
+                new NonTerminal("number"),
+                new Terminal("int"),
+                new PipeMacro(),
+                new Terminal("float"),
+                new PipeMacro(),
+                new Terminal("hex")
             )
         };
     }
 
-    private static NonTerminal GetStart()
-    {
-        return new NonTerminal("json");
-    }
 }

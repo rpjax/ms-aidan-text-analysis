@@ -12,8 +12,6 @@ public class LR1Stack
         Stack = new Stack<object>();
     }
 
-    public int Count => Stack.Count;
-
     public override string ToString()
     {
         return string.Join(" ", Stack.Reverse().Select(x => x.ToString()));
@@ -34,23 +32,6 @@ public class LR1Stack
         }
 
         return -1;
-    }
-
-    public NonTerminal? PeekSymbol()
-    {
-        if (Stack.Count == 0)
-        {
-            throw new InvalidOperationException("The stack is empty.");
-        }
-
-        var state = Stack.Peek();
-
-        if (state is NonTerminal nonTerminal)
-        {
-            return nonTerminal;
-        }
-
-        return null;
     }
 
     public void PushState(int state)

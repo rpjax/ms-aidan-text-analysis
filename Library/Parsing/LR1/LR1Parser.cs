@@ -5,32 +5,38 @@ using Aidan.TextAnalysis.Parsing.LR1.Components;
 using Aidan.TextAnalysis.Tokenization;
 using System.Runtime.CompilerServices;
 
-namespace Aidan.TextAnalysis.Parsing;
+namespace Aidan.TextAnalysis.Parsing.LR1;
 
 /// <summary>
 /// Represents a LR(1) parser. It is capable of parsing text based on a given grammar.
 /// </summary>
 public class LR1Parser
 {
-    private static readonly TokenType[] DefaultIgnoreSet = new TokenType[]
+    private static readonly string[] DefaultIgnoreSet = new string[]
     {
-        TokenType.Comment
+        "comment"
     };
 
     private Grammar Grammar { get; }
-    private LR1ParsingTable ParsingTable { get; }
-    private TokenType[]? TokenIgnoreSet { get; }
+    private IStringLexer Lexer { get; }
+    private ILR1ParserTable Table { get; }
+    private string[] IgnoredTokenTypes { get; }
 
     /// <summary>
     /// Creates a new instance of <see cref="LR1Parser"/>. It automatically transforms the grammar to LR(1) and creates a parsing table.
     /// </summary>
     /// <param name="grammar"> The grammar to parse. </param>
-    /// <param name="tokenIgnoreSet"> The set of tokens to ignore. </param>
-    public LR1Parser(Grammar grammar, TokenType[]? tokenIgnoreSet = null)
+    /// <param name="lexer"> The lexer to tokenize the input text. </param>
+    /// <param name="ignoredTokenTypes"> The set of token types to ignore. </param>
+    public LR1Parser(
+        Grammar grammar, 
+        IStringLexer lexer, 
+        string[]? ignoredTokenTypes = null)
     {
-        Grammar = grammar.AutoTransformLR1();
-        ParsingTable = LR1ParsingTable.Create(Grammar);
-        TokenIgnoreSet = tokenIgnoreSet ?? DefaultIgnoreSet;
+        Grammar = grammar;
+        Lexer = lexer;
+        Table = LR1ParserTable.Create(Grammar);
+        IgnoredTokenTypes = ignoredTokenTypes ?? DefaultIgnoreSet;
     }
 
     /// <summary>
@@ -40,22 +46,17 @@ public class LR1Parser
     /// <returns></returns>
     public CstRootNode Parse(string text)
     {
-        using var inputStream = new InputStream(
-            input: text,
-            tokenizer: Tokenizer.Instance,
-            ignoreSet: TokenIgnoreSet
-        );
-
-        var stack = new LR1Stack(
-            //useDebug: false
-        );
+        var tokens = Lexer.Tokenize(text);
+            
+        using var inputStream = new LR1InputStream(tokens);
+            
+        var stack = new LR1ParserStack();
 
         var cstBuilder = new CstBuilder(
             includeEpsilons: false
         );
 
-        var context = new LR1Context(
-            parsingTable: ParsingTable,
+        var context = new LR1ParserContext(
             inputStream: inputStream,
             stack: stack,
             cstBuilder: cstBuilder
@@ -85,26 +86,16 @@ public class LR1Parser
     /// <param name="context"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private LR1Action GetNextAction(LR1Context context)
+    private LR1Action GetNextAction(LR1ParserContext context)
     {
-        var currentState = context.Stack.PeekState();
-        var lookahead = context.InputStream.LookaheadToken;
+        var currentState = context.Stack.GetCurrentState();
+        var lookahead = context.InputStream.GetLookaheadSymbol();
 
-        if (currentState == -1)
-        {
-            throw new Exception("Invalid state.");
-        }
-
-        if (lookahead is null)
-        {
-            throw context.UnexpectedEndOfTokens();
-        }
-
-        var action = ParsingTable.Lookup(currentState, lookahead);
+        var action = Table.Lookup(currentState, lookahead);
 
         if (action is null)
         {
-            throw context.SyntaxException(currentState, lookahead);
+            throw new Exception();
         }
 
         return action;
@@ -117,7 +108,7 @@ public class LR1Parser
     /// <param name="action"></param>
     /// <exception cref="InvalidOperationException"></exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ExecuteAction(LR1Context context, LR1Action action)
+    private void ExecuteAction(LR1ParserContext context, LR1Action action)
     {
         switch (action.Type)
         {
@@ -148,19 +139,17 @@ public class LR1Parser
     /// <param name="context"></param>
     /// <param name="action"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Shift(LR1Context context, LR1ShiftAction action)
+    private void Shift(LR1ParserContext context, LR1ShiftAction action)
     {
-        var token = context.InputStream.LookaheadToken;
+        var lookahead = context.InputStream.GetLookaheadSymbol();
+        var token = context.InputStream.GetLookaheadToken();
 
-        if (token is null)
-        {
-            throw context.UnexpectedEndOfTokens();
-        }
-
-        context.Stack.PushToken(token);
+        /* handles the shift action */
+        context.Stack.PushSymbol(lookahead);
         context.Stack.PushState(action.NextState);
+        context.InputStream.Advance();
+        /* add leaf to CST */
         context.CstBuilder.CreateLeaf(token);
-        context.InputStream.Consume();
     }
 
     /// <summary>
@@ -169,17 +158,17 @@ public class LR1Parser
     /// <param name="context"></param>
     /// <param name="reduceAction"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Reduce(LR1Context context, LR1ReduceAction reduceAction)
+    private void Reduce(LR1ParserContext context, LR1ReduceAction reduceAction)
     {
-        ref var production = ref ParsingTable.GetProduction(reduceAction.ProductionIndex);
+        var production = Table.LookupProduction(reduceAction.ProductionIndex);
 
-        if (production.IsEpsilonProduction)
+        if (production.IsEpsilonProduction())
         {
-            EpsilonReduce(context, ref production);
+            EpsilonReduce(context, production);
         }
         else
         {
-            NormalReduce(context, ref production);
+            NormalReduce(context, production);
         }
     }
 
@@ -189,30 +178,32 @@ public class LR1Parser
     /// <param name="context"></param>
     /// <param name="production"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void NormalReduce(LR1Context context, ref ProductionRule production)
+    private void NormalReduce(LR1ParserContext context, IProductionRule production)
     {
-        for (int i = 0; i < production.Body.Length * 2; i++)
+        for (int i = 0; i < production.Body.Length; i++)
         {
-            context.Stack.Pop();
+            context.Stack.PopState();
+            context.Stack.PopSymbol();
         }
 
         var nonTerminal = production.Head;
-        var currentState = context.Stack.PeekState();
+        var currentState = context.Stack.GetCurrentState();
 
-        if (currentState == -1)
-        {
-            throw new Exception("Invalid state.");
-        }
+        context.Stack.PushSymbol(nonTerminal);
 
-        context.Stack.PushNonTerminal(nonTerminal);
+        var action = Table.Lookup(currentState, nonTerminal);
 
-        var gotoAction = ParsingTable.LookupGoto(currentState, nonTerminal);
-
-        if (gotoAction is null)
+        if (action is null)
         {
             throw new InvalidOperationException();
         }
 
+        if (action.Type != LR1ActionType.Goto)
+        {
+            throw new InvalidOperationException();
+        }
+
+        var gotoAction = action.AsGoto();
         var nextState = gotoAction.NextState;
 
         // The state 1 is always the accept state due to the way the LR(1) parser is constructed.
@@ -224,11 +215,11 @@ public class LR1Parser
 
         if (isAcceptState)
         {
-            context.CstBuilder.CreateRoot(ref production);
+            context.CstBuilder.CreateRoot(production);
         }
         else
         {
-            context.CstBuilder.CreateInternal(ref production);
+            context.CstBuilder.CreateInternal(production);
         }
     }
 
@@ -238,27 +229,30 @@ public class LR1Parser
     /// <param name="context"></param>
     /// <param name="production"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EpsilonReduce(LR1Context context, ref ProductionRule production)
+    private void EpsilonReduce(LR1ParserContext context, IProductionRule production)
     {
         var nonTerminal = production.Head;
-        var currentState = context.Stack.PeekState();
+        var currentState = context.Stack.GetCurrentState();
 
-        if(currentState == -1)
-        {
-            throw new Exception("Invalid state.");
-        }
+        context.Stack.PushSymbol(nonTerminal);
 
-        context.Stack.PushNonTerminal(nonTerminal);
+        var action = Table.Lookup(currentState, nonTerminal);
 
-        var gotoAction = ParsingTable.LookupGoto(currentState, nonTerminal);
-
-        if (gotoAction is null)
+        if (action is null)
         {
             throw new InvalidOperationException();
         }
 
+        if (action.Type != LR1ActionType.Goto)
+        {
+            throw new InvalidOperationException();
+        }
+
+        var gotoAction = action.AsGoto();
+        var nextState = gotoAction.NextState;
+
         context.Stack.PushState(gotoAction.NextState);
-        context.CstBuilder.CreateEpsilonInternal(ref production);
+        context.CstBuilder.CreateEpsilonInternal(production);
     }
 
     /// <summary>
@@ -267,7 +261,7 @@ public class LR1Parser
     /// <param name="context"></param>
     /// <param name="gotoAction"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Goto(LR1Context context, LR1GotoAction gotoAction)
+    private void Goto(LR1ParserContext context, LR1GotoAction gotoAction)
     {
         context.Stack.PushState(gotoAction.NextState);
     }
@@ -278,9 +272,9 @@ public class LR1Parser
     /// <param name="context"></param>
     /// <param name="action"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Accept(LR1Context context, LR1AcceptAction action)
+    private void Accept(LR1ParserContext context, LR1AcceptAction action)
     {
-        context.Stack.Pop();
+        context.Stack.PopState();
     }
 
 }

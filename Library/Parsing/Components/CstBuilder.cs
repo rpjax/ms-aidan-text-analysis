@@ -1,4 +1,5 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Tokenization;
 using System.Collections;
 using System.Runtime.CompilerServices;
@@ -7,9 +8,9 @@ namespace Aidan.TextAnalysis.Parsing.Components;
 
 internal class TokenCollection : IEnumerable<Token>
 {
-    internal Token[] Tokens { get; }
+    internal IToken[] Tokens { get; }
 
-    public TokenCollection(params Token[] tokens)
+    public TokenCollection(params IToken[] tokens)
     {
         Tokens = tokens;
     }
@@ -63,12 +64,16 @@ public class CstBuilder
     /// <summary>
     /// Creates a leaf node in the accumulator.
     /// </summary>
-    /// <param name="terminal">The terminal collection to add.</param>
+    /// <param name="token">The terminal collection to add.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CreateLeaf(Token token)
+    public void CreateLeaf(IToken token)
     {
-        TokenAccumulator.Add(new TokenCollection(token));
-        NodeAccumulator.Add(new CstLeafNode(token: token, metadata: GetLeafMetadata(token)));
+        var tokenCollection = new TokenCollection(token);
+        var leafMetadata = GetLeafMetadata(token);
+        var leaf = new CstLeafNode(token: token, metadata: leafMetadata);
+
+        TokenAccumulator.Add(tokenCollection);
+        NodeAccumulator.Add(leaf);
     }
 
     /// <summary>
@@ -76,9 +81,9 @@ public class CstBuilder
     /// </summary>
     /// <param name="production"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CreateInternal(ref ProductionRule production)
+    public void CreateInternal(IProductionRule production)
     {
-        var length = production.Length;
+        var length = production.Body.Length;
 
         var children = PopNodes(length);
         var tokens = ReduceTokens(length);
@@ -95,7 +100,7 @@ public class CstBuilder
             name: production.Head.Name,
             children: children,
             metadata: metadata,
-            isEpsilon: production.IsEpsilonProduction
+            isEpsilon: production.IsEpsilonProduction()
         );
 
         NodeAccumulator.Add(node);
@@ -104,16 +109,16 @@ public class CstBuilder
     /// <summary>
     /// Creates an epsilon internal node in the accumulator.
     /// </summary>
-    /// <param name="nonTerminal">The non-terminal associated with the epsilon collection.</param>
+    /// <param name="production">The non-terminal associated with the epsilon collection.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CreateEpsilonInternal(ref ProductionRule production)
+    public void CreateEpsilonInternal(IProductionRule production)
     {
-        if (!production.IsEpsilonProduction)
+        if (!production.IsEpsilonProduction())
         {
             throw new InvalidOperationException("Production rule is not an epsilon production.");
         }
 
-        TokenAccumulator.Add(new TokenCollection(Array.Empty<Token>()));
+        TokenAccumulator.Add(new TokenCollection(Array.Empty<IToken>()));
 
         // Adds the epsilon collection to the collection accumulator.
         // The epsilon collection has no children and is marked as an epsilon collection.
@@ -140,9 +145,9 @@ public class CstBuilder
     /// </summary>
     /// <param name="production"></param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CreateRoot(ref ProductionRule production)
+    public void CreateRoot(IProductionRule production)
     {
-        var length = production.Length;
+        var length = production.Body.Length;
 
         var children = PopNodes(length);
         var tokens = ReduceTokens(length);
@@ -231,7 +236,7 @@ public class CstBuilder
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private CstNodeMetadata GetLeafMetadata(Token token)
+    private CstNodeMetadata GetLeafMetadata(IToken token)
     {
         var position = new SyntaxElementPosition(
             start: new LexicalCoordinate(

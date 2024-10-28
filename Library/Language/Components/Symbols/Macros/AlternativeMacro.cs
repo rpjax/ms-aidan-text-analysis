@@ -1,68 +1,75 @@
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
-/// Represents the alternative macro symbol.
+/// Represents an expanded alternative macro. It is used to represent a set of alternatives in a grammar.
 /// </summary>
-public interface IAlternativeMacro
+public class AlternativeMacro : IMacroSymbol
 {
-}
+    /// <summary>
+    /// Gets the type of the symbol.
+    /// </summary>
+    public SymbolType Type { get; }
 
-/// <summary>
-/// Represents the alternative macro symbol.
-/// </summary>
-public class AlternativeMacro : MacroSymbol
-{
-    public AlternativeMacro()
+    /// <summary>
+    /// Gets the name of the symbol.
+    /// </summary>
+    public string Name { get; }
+
+    /// <summary>
+    /// Gets the type of the macro.
+    /// </summary>
+    public MacroType MacroType { get; }
+
+    /// <summary>
+    /// Gets the alternatives represented by this macro.
+    /// </summary>
+    public ISentence[] Alternatives { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AlternativeMacro"/> class.
+    /// </summary>
+    /// <param name="alternatives">The alternatives represented by this macro.</param>
+    /// <exception cref="ArgumentException">Thrown when no alternatives are provided.</exception>
+    public AlternativeMacro(params ISentence[] alternatives)
     {
+        Type = SymbolType.Macro;
+        Name = "Alternative Macro";
+        MacroType = MacroType.Alternative;
+        Alternatives = alternatives;
 
-    }
-
-    public override MacroType MacroType => MacroType.Alternative;
-
-    public override int GetHashCode()
-    {
-        unchecked
+        if (alternatives.Length == 0)
         {
-            int hash = (int)2166136261;
-
-            hash = (hash * 16777619) ^ MacroType.GetHashCode();
-
-            return hash;
+            throw new ArgumentException("The alternation macro must contain at least one alternative.");
         }
     }
 
-    public override bool Equals(object? obj)
+    /// <summary>
+    /// Determines whether the specified symbol is equal to the current symbol.
+    /// </summary>
+    /// <param name="other">The symbol to compare with the current symbol.</param>
+    /// <returns><c>true</c> if the specified symbol is equal to the current symbol; otherwise, <c>false</c>.</returns>
+    public bool Equals(ISymbol? other)
     {
-        return obj is AlternativeMacro;
+        return other is AlternativeMacro macro
+            && macro.Alternatives.SequenceEqual(Alternatives);
     }
 
-    public override bool Equals(Symbol? other)
+    /// <summary>
+    /// Expands the macro into its alternatives.
+    /// </summary>
+    /// <param name="nonTerminal">The non-terminal symbol to expand.</param>
+    /// <returns>The alternatives represented by this macro.</returns>
+    public IEnumerable<ISentence> Expand(INonTerminal nonTerminal)
     {
-        return other is AlternativeMacro;
+        return Alternatives;
     }
 
-    public override bool Equals(ISymbol? other)
-    {
-        return other is IAlternativeMacro;
-    }
-
-    public override IEnumerable<Sentence> Expand(NonTerminal nonTerminal)
-    {
-        throw new InvalidOperationException();
-    }
-
-    public override IEnumerable<Sentence> Expand(INonTerminal nonTerminal)
-    {
-        throw new InvalidOperationException();
-    }
-
-    public override string ToNotation(NotationType notation)
-    {
-        throw new InvalidOperationException();
-    }
-
+    /// <summary>
+    /// Returns a string that represents the current symbol.
+    /// </summary>
+    /// <returns>A string that represents the current symbol.</returns>
     public override string ToString()
     {
-        throw new InvalidOperationException();
+        return string.Join(" | ", Alternatives.Select(x => x.ToString()));
     }
 }

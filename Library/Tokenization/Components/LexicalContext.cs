@@ -1,5 +1,5 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Tokenization.Tools;
+using Aidan.TextAnalysis.Tokenization.Helpers;
 using System.Runtime.CompilerServices;
 using System.Text;
 

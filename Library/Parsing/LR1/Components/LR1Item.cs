@@ -8,13 +8,12 @@ namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 /// Represents an LR(1) item.
 /// </summary>
 public class LR1Item :
-    IEquatable<LR1Item>,
-    IEqualityComparer<LR1Item>
+    IEquatable<LR1Item>
 {
     /// <summary>
     /// Gets the production rule of the LR(1) item.
     /// </summary>
-    public ProductionRule Production { get; }
+    public IProductionRule Production { get; }
 
     /// <summary>
     /// Gets the position of the LR(1) item.
@@ -24,7 +23,7 @@ public class LR1Item :
     /// <summary>
     /// Gets the lookaheads of the LR(1) item.
     /// </summary>
-    public Terminal[] Lookaheads { get; }
+    public ITerminal[] Lookaheads { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LR1Item"/> class.
@@ -32,7 +31,7 @@ public class LR1Item :
     /// <param name="production">The production rule.</param>
     /// <param name="position">The position in the production rule.</param>
     /// <param name="lookaheads">The lookaheads for the item.</param>
-    public LR1Item(ProductionRule production, int position, params Terminal[] lookaheads)
+    public LR1Item(IProductionRule production, int position, params ITerminal[] lookaheads)
     {
         Production = production;
         Position = position;
@@ -64,7 +63,7 @@ public class LR1Item :
     /// <summary>
     /// Gets the symbol at the current position in the production rule.
     /// </summary>
-    public Symbol? Symbol => Position < Production.Body.Length
+    public ISymbol? Symbol => Position < Production.Body.Length
         ? Production.Body[Position]
         : null;
 
@@ -197,7 +196,7 @@ public class LR1Item :
     /// Gets the alpha part of the production rule.
     /// </summary>
     /// <returns>The alpha part of the production rule.</returns>
-    public Sentence GetAlpha()
+    public ISentence GetAlpha()
     {
         if (Position == 0)
         {
@@ -211,7 +210,7 @@ public class LR1Item :
     /// Gets the beta part of the production rule.
     /// </summary>
     /// <returns>The beta part of the production rule.</returns>
-    public Sentence GetBeta()
+    public ISentence GetBeta()
     {
         var start = Position + 1;
 
@@ -243,11 +242,11 @@ public class LR1Item :
     /// </summary>
     /// <param name="lookaheads">The lookaheads to check.</param>
     /// <returns><c>true</c> if the item contains the specified lookaheads; otherwise, <c>false</c>.</returns>
-    public bool ContainsLookaheads(Terminal[] lookaheads)
+    public bool ContainsLookaheads(ITerminal[] lookaheads)
     {
         foreach (var lookahead in lookaheads)
         {
-            if (!Lookaheads.Any(x => x == lookahead))
+            if (!Lookaheads.Any(x => x.Equals(lookahead)))
             {
                 return false;
             }

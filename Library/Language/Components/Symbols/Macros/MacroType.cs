@@ -95,10 +95,10 @@ public enum MacroType
     /// <summary>
     /// Represents a pipe macro. 
     /// </summary>
-    Alternative,
+    Pipe,
 
     /// <summary>
     /// Represents an expanded alternative macro.
     /// </summary>
-    ExpandedAlternative
+    Alternative
 }

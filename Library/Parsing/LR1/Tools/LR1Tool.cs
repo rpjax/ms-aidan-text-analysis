@@ -13,20 +13,18 @@ public class LR1Tool
     /// <summary>
     /// Computes the LR(1) states for a given production set.
     /// </summary>
-    /// <param name="set">The production set to compute states for.</param>
+    /// <param name="grammar">The production set to compute states for.</param>
     /// <returns>An array of LR(1) states.</returns>
-    public static LR1State[] ComputeStates(
-        ProductionSet set)
+    public static LR1State[] ComputeStates(IGrammar grammar)
     {
-        set.EnsureNoMacros();
-        set.EnsureAugmented();
+        grammar.EnsureNoMacros();
 
-        var initialState = ComputeInitialState(set);
+        var initialState = ComputeInitialState(grammar);
 
         var states = new List<LR1State>
-                        {
-                            initialState
-                        };
+        {
+            initialState
+        };
 
         var proccessedStates = new List<LR1State>();
 
@@ -50,7 +48,7 @@ public class LR1Tool
                     .ToArray();
 
                 var nextStates = ComputeNextStates(
-                    set: set,
+                    grammar: grammar,
                     state: state,
                     kernelBlacklist: kernelBlacklist
                 );
@@ -81,23 +79,34 @@ public class LR1Tool
     /// <summary>
     /// Computes the LR(1) state collection for a given production set.
     /// </summary>
-    /// <param name="set">The production set to compute the state collection for.</param>
+    /// <param name="grammar">The production set to compute the state collection for.</param>
     /// <returns>An LR(1) state collection.</returns>
-    public static LR1StateCollection ComputeStatesCollection(
-        ProductionSet set)
+    public static LR1StateCollection ComputeStatesCollection(IGrammar grammar)
     {
-        return new LR1StateCollection(ComputeStates(set));
+        return new LR1StateCollection(ComputeStates(grammar));
     }
 
     /// <summary>
     /// Computes the initial state for a given production set.
     /// </summary>
-    /// <param name="set">The production set to compute the initial state for.</param>
+    /// <param name="grammar">The production set to compute the initial state for.</param>
     /// <returns>The initial LR(1) state.</returns>
-    private static LR1State ComputeInitialState(
-        ProductionSet set)
+    private static LR1State ComputeInitialState(IGrammar grammar)
     {
-        var augmentedProduction = set.GetAugmentedStartProduction();
+        var startSymbol = grammar.StartSymbol;
+        var startSymbolProductions = grammar.GetProductionRulesForNonTerminal(startSymbol);
+
+        if (startSymbolProductions.Length == 0)
+        {
+            throw new InvalidOperationException($"The start symbol '{startSymbol}' does not have any productions.");
+        }
+
+        if (startSymbolProductions.Length > 1)
+        {
+            throw new InvalidOperationException($"The start symbol '{startSymbol}' has more than one production.");
+        }
+
+        var augmentedProduction = startSymbolProductions.First();
 
         var initialItemProduction = new ProductionRule(
             head: augmentedProduction.Head,
@@ -113,7 +122,7 @@ public class LR1Tool
         var kernel = new LR1Kernel(kernelItem);
 
         var closure = ComputeKernelClosure(
-            set: set,
+            grammar: grammar,
             kernel: kernel
         );
 
@@ -131,7 +140,7 @@ public class LR1Tool
     /// <param name="kernelBlacklist">The kernel blacklist to prevent duplicate computations.</param>
     /// <returns>An array of the next LR(1) states.</returns>
     private static LR1State[] ComputeNextStates(
-        ProductionSet set,
+        IGrammar grammar,
         LR1State state,
         LR1Kernel[] kernelBlacklist)
     {
@@ -147,7 +156,7 @@ public class LR1Tool
             var nextStateKernel = entry.Value;
 
             var nextStateClosure = ComputeKernelClosure(
-                set: set,
+                grammar: grammar,
                 kernel: nextStateKernel
             );
 
@@ -165,11 +174,11 @@ public class LR1Tool
     /// <summary>
     /// Computes the closure of an LR(1) item.
     /// </summary>
-    /// <param name="set">The production set to compute the closure for.</param>
+    /// <param name="grammar">The production set to compute the closure for.</param>
     /// <param name="item">The LR(1) item to compute the closure for.</param>
     /// <returns>The closure of the LR(1) item.</returns>
     private static LR1Closure ComputeItemClosure(
-        ProductionSet set,
+        IGrammar grammar,
         LR1Item item)
     {
         var items = new List<LR1Item>();
@@ -181,8 +190,7 @@ public class LR1Tool
             return new LR1Closure(items.ToArray());
         }
 
-        var productions = set.Lookup(nonTerminal)
-            .ToArray();
+        var productions = grammar.GetProductionRulesForNonTerminal(nonTerminal);
 
         if (productions.Length == 0)
         {
@@ -192,7 +200,7 @@ public class LR1Tool
         foreach (var production in productions)
         {
             var lookaheads = ComputeLookaheads(
-                set: set,
+                grammar: grammar,
                 beta: item.GetBeta(),
                 originalLookaheads: item.Lookaheads
             );
@@ -212,11 +220,11 @@ public class LR1Tool
     /// <summary>
     /// Computes the closure of an LR(1) kernel.
     /// </summary>
-    /// <param name="set">The production set to compute the closure for.</param>
+    /// <param name="grammar">The production set to compute the closure for.</param>
     /// <param name="kernel">The LR(1) kernel to compute the closure for.</param>
     /// <returns>The closure of the LR(1) kernel.</returns>
     private static LR1Closure ComputeKernelClosure(
-        ProductionSet set,
+        IGrammar grammar,
         LR1Kernel kernel)
     {
         var items = new List<LR1Item>(kernel);
@@ -228,7 +236,7 @@ public class LR1Tool
             foreach (var item in items.ToArray())
             {
                 var closure = ComputeItemClosure(
-                    set: set,
+                    grammar: grammar,
                     item: item
                 );
 
@@ -289,17 +297,17 @@ public class LR1Tool
     /// <summary>
     /// Computes the lookaheads for a given beta sentence and original lookaheads.
     /// </summary>
-    /// <param name="set">The production set to compute the lookaheads for.</param>
+    /// <param name="grammar">The production set to compute the lookaheads for.</param>
     /// <param name="beta">The beta sentence.</param>
     /// <param name="originalLookaheads">The original lookaheads.</param>
     /// <returns>An array of computed lookaheads.</returns>
-    private static Terminal[] ComputeLookaheads(
-        ProductionSet set,
-        Sentence beta,
-        Terminal[] originalLookaheads)
+    private static ITerminal[] ComputeLookaheads(
+        IGrammar grammar,
+        ISentence beta,
+        ITerminal[] originalLookaheads)
     {
-        var stack = new Stack<Sentence>();
-        var lookaheads = new List<Terminal>();
+        var stack = new Stack<ISentence>();
+        var lookaheads = new List<ITerminal>();
 
         stack.Push(beta);
 
@@ -336,8 +344,8 @@ public class LR1Tool
                 throw new InvalidOperationException("The symbol is not a nonterminal.");
             }
 
-            var productions = set.Lookup(nonTerminal).ToArray();
-            var producesEpsilon = productions.Any(x => x.IsEpsilonProduction);
+            var productions = grammar.GetProductionRulesForNonTerminal(nonTerminal);
+            var producesEpsilon = productions.Any(x => x.IsEpsilonProduction());
 
             // S -> .A B c (beta is B c)
             // B -> b
@@ -345,9 +353,9 @@ public class LR1Tool
 
             foreach (var production in productions)
             {
-                if (production.IsEpsilonProduction)
+                if (production.IsEpsilonProduction())
                 {
-                    stack.Push(sentence.Skip(1).ToArray());
+                    stack.Push(new Sentence(sentence.Skip(1).ToArray()));
                     continue;
                 }
 
@@ -376,7 +384,7 @@ public class LR1Tool
     /// <param name="state">The current state.</param>
     /// <param name="kernelBlacklist">The kernel blacklist to prevent duplicate computations.</param>
     /// <returns>A dictionary mapping symbols to LR(1) kernels.</returns>
-    private static Dictionary<Symbol, LR1Kernel> ComputeGotoDictionary(
+    private static Dictionary<ISymbol, LR1Kernel> ComputeGotoDictionary(
         LR1State state,
         LR1Kernel[] kernelBlacklist)
     {
@@ -386,7 +394,7 @@ public class LR1Tool
             .GroupBy(item => item.Symbol!)
             .ToArray();
 
-        var dictionary = new Dictionary<Symbol, LR1Kernel>();
+        var dictionary = new Dictionary<ISymbol, LR1Kernel>();
 
         foreach (var entry in symbolGroups)
         {

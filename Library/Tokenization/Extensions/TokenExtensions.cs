@@ -1,4 +1,5 @@
-﻿using Aidan.TextAnalysis.Tokenization.Tools;
+﻿using Aidan.TextAnalysis.Helpers;
+using Aidan.TextAnalysis.Tokenization.Helpers;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
@@ -32,6 +33,6 @@ public static class TokenExtensions
             ? $"{TokenTypeHelper.ToString(token.Type)}{token.Value}"
             : TokenTypeHelper.ToString(token.Type);
 
-        return TokenHashHelper.ComputeFnvHash(value);
+        return HashHelper.ComputeFnvHash(value);
     }
 }

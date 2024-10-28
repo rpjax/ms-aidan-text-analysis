@@ -8,8 +8,8 @@ namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 /// Defines a class that represents an LR(1) state.
 /// </summary>
 public class LR1State :
-   IEquatable<LR1State>,
-   IEnumerable<LR1Item>
+    IEquatable<LR1State>,
+    IEnumerable<LR1Item>
 {
     /// <summary>
     /// Gets the kernel of the LR(1) state.
@@ -117,24 +117,15 @@ public class LR1State :
     /// <summary>
     /// Determines whether the LR(1) state is an accepting state.
     /// </summary>
-    /// <param name="set">The production set to check against.</param>
     /// <returns><c>true</c> if the state is an accepting state; otherwise, <c>false</c>.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the production set does not have an augmented production.</exception>
-    public bool IsAcceptingState(ProductionSet set)
+    public bool IsAcceptingState()
     {
-        if (!IsFinalState)
-        {
-            return false;
-        }
-
-        var augmentedProduction = set.TryGetAugmentedStartProduction();
-
-        if (augmentedProduction is null)
-        {
-            throw new InvalidOperationException("The production set does not have an augmented production.");
-        }
-
-        return Kernel[0].Production == augmentedProduction;
+        return true
+            && Kernel.Length == 1
+            && Kernel[0].GetBeta().Length == 0
+            && Kernel[0].Lookaheads.Length == 1
+            && Kernel[0].Lookaheads[0] == Eoi.Instance;
     }
 
     /// <summary>

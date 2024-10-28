@@ -278,14 +278,14 @@ public class CstLeafNode : CstNode
     /// <summary>
     /// Gets the token associated with the leaf node.
     /// </summary>
-    public Token Token { get; }
+    public IToken Token { get; }
 
     /// <summary>
     /// Creates a new instance of the <see cref="CstLeafNode"/> class.
     /// </summary>
     /// <param name="token"></param>
     /// <param name="metadata"></param>
-    public CstLeafNode(Token token, CstNodeMetadata metadata) : base(null)
+    public CstLeafNode(IToken token, CstNodeMetadata metadata) : base(null)
     {
         Token = token;
         Metadata = metadata;

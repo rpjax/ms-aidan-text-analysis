@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Aidan.TextAnalysis.Language.Transformations;
 
 namespace Aidan.TextAnalysis.Language.Components;
 
@@ -13,65 +12,91 @@ namespace Aidan.TextAnalysis.Language.Components;
 /// - P is a set of production rules. <br/>
 /// - S is the start symbol. <br/>
 /// </remarks>
-public class Grammar
+public interface IGrammar
 {
-    private ProductionSet InternalOriginalSet { get; }
-    private ProductionSet InternalWorkingSet { get; set; }
+    /// <summary>
+    /// Gets the list of non-terminal symbols.
+    /// </summary>
+    IReadOnlyList<INonTerminal> NonTerminals { get; }
 
-    public Grammar(NonTerminal start, IEnumerable<ProductionRule> productions)
+    /// <summary>
+    /// Gets the list of terminal symbols.
+    /// </summary>
+    IReadOnlyList<ITerminal> Terminals { get; }
+
+    /// <summary>
+    /// Gets the list of production rules.
+    /// </summary>
+    IReadOnlyList<IProductionRule> ProductionRules { get; }
+
+    /// <summary>
+    /// Gets the start symbol.
+    /// </summary>
+    INonTerminal StartSymbol { get; }
+}
+
+/// <summary>
+/// Represents a context-free grammar.
+/// </summary>
+public class Grammar : IGrammar
+{
+    /// <summary>
+    /// Gets the list of non-terminal symbols.
+    /// </summary>
+    public IReadOnlyList<INonTerminal> NonTerminals { get; private set; }
+
+    /// <summary>
+    /// Gets the list of terminal symbols.
+    /// </summary>
+    public IReadOnlyList<ITerminal> Terminals { get; private set; }
+
+    /// <summary>
+    /// Gets the list of production rules.
+    /// </summary>
+    public IReadOnlyList<IProductionRule> ProductionRules { get; private set; }
+
+    /// <summary>
+    /// Gets the start symbol.
+    /// </summary>
+    public INonTerminal StartSymbol { get; private set; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Grammar"/> class.
+    /// </summary>
+    /// <param name="start">The start symbol.</param>
+    /// <param name="productions">The collection of production rules.</param>
+    public Grammar(INonTerminal start, IEnumerable<IProductionRule> productions)
     {
-        InternalOriginalSet = new ProductionSet(start, productions);
-        InternalWorkingSet = new ProductionSet(start, productions);
+        NonTerminals = productions
+            .Select(x => x.Head)
+            .Distinct(new NonTerminalEqualityComparer())
+            .ToArray();
+        Terminals = productions
+            .SelectMany(x => x.Body)
+            .OfType<ITerminal>()
+            .Distinct(new TerminalEqualityComparer())
+            .ToArray();
+
+        ProductionRules = productions.ToArray();
+        StartSymbol = start;
     }
 
-    public Grammar(ProductionSet set)
-    {
-        InternalOriginalSet = set.Copy();
-        InternalWorkingSet = set.Copy();
-    }
-
-    public NonTerminal Start => InternalWorkingSet.Start;
-    public ProductionSet Productions => InternalWorkingSet;
-    public SetTransformationCollection Transformations => InternalWorkingSet.Transformations;
-
+    /// <summary>
+    /// Returns a string that represents the current grammar.
+    /// </summary>
+    /// <returns>A string that represents the current grammar.</returns>
     public override string ToString()
     {
         var builder = new StringBuilder();
 
-        builder.AppendLine($"Start Symbol: {Start}");
+        builder.AppendLine($"Start Symbol: {StartSymbol}");
         builder.AppendLine("Productions:");
 
-        foreach (var production in Productions)
+        foreach (var production in ProductionRules)
         {
             builder.AppendLine(production.ToString());
         }
 
         return builder.ToString();
     }
-
-    public IEnumerable<NonTerminal> GetNonTerminals()
-    {
-        return Productions
-            .Select(x => x.Head)
-            .Distinct();
-    }
-
-    public IEnumerable<Terminal> GetTerminals()
-    {
-        return Productions
-            .SelectMany(x => x.Body)
-            .OfType<Terminal>()
-            .Distinct();
-    }
-
-    public Grammar GetOriginalGrammar()
-    {
-        return new Grammar(InternalOriginalSet);
-    }
-
-    public ProductionSet GetOriginalProductionSet()
-    {
-        return InternalOriginalSet;
-    }
-
 }

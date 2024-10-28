@@ -1,60 +1,73 @@
-using Aidan.TextAnalysis.Language.Extensions;
-
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
 /// Represents an option macro. It is analoguous to EBNF's "[ ]" operator.
 /// </summary>
-public interface IOptionMacro : ISentenceMacro
+public class OptionMacro : IMacroSymbol
 {
-}
+    /// <summary>
+    /// Gets the type of the symbol.
+    /// </summary>
+    public SymbolType Type { get; }
 
-/// <summary>
-/// Represents an option macro. It is analoguous to EBNF's "[ ]" operator.
-/// </summary>
-public class OptionMacro : SentenceMacro, IOptionMacro
-{
-    public override MacroType MacroType => MacroType.Option;
+    /// <summary>
+    /// Gets the name of the macro.
+    /// </summary>
+    public string Name { get; }
 
-    public OptionMacro(params Symbol[] symbols) : base(symbols)
+    /// <summary>
+    /// Gets the type of the macro.
+    /// </summary>
+    public MacroType MacroType { get; }
+
+    /// <summary>
+    /// Gets the optional sentence represented by this macro.
+    /// </summary>
+    public ISentence OptionalSentence { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OptionMacro"/> class with the specified symbols.
+    /// </summary>
+    /// <param name="symbols">The symbols to be included in the optional sentence.</param>
+    public OptionMacro(params ISymbol[] symbols)
     {
+        var sentence = new Sentence(symbols);
+
+        Type = SymbolType.Macro;
+        Name = sentence.ToString();
+        MacroType = MacroType.Option;
+        OptionalSentence = sentence;
     }
 
-    public override IEnumerable<Sentence> Expand(NonTerminal nonTerminal)
+    /// <summary>
+    /// Expands the option macro into a sequence of sentences.
+    /// </summary>
+    /// <param name="nonTerminal">The non-terminal symbol to expand.</param>
+    /// <returns>An enumerable collection of sentences.</returns>
+    public IEnumerable<ISentence> Expand(INonTerminal nonTerminal)
     {
-        yield return Sentence;
+        yield return OptionalSentence;
         yield return new Sentence(new Epsilon());
     }
 
-    public override IEnumerable<Sentence> Expand(INonTerminal nonTerminal)
-    {
-        yield return Sentence;
-        yield return new Sentence(new Epsilon());
-    }
-
-    public override string ToNotation(NotationType notation)
-    {
-        switch (notation)
-        {
-            case NotationType.Sentential:
-                return this.ToSententialNotation();
-
-            case NotationType.Bnf:
-                return this.ToBnfNotation();
-
-            case NotationType.Ebnf:
-                return this.ToEbnfNotation();
-
-            case NotationType.EbnfKleene:
-                return this.ToEbnfKleeneNotation();
-        }
-
-        throw new InvalidOperationException("Invalid notation type.");
-    }
-
+    /// <summary>
+    /// Returns a string that represents the current option macro.
+    /// </summary>
+    /// <returns>A string that represents the current option macro.</returns>
     public override string ToString()
     {
-        return ToNotation(NotationType.Sentential);
+        return $"[ {OptionalSentence.ToString()} ]";
     }
 
+    /// <summary>
+    /// Determines whether the specified symbol is equal to the current option macro.
+    /// </summary>
+    /// <param name="other">The symbol to compare with the current option macro.</param>
+    /// <returns>true if the specified symbol is equal to the current option macro; otherwise, false.</returns>
+    public bool Equals(ISymbol? other)
+    {
+        return other is OptionMacro macro
+            && macro.MacroType == MacroType
+            && macro.OptionalSentence.SequenceEqual(OptionalSentence);
+    }
 }
