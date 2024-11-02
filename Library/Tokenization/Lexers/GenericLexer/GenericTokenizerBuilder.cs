@@ -305,6 +305,74 @@ public class GenericTokenizerBuilder : IBuilder<TokenizerMachine>
 
     }
 
+    /* comments */
+
+    private void CStyleInlineComment(TokenizerDfaBuilder builder)
+    {
+        builder
+            .FromInitialState()
+            .OnCharacter('/')
+            .GoTo("comment_start")
+            ;
+
+        builder
+            .FromState("comment_start")
+            .OnCharacter('/')
+            .GoTo("comment_body")
+            ;
+
+        builder
+            .FromState("comment_body")
+            .OnAnyCharacterExcept('\n')
+            .Recurse()
+            ;
+
+        builder
+            .FromState("comment_body")
+            .OnCharacter('\n')
+            .Accept("comment")
+            ;
+    }
+
+    private void CSyleBlockComment(TokenizerDfaBuilder builder)
+    {
+        builder
+            .FromInitialState()
+            .OnCharacter('/')
+            .GoTo("block_comment_start")
+            ;
+
+        builder
+            .FromState("block_comment_start")
+            .OnCharacter('*')
+            .GoTo("block_comment_body")
+            ;
+
+        builder
+            .FromState("block_comment_body")
+            .OnAnyCharacterExcept('*')
+            .Recurse()
+            ;
+
+        builder
+            .FromState("block_comment_body")
+            .OnCharacter('*')
+            .GoTo("block_comment_end_star")
+            ;
+
+        builder
+            .FromState("block_comment_end_star")
+            .OnAnyCharacterExcept('/')
+            .GoTo("block_comment_body")
+            ;
+
+        builder
+            .FromState("block_comment_end_star")
+            .OnCharacter('/')
+            .Accept("block_comment")
+            ;
+    }
+
 }
 
 internal static class States

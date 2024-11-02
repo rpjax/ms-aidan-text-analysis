@@ -1,6 +1,7 @@
 ﻿using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Grammars;
 using Aidan.TextAnalysis.Parsing.LR1;
+using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.GenericLexer;
 using Aidan.TextAnalysis.Tokenization.StateMachine;
 using System.Globalization;
@@ -11,18 +12,76 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var genericDfa = new GenericTokenizerBuilder()
-            .Build()
-            ;
-
         var regexLexer = new RegexTokenizerBuilder()
             .Build()
             ;
 
-        var _tokens = regexLexer.Tokenize("^a.b*c[d-e](f|g){2,5}h\\^i\\$j\\*k\\+l\\?m\\{1,3\\}n[o-p]q\\|rs\\.t$\r\n")
-            .ToArray();
+        var grammarLexer = new GrammarTokenizerBuilder()
+            .Build()
+            ;
 
-        foreach (var token in _tokens)
+        var testRegex = "^a.b*c[d-e](f|g){2,5}h\\^i\\$j\\*k\\+l\\?m\\{1,3\\}n[o-p]q\\|rs\\.t$\r\n";
+        var testGrammar = @"
+/*
+	lexer stuff
+*/
+
+start
+	: json 
+	;
+
+json
+	: object
+	| array
+	;
+
+object
+	: '{' { members } '}' 
+	;
+
+members
+	: pair  { ',' members } 
+	;
+
+pair
+	: $string ':' value 
+	;
+
+array
+	: '[' [ elements ] ']'
+	;
+
+elements
+	: value { ',' value }
+	;
+
+value 
+	: number 
+	| object 
+	| array
+	| $string
+	| bool
+	| null 
+	;
+
+bool
+	: 'true' 
+	| 'false' 
+	;
+
+null
+	: 'null' 
+	;
+
+number
+	: $int 
+	| $float 
+	| $hex 
+	;
+
+";
+
+        foreach (var token in grammarLexer.Tokenize(testGrammar))
         {
             Console.WriteLine(token);
         }

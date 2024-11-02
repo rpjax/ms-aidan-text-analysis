@@ -45,6 +45,21 @@ public class Token : IToken
     }
 
     /// <summary>
+    /// Creates a new instance of the <see cref="Token"/> class.
+    /// </summary>
+    /// <param name="type"> The type of the token. </param>
+    /// <param name="value"> The value of the token. </param>
+    /// <param name="metadata"> The information associated with the token. </param>
+    /// <exception cref="ArgumentException"> Thrown when the value of the token is empty. </exception>
+    public Token(
+        string type,
+        string value,
+        TokenMetadata metadata) : this(type, value.AsMemory(), metadata)
+    {
+
+    }
+
+    /// <summary>
     /// Returns a string that represents the current token.
     /// </summary>
     /// <returns> A string that represents the current token. </returns>
@@ -55,7 +70,7 @@ public class Token : IToken
             return "EOI";
         }
 
-        return $"{Type}: »{FormatTokenForDisplay(Value.ToString())}«";
+        return $"{Type} »{FormatTokenForDisplay(Value.ToString())}«";
     }
 
     private string FormatTokenForDisplay(string tokenValue)

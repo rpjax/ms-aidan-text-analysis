@@ -5,6 +5,11 @@ namespace Aidan.TextAnalysis.GDef.Tokenization;
 
 public class RegexTokenizerBuilder : IBuilder<TokenizerMachine>
 {
+    internal static class States
+    {
+        public static string InitialState { get; } = "initial_state";
+    }
+
     public TokenizerMachine Build()
     {
         var builder = new TokenizerDfaBuilder(initialStateName: States.InitialState);
@@ -127,9 +132,6 @@ public class RegexTokenizerBuilder : IBuilder<TokenizerMachine>
                 ;
         }
     }
+
 }
 
-internal static class States
-{
-    public static string InitialState { get; } = "initial_state";
-}

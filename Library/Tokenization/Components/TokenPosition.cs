@@ -33,9 +33,9 @@ public struct TokenPosition
     /// <param name="line">The line number in which the token is located in the source text.</param>
     /// <param name="column">The column number in which the token is located in the source text.</param>
     public TokenPosition(
-        int start, 
-        int end, 
-        int line, 
+        int start,
+        int end,
+        int line,
         int column)
     {
         Start = start;
@@ -43,4 +43,10 @@ public struct TokenPosition
         Line = line;
         Column = column;
     }
+
+    /// <summary>
+    /// Gets an empty <see cref="TokenPosition"/> instance with all properties set to -1.
+    /// </summary>
+    public static TokenPosition Empty => new TokenPosition(-1, -1, -1, -1);
+
 }
