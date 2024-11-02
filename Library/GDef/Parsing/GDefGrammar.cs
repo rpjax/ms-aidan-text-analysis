@@ -1,318 +1,279 @@
-//using Aidan.TextAnalysis.Language.Components;
-//using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.GDef.Tokenization;
+using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Tokenization;
 
-//namespace Aidan.TextAnalysis.GDef;
+namespace Aidan.TextAnalysis.GDef;
 
-///// <summary>
-///// Represents the grammar for the Grammar Definition Format (GDef).
-///// </summary>
-//public class GDefGrammar : Grammar
-//{
-//    /// <summary>
-//    /// Initializes a new instance of the <see cref="GDefGrammar"/> class.
-//    /// </summary>
-//    public GDefGrammar() : base(GetStart(), GetProductions())
-//    {
-//    }
+/// <summary>
+/// Represents the grammar for the Grammar Definition Format (GDef).
+/// </summary>
+public class GDefGrammar : Grammar
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GDefGrammar"/> class.
+    /// </summary>
+    public GDefGrammar() : base(GetStart(), GetProductions())
+    {
+    }
 
-//    /// <summary>
-//    /// Gets the start non-terminal symbol for the grammar.
-//    /// </summary>
-//    /// <returns>The start non-terminal symbol.</returns>
-//    private static NonTerminal GetStart()
-//    {
-//        return new NonTerminal("start");
-//    }
+    /// <summary>
+    /// Gets the start non-terminal symbol for the grammar.
+    /// </summary>
+    /// <returns>The start non-terminal symbol.</returns>
+    private static NonTerminal GetStart()
+    {
+        return new NonTerminal("start");
+    }
 
-//    /// <summary>
-//    /// Gets the production rules for the grammar.
-//    /// </summary>
-//    /// <returns>An array of production rules.</returns>
-//    private static ProductionRule[] GetProductions()
-//    {
-//        return new ProductionRule[]
-//        {
-//            new ProductionRule(
-//                new NonTerminal("start"),
-//                new NonTerminal("grammar")
-//            ),
+    /// <summary>
+    /// Gets the production rules for the grammar.
+    /// </summary>
+    /// <returns>An array of production rules.</returns>
+    private static ProductionRule[] GetProductions()
+    {
+        return new ProductionRule[]
+        {
+            /* 
+             *   start
+             *      : grammar
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("start"),
+                new NonTerminal("grammar")
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("grammar"),
-//                new OptionMacro(
-//                    new NonTerminal("lexer_settings")
-//                ),
-//                new NonTerminal("production_list")
-//            ),
+            /* 
+             *   grammar
+             *      : [ lexer_settings ] production_list
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("grammar"),
 
-//            new ProductionRule(
-//                new NonTerminal("lexer_settings"),
-//                new Terminal("<"),
-//                new Terminal("lexer"),
-//                new Terminal(">"),
+                new OptionMacro(
+                    new NonTerminal("lexer_settings")
+                ),
+                new NonTerminal("production_list")
+            ),
 
-//                new RepetitionMacro(
-//                    new NonTerminal("lexer_statement")
-//                ),
+            /* 
+             *   lexer_settings
+             *      : { lexer_statement }
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("lexer_settings"),
 
-//                new Terminal("<"),
-//                new Terminal("/"),
-//                new Terminal("lexer"),
-//                new Terminal(">")
-//            ),
+                new NonTerminal("lexer_statement"),
+                new RepetitionMacro(
+                    new NonTerminal("lexer_statement")
+                )
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("lexer_statement"),
-//                new Terminal("use"),
-//                new Terminal(TokenType.Identifier),
-//                new Terminal(";"),
-//                new AlternativeMacro(),
-//                new Terminal("lexeme"),
-//                new Terminal(TokenType.Identifier),
-//                new NonTerminal("regex"),
-//                new Terminal(";")
-//            ),
+            /* 
+             *   lexer_statement
+             *      : use charset $id 
+             *      | lexeme $id = $string 
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("lexer_statement"),
 
-//            new ProductionRule(
-//                new NonTerminal("regex"),
-//                new Terminal("regex")
-//            ),
+                new Terminal("use"),
+                new Terminal("charset"),
+                new Terminal(GDefLexemes.Identifier),
+                new Terminal(";"),
+                new PipeMacro(), // pipe
+                new Terminal("lexeme"),
+                new Terminal(GDefLexemes.Identifier),
+                new Terminal("="),
+                new Terminal(GDefLexemes.String),
+                new Terminal(";")
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("production_list"),
-//                new NonTerminal("production"),
-//                new RepetitionMacro(
-//                    new NonTerminal("production")
-//                )
-//            ),
+            /* 
+             *   production_list
+             *      : production { production }
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("production_list"),
+                new NonTerminal("production"),
+                new RepetitionMacro(
+                    new NonTerminal("production")
+                )
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("production"),
-//                new Terminal(TokenType.Identifier),
-//                new Terminal(":"),
-//                new NonTerminal("production_body"),
-//                new Terminal(";")
-//            ),
+            /* 
+             *   production
+             *      : $id ':' production_body ';'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("production"),
+                new Terminal(GDefLexemes.Identifier),
+                new Terminal(":"),
+                new NonTerminal("production_body"),
+                new Terminal(";")
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("production_body"),
-//                new NonTerminal("symbol"),
-//                new RepetitionMacro(
-//                    new NonTerminal("symbol")
-//                ),
-//                new OptionMacro(
-//                    new NonTerminal("semantic_action")
-//                )
-//            ),
+            /* 
+             *   production_body
+             *      : symbol { symbol } [ semantic_action ]
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("production_body"),
+                new NonTerminal("symbol"),
+                new RepetitionMacro(
+                    new NonTerminal("symbol")
+                ),
+                new OptionMacro(
+                    new NonTerminal("semantic_action")
+                )
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("symbol"),
-//                new NonTerminal("terminal"),
-//                new AlternativeMacro(),
-//                new NonTerminal("non_terminal"),
-//                new AlternativeMacro(),
-//                new NonTerminal("macro")
-//            ),
+            /* 
+             *   symbol
+             *      : terminal | non_terminal | macro
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("symbol"),
+                new NonTerminal("terminal"),
+                new PipeMacro(),
+                new NonTerminal("non_terminal"),
+                new PipeMacro(),
+                new NonTerminal("macro")
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("terminal"),
-//                new Terminal(TokenType.String),
-//                new AlternativeMacro(),
-//                new NonTerminal("lexeme"),
-//                new AlternativeMacro(),
-//                new NonTerminal("epsilon")
-//            ),
+            /* 
+             *   terminal
+             *      : $string | lexeme 
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("terminal"),
 
-//            new ProductionRule(
-//                new NonTerminal("non_terminal"),
-//                new Terminal(TokenType.Identifier)
-//            ),
+                new Terminal(GDefLexemes.String),
+                new PipeMacro(),
+                new NonTerminal("lexeme_reference")
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("epsilon"),
-//                new Terminal("ε")
-//            ),
+            /* 
+             *   non_terminal
+             *      : $id 
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("non_terminal"),
+                new Terminal(GDefLexemes.Identifier)
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("macro"),
-//                new NonTerminal("grouping"),
-//                new AlternativeMacro(),
-//                new NonTerminal("option"),
-//                new AlternativeMacro(),
-//                new NonTerminal("repetition"),
-//                new AlternativeMacro(),
-//                new NonTerminal("alternative")
-//            ),
+            /* 
+             *   macro
+             *      : grouping | option | repetition | alternative
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("macro"),
 
-//            new ProductionRule(
-//                new NonTerminal("grouping"),
-//                new Terminal("("),
-//                new NonTerminal("symbol"),
-//                new RepetitionMacro(
-//                    new NonTerminal("symbol")
-//                ),
-//                new Terminal(")")
-//            ),
+                new NonTerminal("grouping"),
+                new PipeMacro(),
+                new NonTerminal("option"),
+                new PipeMacro(),
+                new NonTerminal("repetition"),
+                new PipeMacro(),
+                new NonTerminal("alternative")
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("option"),
-//                new Terminal("["),
-//                new NonTerminal("symbol"),
-//                new RepetitionMacro(
-//                    new NonTerminal("symbol")
-//                ),
-//                new Terminal("]")
-//            ),
+            /* 
+             *   grouping
+             *      : '(' symbol { symbol } ')'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("grouping"),
 
-//            new ProductionRule(
-//                new NonTerminal("repetition"),
-//                new Terminal("{"),
-//                new NonTerminal("symbol"),
-//                new RepetitionMacro(
-//                    new NonTerminal("symbol")
-//                ),
-//                new Terminal("}")
-//            ),
+                new Terminal("("),
+                new NonTerminal("symbol"),
+                new RepetitionMacro(
+                    new NonTerminal("symbol")
+                ),
+                new Terminal(")")
+            ),
 
-//            new ProductionRule(
-//                new NonTerminal("alternative"),
-//                new Terminal("|")
-//            ),
+            /* 
+             *   option
+             *      : '[' symbol { symbol } ']'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("option"),
 
-//            new ProductionRule(
-//                new NonTerminal("lexeme"),
-//                new Terminal("$"),
-//                new Terminal(TokenType.Identifier)
-//            ),
+                new Terminal("["),
+                new NonTerminal("symbol"),
+                new RepetitionMacro(
+                    new NonTerminal("symbol")
+                ),
+                new Terminal("]")
+            ),
 
-//            /*
-//             * Semantic Actions
-//             */
+            /* 
+             *   repetition
+             *      : '{' symbol { symbol } '}'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("repetition"),
 
-//            //* semantic_action
-//            new ProductionRule(
-//                new NonTerminal("semantic_action"),
-//                new Terminal("="),
-//                new Terminal(">"),
-//                new NonTerminal("action_block")
-//            ),
+                new Terminal("{"),
+                new NonTerminal("symbol"),
+                new RepetitionMacro(
+                    new NonTerminal("symbol")
+                ),
+                new Terminal("}")
+            ),
 
-//            //* action_block
-//            new ProductionRule(
-//                new NonTerminal("action_block"),
-//                new Terminal("{"),
-//                new NonTerminal("semantic_statement"),
-//                new RepetitionMacro(
-//                    new Terminal(","),
-//                    new NonTerminal("semantic_statement")
-//                ),
-//                new Terminal("}")
-//            ),
+            /* 
+             *   alternative
+             *      : '|'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("alternative"),
+                new Terminal("|")
+            ),
 
-//            //* semantic_statement
-//            new ProductionRule(
-//                new NonTerminal("semantic_statement"),
-//                new NonTerminal("reduction")
-//            ),
-//            new ProductionRule(
-//                new NonTerminal("semantic_statement"),
-//                new NonTerminal("assignment")
-//            ),
+            /* 
+             *   lexeme
+             *      : '$' $id
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("lexeme_reference"),
 
-//            //* reduction
-//            new ProductionRule(
-//                new NonTerminal("reduction"),
-//                new Terminal("$"),
-//                new Terminal(":"),
-//                new NonTerminal("expression")
-//            ),
+                new Terminal("$"),
+                new Terminal(GDefLexemes.Identifier)
+            ),
 
-//            //* assignment
-//            new ProductionRule(
-//                new NonTerminal("assignment"),
-//                new Terminal(TokenType.Identifier),
-//                new Terminal(":"),
-//                new NonTerminal("expression")
-//            ),
+            /*
+             * Semantic Actions
+             */
 
-//            //* expression
-//            new ProductionRule(
-//                new NonTerminal("expression"),
-//                new NonTerminal("literal")
-//            ),
-//            new ProductionRule(
-//                new NonTerminal("expression"),
-//                new NonTerminal("reference")
-//            ),
-//            new ProductionRule(
-//                new NonTerminal("expression"),
-//                new NonTerminal("index_expression")
-//            ),
-//            new ProductionRule(
-//                new NonTerminal("expression"),
-//                new NonTerminal("function_call")
-//            ),
-//            new ProductionRule(
-//                new NonTerminal("expression"),
-//                new NonTerminal("expression"),
-//                new Terminal("."),
-//                new NonTerminal("function_call")
-//            ),
+            /* 
+             *   semantic_action
+             *      : '=' '>' placeholder
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("semantic_action"),
+                new Terminal("="),
+                new Terminal(">"),
+                new Terminal("placeholder")
+            ),
 
-//            //* literal
-//            new ProductionRule(
-//                new NonTerminal("literal"),
-//                new Terminal(TokenType.String)
-//            ),
-//            new ProductionRule(
-//                new NonTerminal("literal"),
-//                new Terminal(TokenType.Integer)
-//            ),
-//            new ProductionRule(
-//                new NonTerminal("literal"),
-//                new Terminal(TokenType.Float)
-//            ),
-
-//            //* reference
-//            new ProductionRule(
-//                new NonTerminal("reference"),
-//                new Terminal(TokenType.Identifier)
-//            ),
-
-//            //* index_expression
-//            new ProductionRule(
-//                new NonTerminal("index_expression"),
-//                new Terminal("["),
-//                new Terminal(TokenType.Integer),
-//                new Terminal("]")
-//            ),
-
-//            //* function_call
-//            new ProductionRule(
-//                new NonTerminal("function_call"),
-//                new Terminal(TokenType.Identifier),
-//                new Terminal("("),
-//                new OptionMacro(
-//                    new NonTerminal("parameter_list")
-//                ),
-//                new Terminal(")")
-//            ),
-
-//            //* parameter_list
-//            new ProductionRule(
-//                new NonTerminal("parameter_list"),
-//                new NonTerminal("parameter"),
-//                new RepetitionMacro(
-//                    new Terminal(","),
-//                    new NonTerminal("parameter")
-//                )
-//            ),
-
-//            //* parameter
-//            new ProductionRule(
-//                new NonTerminal("parameter"),
-//                new Terminal(TokenType.Identifier)
-//            ),
-//        };
-//    }
-//}
+        };
+    }
+}

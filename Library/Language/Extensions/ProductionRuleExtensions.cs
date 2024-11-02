@@ -53,7 +53,6 @@ public static class IProductionRuleExtensions
          this IProductionRule production,
          IEnumerable<IProductionRule> source)
     {
-        var set = new ProductionCollection(source);
         var transformedSentence = new List<ISymbol>();
         var generatedProductions = new List<IProductionRule>();
 
@@ -64,6 +63,10 @@ public static class IProductionRuleExtensions
                 transformedSentence.Add(symbol);
                 continue;
             }
+
+            var _source = source.ToList();
+            _source.AddRange(generatedProductions);
+            var set = new ProductionCollection(_source);
 
             var nonTerminal = set.CreateNonTerminalPrime(production.Head);
             var sentences = macro.Expand(nonTerminal);

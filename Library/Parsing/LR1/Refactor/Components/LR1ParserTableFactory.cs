@@ -168,7 +168,7 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
     private Dictionary<ISymbol, LR1Action> ComputeReduceActions(LR1State state)
     {
         var actions = new Dictionary<ISymbol, LR1Action>();
-        var isAcceptingState = state.IsAcceptingState();
+        var isAcceptingState = state.IsAcceptingState(Grammar);
 
         var reduceItems = state.Items
             .Where(x => x.Symbol is null || x.Symbol.IsEpsilon())
@@ -188,11 +188,6 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
                 if (lookahead.IsEoi() && isAcceptingState)
                 {
                     continue;
-                }
-
-                if(lookahead.IsEpsilon())
-                {
-                    throw new Exception();
                 }
 
                 actions.Add(lookahead, new LR1ReduceAction(productionIndex));

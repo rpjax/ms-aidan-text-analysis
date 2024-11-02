@@ -1,5 +1,7 @@
-﻿using Aidan.TextAnalysis.GDef.Tokenization;
+﻿using Aidan.TextAnalysis.GDef;
+using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Grammars;
+using Aidan.TextAnalysis.Parsing.Extensions;
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.GenericLexer;
@@ -19,6 +21,8 @@ public class Program
         var grammarLexer = new GrammarTokenizerBuilder()
             .Build()
             ;
+
+        var gdefGrammar = new GDefGrammar();
 
         var testRegex = "^a.b*c[d-e](f|g){2,5}h\\^i\\$j\\*k\\+l\\?m\\{1,3\\}n[o-p]q\\|rs\\.t$\r\n";
         var testGrammar = @"
@@ -80,6 +84,11 @@ number
 	;
 
 ";
+
+        var gdefParser = new LR1Parser(gdefGrammar, grammarLexer);
+
+        var grammarCst = gdefParser.Parse(testGrammar);
+        var html = grammarCst.ToHtmlTreeView();
 
         foreach (var token in grammarLexer.Tokenize(testGrammar))
         {

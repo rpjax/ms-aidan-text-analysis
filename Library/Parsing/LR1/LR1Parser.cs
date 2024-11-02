@@ -48,7 +48,9 @@ public class LR1Parser
     {
         var tokens = Lexer.Tokenize(text);
             
-        using var inputStream = new LR1InputStream(tokens);
+        using var inputStream = new LR1InputStream(
+            tokens: tokens,
+            ignoreSet: new string[] { "comment" });
             
         var stack = new LR1ParserStack();
 

@@ -34,15 +34,18 @@ public class LR1InputStream : ILR1InputStream, IDisposable
 {
     private IEnumerator<IToken> Enumerator { get; }
     private bool IsConsumed { get; set; }
+    private string[] IgnoreSet { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LR1InputStream"/> class.
     /// </summary>
     /// <param name="tokens">The tokens to be processed by the input stream.</param>
-    public LR1InputStream(IEnumerable<IToken> tokens)
+    /// <param name="ignoreSet">The set of token types to ignore.</param>
+    public LR1InputStream(IEnumerable<IToken> tokens, string[]? ignoreSet = null)
     {
         Enumerator = tokens.GetEnumerator();
-        IsConsumed = !Enumerator.MoveNext();
+        IgnoreSet = ignoreSet ?? new string[0];
+        Advance();
     }
 
     /// <summary>
@@ -60,6 +63,11 @@ public class LR1InputStream : ILR1InputStream, IDisposable
     public void Advance()
     {
         IsConsumed = !Enumerator.MoveNext();
+
+        while (!IsConsumed && IgnoreSet.Contains(Enumerator.Current.Type))
+        {
+            IsConsumed = !Enumerator.MoveNext();
+        }
     }
 
     /// <summary>

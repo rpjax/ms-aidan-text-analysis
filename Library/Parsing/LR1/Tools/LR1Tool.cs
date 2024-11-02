@@ -26,7 +26,7 @@ public class LR1Tool
             initialState
         };
 
-        var proccessedStates = new List<LR1State>();
+        var processedStates = new List<LR1State>();
 
         while (true)
         {
@@ -34,7 +34,7 @@ public class LR1Tool
 
             foreach (var state in states.ToArray())
             {
-                if (proccessedStates.Any(x => x.Equals(state)))
+                if (processedStates.Any(x => x.Equals(state)))
                 {
                     continue;
                 }
@@ -64,7 +64,7 @@ public class LR1Tool
                     counter++;
                 }
 
-                proccessedStates.Add(state);
+                processedStates.Add(state);
             }
 
             if (counter == 0)
@@ -390,7 +390,7 @@ public class LR1Tool
     {
         var symbolGroups = state.Items
             .Where(item => item.Symbol is not null)
-            .Where(item => item.Symbol is not Epsilon)
+            .Where(item => item.Symbol?.Type != SymbolType.Epsilon)
             .GroupBy(item => item.Symbol!)
             .ToArray();
 
@@ -417,4 +417,19 @@ public class LR1Tool
         return dictionary;
     }
 
+}
+
+public class LR1StatesCalculator
+{
+    private IGrammar Grammar { get; }
+
+    public LR1StatesCalculator(IGrammar grammar)
+    {
+        Grammar = grammar;
+    }
+
+    public LR1State[] ComputeStates()
+    {
+        throw new NotImplementedException();
+    }
 }
