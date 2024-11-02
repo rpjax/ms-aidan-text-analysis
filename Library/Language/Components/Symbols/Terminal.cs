@@ -5,10 +5,10 @@ namespace Aidan.TextAnalysis.Language.Components;
 /// </summary>
 public interface ITerminal : ISymbol, IComparable<ITerminal>
 {
-    /// <summary>
-    /// Gets the value of the terminal symbol.
-    /// </summary>
-    ReadOnlyMemory<char> Value { get; }
+    ///// <summary>
+    ///// Gets the value of the terminal symbol.
+    ///// </summary>
+    //ReadOnlyMemory<char> Value { get; }
 }
 
 /// <summary>
@@ -26,34 +26,34 @@ public class Terminal : ITerminal
     /// </summary>
     public string Name { get; }
 
-    /// <summary>
-    /// Gets the value of the terminal symbol.
-    /// </summary>
-    public ReadOnlyMemory<char> Value { get; }
+    ///// <summary>
+    ///// Gets the value of the terminal symbol.
+    ///// </summary>
+    //public ReadOnlyMemory<char> Value { get; }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
-    /// </summary>
-    /// <param name="name">The name of the terminal symbol.</param>
-    /// <param name="value">The value of the terminal symbol.</param>
-    public Terminal(string name, ReadOnlyMemory<char> value)
-    {
-        Type = SymbolType.Terminal;
-        Name = name;
-        Value = value;
-    }
+    ///// <summary>
+    ///// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
+    ///// </summary>
+    ///// <param name="name">The name of the terminal symbol.</param>
+    ///// <param name="value">The value of the terminal symbol.</param>
+    //public Terminal(string name, ReadOnlyMemory<char> value)
+    //{
+    //    Type = SymbolType.Terminal;
+    //    Name = name;
+    //    Value = value;
+    //}
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
-    /// </summary>
-    /// <param name="name">The name of the terminal symbol.</param>
-    /// <param name="value">The value of the terminal symbol as a string.</param>
-    public Terminal(string name, string value)
-    {
-        Type = SymbolType.Terminal;
-        Name = name;
-        Value = value.AsMemory();
-    }
+    ///// <summary>
+    ///// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
+    ///// </summary>
+    ///// <param name="name">The name of the terminal symbol.</param>
+    ///// <param name="value">The value of the terminal symbol as a string.</param>
+    //public Terminal(string name, string value)
+    //{
+    //    Type = SymbolType.Terminal;
+    //    Name = name;
+    //    Value = value.AsMemory();
+    //}
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Terminal"/> class with the specified value.
@@ -63,7 +63,6 @@ public class Terminal : ITerminal
     {
         Type = SymbolType.Terminal;
         Name = name;
-        Value = string.Empty.AsMemory();
     }
 
     /// <summary>
@@ -84,7 +83,7 @@ public class Terminal : ITerminal
     {
         return other is ITerminal terminal
             && Type == terminal.Type
-            && Value.Equals(terminal.Value);
+            && Name == terminal.Name;
     }
 
     /// <summary>
@@ -94,9 +93,20 @@ public class Terminal : ITerminal
     /// <returns>A value that indicates the relative order of the terminal symbols being compared.</returns>
     public int CompareTo(ITerminal? other)
     {
-        var thisStr = ToString();
-        var otherStr = other?.ToString();
+        var thisName = Name;
+        var otherName = other?.Name;
 
-        return string.Compare(thisStr, otherStr, StringComparison.Ordinal);
+        return string.Compare(thisName, otherName, StringComparison.Ordinal);
     }
+}
+
+public interface ILexeme
+{
+    string Name { get; }
+    ILexemeProduction Production { get; }
+}
+
+public interface ILexemeProduction
+{
+
 }

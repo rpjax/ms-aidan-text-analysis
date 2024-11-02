@@ -1,11 +1,8 @@
-﻿using Aidan.Core.Helpers;
+﻿using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Grammars;
-
-//using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.Parsing.LR1;
-using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.Tokenization.GenericLexer;
 using Aidan.TextAnalysis.Tokenization.StateMachine;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace Aidan.TextAnalysis.Tests;
@@ -14,8 +11,23 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var table = CreateDebugTable();
-        var tokenizer = new TokenizerMachine(table);
+        var genericDfa = new GenericTokenizerBuilder()
+            .Build()
+            ;
+
+        var regexLexer = new RegexTokenizerBuilder()
+            .Build()
+            ;
+
+        var _tokens = regexLexer.Tokenize("^a.b*c[d-e](f|g){2,5}h\\^i\\$j\\*k\\+l\\?m\\{1,3\\}n[o-p]q\\|rs\\.t$\r\n")
+            .ToArray();
+
+        foreach (var token in _tokens)
+        {
+            Console.WriteLine(token);
+        }
+       
+        var tokenizer = CreateDebugDfa();
 
         var grammar = new JsonGrammar();
         var parser = new LR1Parser(grammar, tokenizer);
@@ -78,11 +90,11 @@ public class Program
 
     }
 
-    private static ITokenizerTable CreateDebugTable()
+    private static TokenizerMachine CreateDebugDfa()
     {
-        var builder = new TableBuilder();
+        var builder = new TokenizerDfaBuilder();
 
-        var table = builder
+        var dfa = builder
             .SetCharset(CharsetType.Ascii)
 
             .FromInitialState()
@@ -225,7 +237,7 @@ public class Program
 
             .Build();
 
-        return table;
+        return dfa;
     }
 
     private static string FormatTime(double seconds)

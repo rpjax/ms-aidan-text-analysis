@@ -39,7 +39,7 @@ public class LR1Stack
         Stack.Push(state);
     }
 
-    public void PushToken(Token token)
+    public void PushToken(OldToken token)
     {
         Stack.Push(token);
     }

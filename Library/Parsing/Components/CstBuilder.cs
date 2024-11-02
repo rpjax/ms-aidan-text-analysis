@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Parsing.Components;
 
-internal class TokenCollection : IEnumerable<Token>
+internal class TokenCollection : IEnumerable<OldToken>
 {
     internal IToken[] Tokens { get; }
 
@@ -23,15 +23,15 @@ internal class TokenCollection : IEnumerable<Token>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IEnumerator<Token> GetEnumerator()
+    public IEnumerator<OldToken> GetEnumerator()
     {
-        return ((IEnumerable<Token>)Tokens).GetEnumerator();
+        return ((IEnumerable<OldToken>)Tokens).GetEnumerator();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return ((IEnumerable<Token>)Tokens).GetEnumerator();
+        return ((IEnumerable<OldToken>)Tokens).GetEnumerator();
     }
 
 }

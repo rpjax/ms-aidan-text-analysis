@@ -57,7 +57,18 @@ public class TokenizerTable : ITokenizerTable
 
             foreach (var transition in entry.Value)
             {
-                Transitions.Add(Combine(state.Id, transition.Character), transition);
+                var key = Combine(state.Id, transition.Character);
+                var stateName = state.Name;
+                var c = transition.Character == '\0' 
+                    ? "EOF" 
+                    : transition.Character.ToString();
+
+                if (Transitions.ContainsKey(key))
+                {
+                    throw new InvalidOperationException($"Duplicate transition for state '{stateName}' on character '{c}'");
+                }
+
+                Transitions.Add(key, transition);
             }
         }
     }

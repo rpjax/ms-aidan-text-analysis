@@ -39,7 +39,7 @@ public class TokenizerMachine : IStringLexer
         string eoiName = EoiDefaultName)
     {
         Table = table;
-        IncludeEoi = true;
+        IncludeEoi = includeEoi;
         EoiName = eoiName;
 
         if (!includeEoi && eoiName != EoiDefaultName)
@@ -238,7 +238,7 @@ public class TokenizerMachine : IStringLexer
         int line,
         int column)
     {
-        return new TokenNewApi(
+        return new Token(
             type: EoiName,
             value: EoiReadOnlyMemory,
             metadata: CreateMetadata(
@@ -269,7 +269,7 @@ public class TokenizerMachine : IStringLexer
         int line,
         int column)
     {
-        return new TokenNewApi(
+        return new Token(
             type: type,
             value: value,
             metadata: CreateMetadata(

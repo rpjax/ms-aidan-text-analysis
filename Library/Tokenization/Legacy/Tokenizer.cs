@@ -90,7 +90,7 @@ public class Tokenizer
     /// <param name="source">The source code string to tokenize.</param>
     /// <param name="includeEoi">Indicates whether to include an End of Input (EOI) token at the end of the token sequence.</param>
     /// <returns>An enumerable sequence of tokens.</returns>
-    public IEnumerable<Token> Tokenize(
+    public IEnumerable<OldToken> Tokenize(
         string source,
         bool includeEoi = true)
     {
@@ -125,9 +125,9 @@ public class Tokenizer
                 case TokenizerAction.End:
                     if (includeEoi)
                     {
-                        yield return new Token(
+                        yield return new OldToken(
                             type: TokenType.Eoi,
-                            value: Eoi.Instance.Value,
+                            value: Eoi.EoiString.AsMemory(),
                             metadata: context.GetMetadata()
                         );
                     }
@@ -246,14 +246,14 @@ public class Tokenizer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Token OnEmit(LexicalContext context, ITransitionResult transition)
+    private OldToken OnEmit(LexicalContext context, ITransitionResult transition)
     {
         if (transition is not ITokenResult acceptingState)
         {
             throw new Exception($"Unexpected transition type '{transition.GetType().Name}'. Expected ITokenResult.");
         }
 
-        var token = new Token(
+        var token = new OldToken(
             type: acceptingState.TokenType,
             value: context.AccumulatorValue,
             metadata: context.GetMetadata()

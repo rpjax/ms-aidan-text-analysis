@@ -7,7 +7,7 @@ namespace Aidan.TextAnalysis.Tokenization.Extensions;
 
 public static class TokenExtensions
 {
-    public static string GetNormalizedStringValue(this Token token)
+    public static string GetNormalizedStringValue(this OldToken token)
     {
         if(token.Type != TokenType.String)
         {
@@ -27,7 +27,7 @@ public static class TokenExtensions
     /// <param name="useValue"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint ComputeFnv1aHash(this Token token, bool useValue = false)
+    public static uint ComputeFnv1aHash(this OldToken token, bool useValue = false)
     {
         var value = useValue 
             ? $"{TokenTypeHelper.ToString(token.Type)}{token.Value}"

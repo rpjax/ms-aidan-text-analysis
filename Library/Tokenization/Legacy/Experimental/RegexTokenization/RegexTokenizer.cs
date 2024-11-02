@@ -204,7 +204,7 @@ public class RegexTokenizer : IStringLexer
                 var value = context.GetTokenValue();
                 var metadata = context.GetTokenMetadata();
                     
-                yield return new TokenNewApi(
+                yield return new Token(
                     type: "TODO",
                     value: value,
                     metadata: metadata);

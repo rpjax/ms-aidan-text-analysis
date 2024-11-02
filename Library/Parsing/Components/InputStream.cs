@@ -3,11 +3,11 @@
 namespace Aidan.TextAnalysis.Parsing.Components;
 
 /// <summary>
-/// Represents a stream of <see cref="Token"/> with one token lookahead. It is used by LL(1) and LR(1) parsers.
+/// Represents a stream of <see cref="OldToken"/> with one token lookahead. It is used by LL(1) and LR(1) parsers.
 /// </summary>
 public class InputStream : IDisposable
 {
-    private IEnumerator<Token> TokenStream { get; }
+    private IEnumerator<OldToken> TokenStream { get; }
     private bool IsEndReached { get; set; }
     private TokenType[] IgnoreSet { get; }
 
@@ -32,7 +32,7 @@ public class InputStream : IDisposable
     /// <summary>
     /// Gets the lookahead token.
     /// </summary>
-    public Token? LookaheadToken => Peek();
+    public OldToken? LookaheadToken => Peek();
 
     /// <summary>
     /// Gets a value indicating whether the end of the input stream has been reached.
@@ -51,7 +51,7 @@ public class InputStream : IDisposable
     /// Peeks the next token.
     /// </summary>
     /// <returns>The next token if the end of the input stream has not been reached; otherwise, <c>null</c>.</returns>
-    public Token? Peek()
+    public OldToken? Peek()
     {
         if (IsEndReached)
         {

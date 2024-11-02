@@ -2,7 +2,7 @@
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine;
 
-public enum CharsetType 
+public enum CharsetType
 {
     Ascii,
     Unicode,
@@ -22,7 +22,7 @@ public enum CharType
 /// <summary>
 /// A builder class for constructing a <see cref="TokenizerTable"/>.
 /// </summary>
-public class TableBuilder : IBuilder<TokenizerTable>
+public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
 {
     /// <summary>
     /// A dictionary mapping state names to their corresponding states.
@@ -36,24 +36,47 @@ public class TableBuilder : IBuilder<TokenizerTable>
 
     private char[] Charset { get; set; }
 
+    private string InitialStateName { get; set; }
+
     /// <summary>
-    /// Initializes a new instance of the <see cref="TableBuilder"/> class.
+    /// Initializes a new instance of the <see cref="TokenizerDfaBuilder"/> class.
     /// </summary>
-    public TableBuilder()
+    public TokenizerDfaBuilder(string initialStateName = "0")
     {
         States = new Dictionary<string, State>();
         Transitions = new Dictionary<string, List<Transition>>();
         Charset = ComputeCharset(CharsetType.Ascii);
+        InitialStateName = initialStateName;
+
+        /* adds the initial state */
+        var initialState = new State(
+            id: 0,
+            name: InitialStateName,
+            isAccepting: false);
+
+        States.Add(initialState.Name, initialState);
     }
 
     public static char[] ComputeCharset(CharsetType charset)
     {
         return charset switch
         {
-            CharsetType.Ascii => Enumerable.Range(0, 128).Select(x => (char)x).ToArray(),
-            CharsetType.Unicode => Enumerable.Range(0, 0x10FFFF).Select(x => (char)x).ToArray(),
-            CharsetType.Utf8 => new char[] { },
-            CharsetType.Utf16 => new char[] { },
+            CharsetType.Ascii => Enumerable.Range(0, 128)
+                .Select(x => (char)x)
+                .ToArray(),
+
+            CharsetType.Unicode => Enumerable.Range(0, 0xFFFF + 1) // Generates BMP (Basic Multilingual Plane) characters only
+                .Select(x => (char)x)
+                .ToArray(),
+
+            CharsetType.Utf8 => Enumerable.Range(0, 0xFFFF + 1) // BMP characters, as UTF-8 is variable-length but this is limited by char's 16-bit size
+                .Select(x => (char)x)
+                .ToArray(),
+
+            CharsetType.Utf16 => Enumerable.Range(0, 0xFFFF + 1) // BMP characters in UTF-16 representation
+                .Select(x => (char)x)
+                .ToArray(),
+
             _ => throw new ArgumentOutOfRangeException(nameof(charset))
         };
     }
@@ -63,7 +86,7 @@ public class TableBuilder : IBuilder<TokenizerTable>
         return Charset;
     }
 
-    public TableBuilder SetCharset(params char[] chars)
+    public TokenizerDfaBuilder SetCharset(params char[] chars)
     {
         if (chars.Length == 0)
         {
@@ -74,7 +97,7 @@ public class TableBuilder : IBuilder<TokenizerTable>
         return this;
     }
 
-    public TableBuilder SetCharset(CharsetType charset)
+    public TokenizerDfaBuilder SetCharset(CharsetType charset)
     {
         Charset = ComputeCharset(charset);
         return this;
@@ -88,12 +111,7 @@ public class TableBuilder : IBuilder<TokenizerTable>
     {
         if (States.Count == 0)
         {
-            var initialState = new State(
-                id: 0,
-                name: "0",
-                isAccepting: false);
-
-            States.Add(initialState.Name, initialState);
+            throw new InvalidOperationException("No initial state defined.");
         }
 
         return States.Values.First();
@@ -134,9 +152,9 @@ public class TableBuilder : IBuilder<TokenizerTable>
     /// <param name="currentState">The current state.</param>
     /// <param name="character">The character triggering the transition.</param>
     /// <param name="nextState">The next state.</param>
-    /// <returns>The current <see cref="TableBuilder"/> instance.</returns>
+    /// <returns>The current <see cref="TokenizerDfaBuilder"/> instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the current or next state does not exist.</exception>
-    public TableBuilder AddTransition(
+    public TokenizerDfaBuilder AddTransition(
         State currentState,
         char character,
         State nextState)
@@ -238,7 +256,7 @@ public class TableBuilder : IBuilder<TokenizerTable>
     /// Builds the <see cref="TokenizerTable"/> from the current states and transitions.
     /// </summary>
     /// <returns>The constructed <see cref="TokenizerTable"/>.</returns>
-    public TokenizerTable Build()
+    public TokenizerMachine Build()
     {
         var entries = new Dictionary<State, Transition[]>();
 
@@ -247,7 +265,7 @@ public class TableBuilder : IBuilder<TokenizerTable>
             entries.Add(state, GetTransitions(state).ToArray());
         }
 
-        return new TokenizerTable(entries);
+        return new TokenizerMachine(new TokenizerTable(entries));
     }
 }
 
@@ -257,9 +275,9 @@ public class TableBuilder : IBuilder<TokenizerTable>
 public class TableTransitionBuilder
 {
     /// <summary>
-    /// The parent <see cref="TableBuilder"/> instance.
+    /// The parent <see cref="TokenizerDfaBuilder"/> instance.
     /// </summary>
-    private TableBuilder Builder { get; }
+    private TokenizerDfaBuilder Builder { get; }
 
     /// <summary>
     /// The current state from which transitions are being added.
@@ -274,10 +292,10 @@ public class TableTransitionBuilder
     /// <summary>
     /// Initializes a new instance of the <see cref="TableTransitionBuilder"/> class.
     /// </summary>
-    /// <param name="builder">The parent <see cref="TableBuilder"/> instance.</param>
+    /// <param name="builder">The parent <see cref="TokenizerDfaBuilder"/> instance.</param>
     /// <param name="currentState">The current state from which transitions are being added.</param>
     public TableTransitionBuilder(
-        TableBuilder builder,
+        TokenizerDfaBuilder builder,
         State currentState)
     {
         Builder = builder;
@@ -350,6 +368,39 @@ public class TableTransitionBuilder
         return this;
     }
 
+    public TableTransitionBuilder OnAnyCharacterExceptRange(char start, char end)
+    {
+        foreach (var character in Builder.GetCharset())
+        {
+            if (character < start || character > end)
+            {
+                AddCharacter(character);
+            }
+        }
+
+        return this;
+    }
+
+    public TableTransitionBuilder Except(params char[] characters)
+    {
+        foreach (var character in characters)
+        {
+            Characters.Remove(character);
+        }
+
+        return this;
+    }
+
+    public TableTransitionBuilder ExceptRange(char start, char end)
+    {
+        for (var i = start; i <= end; i++)
+        {
+            Characters.Remove(i);
+        }
+
+        return this;
+    }
+
     /// <summary>
     /// Adds the end of input character as a trigger for a transition.
     /// </summary>
@@ -368,13 +419,18 @@ public class TableTransitionBuilder
         return OnCharacter(' ');
     }
 
+    public TableTransitionBuilder OnDigit()
+    {
+        return OnCharacterRange('0', '9');
+    }
+
     /// <summary>
     /// Specifies the next state to transition to.
     /// </summary>
     /// <param name="name">The name of the next state.</param>
-    /// <returns>The parent <see cref="TableBuilder"/> instance.</returns>
+    /// <returns>The parent <see cref="TokenizerDfaBuilder"/> instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when no characters have been set.</exception>
-    public TableBuilder GoTo(string name)
+    public TokenizerDfaBuilder GoTo(string name)
     {
         if (Characters.Count == 0)
         {
@@ -395,9 +451,9 @@ public class TableTransitionBuilder
     /// Specifies the next state to transition to and marks it as an accepting state.
     /// </summary>
     /// <param name="name">The name of the next state.</param>
-    /// <returns>The parent <see cref="TableBuilder"/> instance.</returns>
+    /// <returns>The parent <see cref="TokenizerDfaBuilder"/> instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when no characters have been set.</exception>
-    public TableBuilder Accept(string name)
+    public TokenizerDfaBuilder Accept(string name)
     {
         if (Characters.Count == 0)
         {
@@ -417,9 +473,9 @@ public class TableTransitionBuilder
     /// <summary>
     /// Specifies that the current state should transition to itself on the specified characters.
     /// </summary>
-    /// <returns>The parent <see cref="TableBuilder"/> instance.</returns>
+    /// <returns>The parent <see cref="TokenizerDfaBuilder"/> instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when no characters have been set.</exception>
-    public TableBuilder Recurse()
+    public TokenizerDfaBuilder Recurse()
     {
         if (Characters.Count == 0)
         {
@@ -437,9 +493,9 @@ public class TableTransitionBuilder
     /// <summary>
     /// Specifies that the current state should transition to the initial state on the specified characters.
     /// </summary>
-    /// <returns>The parent <see cref="TableBuilder"/> instance.</returns>
+    /// <returns>The parent <see cref="TokenizerDfaBuilder"/> instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when no characters have been set.</exception>
-    public virtual TableBuilder GoToInitialState()
+    public virtual TokenizerDfaBuilder GoToInitialState()
     {
         if (Characters.Count == 0)
         {

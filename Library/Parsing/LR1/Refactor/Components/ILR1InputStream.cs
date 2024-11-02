@@ -101,6 +101,6 @@ public class LR1InputStream : ILR1InputStream, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ITerminal Convert(IToken token)
     {
-        return new Terminal(token.Type, token.Value);
+        return new Terminal(token.Type);
     }
 }

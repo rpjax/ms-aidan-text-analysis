@@ -6,6 +6,16 @@ namespace Aidan.TextAnalysis.Language.Components;
 public sealed class Eoi : Terminal
 {
     /// <summary>
+    /// The character representing the End of Input (EOI).
+    /// </summary>
+    public const char EoiChar = '\0';
+
+    /// <summary>
+    /// The string representing the End of Input (EOI).
+    /// </summary>
+    public const string EoiString = "\0";
+
+    /// <summary>
     /// Gets the singleton instance of the <see cref="Eoi"/> class.
     /// </summary>
     public static Eoi Instance { get; } = new();
@@ -13,7 +23,7 @@ public sealed class Eoi : Terminal
     /// <summary>
     /// Initializes a new instance of the <see cref="Eoi"/> class.
     /// </summary>
-    public Eoi() : base("\0", "\0")
+    public Eoi() : base(EoiString)
     {
         Type = SymbolType.Eoi;
     }

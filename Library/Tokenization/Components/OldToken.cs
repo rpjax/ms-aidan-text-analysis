@@ -1,16 +1,14 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-
-namespace Aidan.TextAnalysis.Tokenization;
+﻿namespace Aidan.TextAnalysis.Tokenization;
 
 /// <summary>
-/// Represents a new token produced by the lexical Analyzer, using a lexeme production rule.
+/// Represents a token produced by the lexical Analyzer, using a lexeme production rule.
 /// </summary>
-public class Token : IToken
+public class OldToken : ITokenLegacy
 {
     /// <summary>
     /// Gets the type of the token. (e.g. Identifier, Number, String, etc.)
     /// </summary>
-    public string Type { get; }
+    public TokenType Type { get; }
 
     /// <summary>
     /// Gets the raw value of the token. (e.g. "if", "123", "Hello World", etc.)
@@ -23,16 +21,12 @@ public class Token : IToken
     public TokenMetadata Metadata { get; }
 
     /// <summary>
-    /// Creates a new instance of the <see cref="Token"/> class.
+    /// Creates a new instance of the <see cref="OldToken"/> class.
     /// </summary>
     /// <param name="type"> The type of the token. </param>
     /// <param name="value"> The value of the token. </param>
     /// <param name="metadata"> The information associated with the token. </param>
-    /// <exception cref="ArgumentException"> Thrown when the value of the token is empty. </exception>
-    public Token(
-        string type,
-        ReadOnlyMemory<char> value,
-        TokenMetadata metadata)
+    public OldToken(TokenType type, ReadOnlyMemory<char> value, TokenMetadata metadata)
     {
         Type = type;
         Value = value;
@@ -44,28 +38,27 @@ public class Token : IToken
         }
     }
 
-    /// <summary>
-    /// Returns a string that represents the current token.
-    /// </summary>
-    /// <returns> A string that represents the current token. </returns>
     public override string ToString()
     {
-        if (Type == Eoi.EoiString)
+        if(Type == TokenType.Eoi)
         {
             return "EOI";
         }
 
-        return $"{Type}: »{FormatTokenForDisplay(Value.ToString())}«";
+        return Value.ToString();
     }
 
-    private string FormatTokenForDisplay(string tokenValue)
+    public string ToStringVerbose()
     {
-        return tokenValue
-            .Replace("\n", "\\n")
-            .Replace("\r", "\\r")
-            .Replace("\t", "\\t")
-            .Replace("\b", "\\b")
-            .Replace("\f", "\\f");
+        if (Type == TokenType.String)
+        {
+            return $"{Type}: {Value} {Metadata}";
+        }
+        else
+        {
+            return $"{Type}: \"{Value}\"  {Metadata}";
+        }
     }
 
 }
+
