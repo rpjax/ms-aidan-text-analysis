@@ -14,17 +14,6 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var regexLexer = new RegexTokenizerBuilder()
-            .Build()
-            ;
-
-        var grammarLexer = new GrammarTokenizerBuilder()
-            .Build()
-            ;
-
-        var gdefGrammar = new GDefGrammar();
-
-        var testRegex = "^a.b*c[d-e](f|g){2,5}h\\^i\\$j\\*k\\+l\\?m\\{1,3\\}n[o-p]q\\|rs\\.t$\r\n";
         var testGrammar = @"
 /*
 	lexer stuff
@@ -85,15 +74,8 @@ number
 
 ";
 
-        var gdefParser = new LR1Parser(gdefGrammar, grammarLexer);
-
-        var grammarCst = gdefParser.Parse(testGrammar);
+        var grammarCst = GDefParser.Parse(testGrammar);
         var html = grammarCst.ToHtmlTreeView();
-
-        foreach (var token in grammarLexer.Tokenize(testGrammar))
-        {
-            Console.WriteLine(token);
-        }
        
         var tokenizer = CreateDebugDfa();
 

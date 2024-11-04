@@ -94,7 +94,7 @@ public class LR1Tool
     private static LR1State ComputeInitialState(IGrammar grammar)
     {
         var startSymbol = grammar.StartSymbol;
-        var startSymbolProductions = grammar.GetProductionRulesForNonTerminal(startSymbol);
+        var startSymbolProductions = grammar.GetProductions(startSymbol);
 
         if (startSymbolProductions.Length == 0)
         {
@@ -190,7 +190,7 @@ public class LR1Tool
             return new LR1Closure(items.ToArray());
         }
 
-        var productions = grammar.GetProductionRulesForNonTerminal(nonTerminal);
+        var productions = grammar.GetProductions(nonTerminal);
 
         if (productions.Length == 0)
         {
@@ -344,7 +344,7 @@ public class LR1Tool
                 throw new InvalidOperationException("The symbol is not a nonterminal.");
             }
 
-            var productions = grammar.GetProductionRulesForNonTerminal(nonTerminal);
+            var productions = grammar.GetProductions(nonTerminal);
             var producesEpsilon = productions.Any(x => x.IsEpsilonProduction());
 
             // S -> .A B c (beta is B c)
@@ -417,19 +417,4 @@ public class LR1Tool
         return dictionary;
     }
 
-}
-
-public class LR1StatesCalculator
-{
-    private IGrammar Grammar { get; }
-
-    public LR1StatesCalculator(IGrammar grammar)
-    {
-        Grammar = grammar;
-    }
-
-    public LR1State[] ComputeStates()
-    {
-        throw new NotImplementedException();
-    }
 }

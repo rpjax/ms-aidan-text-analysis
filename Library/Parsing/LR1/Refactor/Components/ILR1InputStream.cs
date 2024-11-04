@@ -34,7 +34,7 @@ public class LR1InputStream : ILR1InputStream, IDisposable
 {
     private IEnumerator<IToken> Enumerator { get; }
     private bool IsConsumed { get; set; }
-    private string[] IgnoreSet { get; }
+    private Dictionary<string, bool> IgnoreDictionary { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LR1InputStream"/> class.
@@ -44,7 +44,7 @@ public class LR1InputStream : ILR1InputStream, IDisposable
     public LR1InputStream(IEnumerable<IToken> tokens, string[]? ignoreSet = null)
     {
         Enumerator = tokens.GetEnumerator();
-        IgnoreSet = ignoreSet ?? new string[0];
+        IgnoreDictionary = (ignoreSet ?? new string[0]).ToDictionary(x => x, x => true);
         Advance();
     }
 
@@ -64,7 +64,7 @@ public class LR1InputStream : ILR1InputStream, IDisposable
     {
         IsConsumed = !Enumerator.MoveNext();
 
-        while (!IsConsumed && IgnoreSet.Contains(Enumerator.Current.Type))
+        while (!IsConsumed && IgnoreDictionary.ContainsKey(Enumerator.Current.Type))
         {
             IsConsumed = !Enumerator.MoveNext();
         }

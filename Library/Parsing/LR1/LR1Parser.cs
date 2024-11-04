@@ -17,7 +17,7 @@ public class LR1Parser
         "comment"
     };
 
-    private Grammar Grammar { get; }
+    private IGrammar Grammar { get; }
     private IStringLexer Lexer { get; }
     private ILR1ParserTable Table { get; }
     private string[] IgnoredTokenTypes { get; }
@@ -29,7 +29,7 @@ public class LR1Parser
     /// <param name="lexer"> The lexer to tokenize the input text. </param>
     /// <param name="ignoredTokenTypes"> The set of token types to ignore. </param>
     public LR1Parser(
-        Grammar grammar, 
+        IGrammar grammar, 
         IStringLexer lexer, 
         string[]? ignoredTokenTypes = null)
     {
@@ -50,7 +50,7 @@ public class LR1Parser
             
         using var inputStream = new LR1InputStream(
             tokens: tokens,
-            ignoreSet: new string[] { "comment" });
+            ignoreSet: IgnoredTokenTypes);
             
         var stack = new LR1ParserStack();
 

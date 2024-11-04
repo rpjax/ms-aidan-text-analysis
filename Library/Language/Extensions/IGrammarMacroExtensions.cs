@@ -3,41 +3,8 @@ using Aidan.TextAnalysis.Language.Components;
 
 namespace Aidan.TextAnalysis.Language.Extensions;
 
-/// <summary>
-/// Provides extension methods for the <see cref="IGrammar"/> interface.
-/// </summary>
-public static class IGrammarExtensions
+public static class IGrammarMacroExtensions
 {
-    /// <summary>
-    /// Gets all symbols (terminals and non-terminals) in the grammar.
-    /// </summary>
-    /// <param name="grammar">The grammar to get the symbols from.</param>
-    /// <returns>An array of all symbols in the grammar.</returns>
-    public static ISymbol[] GetAllSymbols(
-        this IGrammar grammar)
-    {
-        return grammar.NonTerminals
-            .Cast<ISymbol>()
-            .Concat(grammar.Terminals)
-            .Distinct()
-            .ToArray();
-    }
-
-    /// <summary>
-    /// Gets all production rules for a specified non-terminal symbol.
-    /// </summary>
-    /// <param name="grammar">The grammar to get the production rules from.</param>
-    /// <param name="nonTerminal">The non-terminal symbol to get the production rules for.</param>
-    /// <returns>An array of production rules for the specified non-terminal symbol.</returns>
-    public static IProductionRule[] GetProductionRulesForNonTerminal(
-        this IGrammar grammar,
-        INonTerminal nonTerminal)
-    {
-        return grammar.ProductionRules
-            .Where(x => x.Head.Equals(nonTerminal))
-            .ToArray();
-    }
-
     /// <summary>
     /// Ensures that the grammar does not contain any macros.
     /// </summary>
@@ -56,20 +23,6 @@ public static class IGrammarExtensions
     {
         return grammar.ProductionRules
             .Any(x => x.Body.Any(x => x.IsMacro()));
-    }
-
-    public static NonTerminal CreateNonTerminalPrime(
-        this IGrammar grammar,
-        INonTerminal nonTerminal)
-    {
-        var name = nonTerminal.Name + "′";
-
-        while (grammar.ProductionRules.Any(p => p.Head.Name == name))
-        {
-            name += "′";
-        }
-
-        return new NonTerminal(name);
     }
 
     public static IGrammar ExpandMacros(this IGrammar grammar)

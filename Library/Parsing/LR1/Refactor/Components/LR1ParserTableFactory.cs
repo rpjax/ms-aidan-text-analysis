@@ -11,7 +11,6 @@ namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 public class LR1ParserTableFactory : IFactory<LR1ParserTable>
 {
     private IGrammar Grammar { get; }
-    private ISymbol[] Symbols { get; }
     private IProductionRule[] Productions { get; }
     private LR1State[] States { get; }
 
@@ -20,17 +19,9 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
         grammar = grammar.ExpandMacros();
 
         Grammar = grammar;
-
-        Symbols = grammar.ProductionRules
-            .SelectMany(x => x.Body.Concat(new [] { x.Head }))
-            .Concat(new [] { Eoi.Instance })
-            .Distinct(new SymbolEqualityComparer())
-            .ToArray();
-
         Productions = Grammar.ProductionRules
             .Distinct()
             .ToArray();
-
         States = LR1Tool.ComputeStates(Grammar);
     }
 
@@ -61,11 +52,10 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
         }
 
         return new LR1ParserTable(
-            entries: entries.ToDictionary(
+            stateTransitionsDictionary: entries.ToDictionary(
                 kv => kv.Key,
                 kv => kv.Value.ToArray()
             ),
-            symbols: Symbols,
             productions: Productions);
     }
 
