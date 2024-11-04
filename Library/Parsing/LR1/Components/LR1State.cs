@@ -1,6 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Language.Extensions;
-using System.Collections;
+﻿using System.Collections;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 
@@ -119,16 +117,15 @@ public class LR1State :
     /// </summary>
     /// <returns><c>true</c> if the state is an accepting state; otherwise, <c>false</c>.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the production set does not have an augmented production.</exception>
-    public bool IsAcceptingState(IGrammar grammar)
-    {
-        return true
-            && IsFinalState
-            && Kernel.Length == 1
-            && Kernel[0].Production.Head.Equals(grammar.StartSymbol)
-            && Kernel[0].GetBeta().Length == 0
-            && Kernel[0].Lookaheads.Length == 1
-            && Kernel[0].Lookaheads[0] == Eoi.Instance;
-    }
+    //public bool IsAcceptingState(IGrammar grammar)
+    //{
+    //    return true
+    //        && IsFinalState
+    //        && Kernel.Length == 1
+    //        && Kernel[0].Production.Head.Equals(grammar.StartSymbol)
+    //        && Kernel[0].Lookaheads.Length == 1
+    //        && Kernel[0].Lookaheads[0] == Eoi.Instance;
+    //}
 
     /// <summary>
     /// Returns the hash code for the current LR(1) state.

@@ -1,4 +1,5 @@
-﻿using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Language;
+using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using System.Diagnostics.CodeAnalysis;
 
@@ -207,9 +208,9 @@ public class LR1Item :
     }
 
     /// <summary>
-    /// Gets the beta part of the production rule.
+    /// Gets the β part of the production rule.
     /// </summary>
-    /// <returns>The beta part of the production rule.</returns>
+    /// <returns> A new sentence containing the β part of the production rule. </returns>
     public ISentence GetBeta()
     {
         var start = Position + 1;

@@ -1,8 +1,11 @@
 ﻿using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Grammars;
+using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.Extensions;
 using Aidan.TextAnalysis.Parsing.LR1;
+using Aidan.TextAnalysis.Parsing.LR1.TableComputation;
+using Aidan.TextAnalysis.Parsing.LR1.Tools;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.GenericLexer;
 using Aidan.TextAnalysis.Tokenization.StateMachine;
@@ -73,6 +76,9 @@ number
 	;
 
 ";
+
+        var test = new LR1StatesCalculator(new GDefGrammar().ExpandMacros())
+            .ComputeStates();
 
         var grammarCst = GDefParser.Parse(testGrammar);
         var html = grammarCst.ToHtmlTreeView();
