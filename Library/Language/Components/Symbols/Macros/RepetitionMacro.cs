@@ -59,7 +59,7 @@ public class RepetitionMacro : IMacroSymbol
     public override string ToString()
     {
         // sentential form
-        return $"{{ {RepeatedSentence} }};";
+        return $"{{ {RepeatedSentence} }}";
     }
 
     /// <summary>

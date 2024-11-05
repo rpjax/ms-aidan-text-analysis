@@ -213,6 +213,7 @@ public class LR1Parser
         // So after reducing the start symbol, the parser should accept the input, and the CST build process should be finished.
         var isAcceptState = nextState == 1;
 
+        /* executes the goto action */
         context.Stack.PushState(nextState);
 
         if (isAcceptState)

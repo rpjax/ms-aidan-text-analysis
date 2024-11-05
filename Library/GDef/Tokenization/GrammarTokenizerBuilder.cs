@@ -27,6 +27,7 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
 
         SkipWhitespace(builder);
         SkipControlChars(builder);
+        Keywords(builder);
         Identifier(builder);
         SpecialSymbols(builder);
         StringLexemes(builder);
@@ -41,7 +42,7 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
     {
         return new char[]
         {
-            ':', ';', '$', '{', '}', '[', ']', '(', ')', '|'
+            ':', ';', '$', '{', '}', '[', ']', '(', ')', '|', '='
         };
     }
 
@@ -52,6 +53,16 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
             '"', '\''
         };
     }
+
+    private string[] GetKeywords()
+    {
+        return new string[]
+        {
+            GDefLexemes.Lexeme, GDefLexemes.Use, GDefLexemes.Charset
+        };
+    }
+
+    /* tokenization rules */
 
     private void SkipWhitespace(TokenizerDfaBuilder builder)
     {
@@ -72,10 +83,46 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
             ;
     }
 
+    private void Keywords(TokenizerDfaBuilder builder)
+    {
+        var keywords = GetKeywords();
+
+        foreach (var keyword in keywords)
+        {
+            /*
+             * use -> u s e
+             */
+            var currentState = States.InitialState;
+
+            // Create states for each character in the keyword
+            foreach (var (index, c) in keyword.Select((c, i) => (i, c)))
+            {
+                var nextState = $"{keyword}_part_{index}";
+
+                builder
+                    .FromState(currentState)
+                    .OnCharacter(c)
+                    .GoTo(nextState);
+
+                currentState = nextState;
+            }
+
+            // After the last character, confirm it's a keyword by checking the next character
+            builder
+                .FromState(currentState)
+                .OnAnyCharacter()
+                .ExceptRange('a', 'z')
+                .ExceptRange('A', 'Z')
+                .ExceptRange('0', '9')
+                .Except('_')
+                .Accept(keyword);
+        }
+    }
+
     private void Identifier(TokenizerDfaBuilder builder)
     {
         var identifierStart = "identifier_start";
-        var acceptName = "identifier";
+        var acceptName = GDefLexemes.Identifier;
 
         builder
             .FromInitialState()
@@ -92,8 +139,8 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
             .OnCharacterRange('A', 'Z')
             .OnCharacterRange('0', '9')
             .Recurse()
-
             ;
+
         builder
             .FromState(identifierStart)
             .OnAnyCharacter()
@@ -139,7 +186,7 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
             var stringState = $"{delimiter}-string start";
             var stringEndState = $"{delimiter}-string end";
             var escapeState = $"{delimiter}-string escape char";
-            var acceptName = "string";
+            var acceptName = GDefLexemes.String;
 
             var otherDelimiters = delimiters
                 .Where(d => d != delimiter)
@@ -199,7 +246,7 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
 
         var cStyleBlockComment = "c_style_block_comment";
         var cStyleBlockCommentEnd = "c_style_block_comment_end";
-        var acceptName = "comment";
+        var acceptName = GDefLexemes.Comment;
 
         //builder.SetCharset(CharsetType.Utf8);
 

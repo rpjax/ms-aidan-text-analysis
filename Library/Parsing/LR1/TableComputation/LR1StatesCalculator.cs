@@ -185,7 +185,7 @@ public class LR1StatesCalculator
 
         var nonTerminal = symbol.AsNonTerminal();
         var productions = Grammar.GetProductions(nonTerminal);
-        var lookaheads = ComputeLookaheads(item, item.GetBeta());
+        var lookaheads = ComputeLookaheads(item);
 
         var items = new List<LR1Item>();
 
@@ -206,14 +206,13 @@ public class LR1StatesCalculator
     /// Computes the lookaheads for the specified item and beta.
     /// </summary>
     /// <param name="item">The item to compute the lookaheads for.</param>
-    /// <param name="beta">The beta to compute the lookaheads for.</param>
     /// <returns>An array of computed lookaheads.</returns>
-    private ITerminal[] ComputeLookaheads(
-        LR1Item item,
-        ISentence beta)
+    private ITerminal[] ComputeLookaheads(LR1Item item)
     {
+        var beta = item.GetBeta();
         var originalLookaheads = item.Lookaheads;
         var firstSet = ComputeFirstSet(beta);
+
         var lookaheads = new List<ITerminal>(firstSet.Terminals);
 
         if (firstSet.ContainsEpsilon)
@@ -278,13 +277,4 @@ public class LR1StatesCalculator
         return gotoStates.ToArray();
     }
 
-    /// <summary>
-    /// Computes the follow set for the grammar.
-    /// </summary>
-    /// <returns>The computed follow set.</returns>
-    /// <exception cref="NotImplementedException">Thrown when the method is not implemented.</exception>
-    private FollowSetCalculator ComputeFollowSet()
-    {
-        throw new NotImplementedException();
-    }
 }

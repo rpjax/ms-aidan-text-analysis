@@ -1,8 +1,6 @@
 ﻿using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.Components;
-using Aidan.TextAnalysis.Tokenization;
-using Aidan.TextAnalysis.Tokenization.Extensions;
 
 namespace Aidan.TextAnalysis.GDef;
 
@@ -11,6 +9,9 @@ namespace Aidan.TextAnalysis.GDef;
 /// </summary>
 public class GDefTranslator
 {
+    /// <summary>
+    /// Enum representing the type of symbol.
+    /// </summary>
     enum SymbolType
     {
         Terminal,
@@ -18,6 +19,11 @@ public class GDefTranslator
         Macro
     }
 
+    /// <summary>
+    /// Translates a CST root node to a Grammar object.
+    /// </summary>
+    /// <param name="root">The root node of the CST.</param>
+    /// <returns>A Grammar object.</returns>
     public static Grammar TranslateGrammar(CstRootNode root)
     {
         var productions = root.Children
@@ -32,6 +38,13 @@ public class GDefTranslator
         return new Grammar(start, productions);
     }
 
+    /// <summary>
+    /// Translates a CST internal node representing a production rule to a ProductionRule object.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A ProductionRule object.</returns>
+    /// <exception cref="Exception">Thrown when the node name is not "production".</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the node has an invalid structure.</exception>
     public static ProductionRule TranslateProductionRule(CstInternalNode node)
     {
         if (node.Name != "production")
@@ -67,6 +80,11 @@ public class GDefTranslator
         return new ProductionRule(head, body);
     }
 
+    /// <summary>
+    /// Translates an array of CST nodes to a Sentence object.
+    /// </summary>
+    /// <param name="nodes">The array of CST nodes.</param>
+    /// <returns>A Sentence object.</returns>
     public static Sentence TranslateSentence(CstNode[] nodes)
     {
         var symbols = nodes
@@ -77,6 +95,12 @@ public class GDefTranslator
         return new Sentence(symbols);
     }
 
+    /// <summary>
+    /// Translates a CST node to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid internal node.</exception>
     public static IEnumerable<ISymbol> TranslateSymbol(CstNode node)
     {
         if (node is not CstInternalNode internalNode)
@@ -100,85 +124,56 @@ public class GDefTranslator
         }
     }
 
-    /*
-     * translate terminals
-     */
+    /// <summary>
+    /// Translates a CST internal node representing a terminal to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid terminal node.</exception>
     public static IEnumerable<ISymbol> TranslateTerminal(CstInternalNode node)
     {
         if (node.Name != "terminal")
         {
             throw new InvalidOperationException();
         }
-        if (node.Children.Length != 1)
+
+        var length = node.Children.Length;
+
+        if (length == 1)
         {
-            throw new InvalidOperationException();
+            if (node.Children[0] is not CstLeafNode leaf)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var value = leaf.Token.Value.ToString();
+            /* trim the string quotes*/
+            var normalizedValue = value.Substring(1, value.Length - 2);
+
+            yield return new Terminal(normalizedValue);
+            yield break;
         }
 
-        var child = node.Children[0];
+        if (length == 2)
+        {
+            if (node.Children[1] is not CstLeafNode leaf)
+            {
+                throw new InvalidOperationException();
+            }
 
-        if (child is CstLeafNode leaf)
-        {
-            return TranslateTerminalString(leaf);
-        }
-        if (child is not CstInternalNode internalNode)
-        {
-            throw new InvalidOperationException();
-        }
-
-        if (internalNode.Name == "lexeme")
-        {
-            return TranslateTerminalLexeme(internalNode);
-        }
-
-        if (internalNode.Name == "epsilon")
-        {
-            return TranslateTerminalEpsilon(internalNode);
+            yield return new Terminal(leaf.Token.Value.ToString());
+            yield break;
         }
 
         throw new InvalidOperationException();
     }
 
-    public static IEnumerable<ISymbol> TranslateTerminalString(CstLeafNode leaf)
-    {
-        var tokens = new List<IToken>();
-
-        if (leaf.Token.Type == GDefLexemes.String)
-        {
-            var leafTokens = GDefTokenizers.GrammarTokenizer.Tokenize(
-                input: leaf.Token.Value.ToString()
-            );
-
-            tokens.AddRange(leafTokens);
-        }
-        else
-        {
-            tokens.Add(leaf.Token);
-        }
-
-        return tokens
-            .Select(x => new Terminal(x.Type));
-    }
-
-    public static IEnumerable<ISymbol> TranslateTerminalLexeme(CstInternalNode node)
-    {
-        yield return new Terminal(GetLexemeType(node));
-        yield break;
-    }
-
-    public static IEnumerable<ISymbol> TranslateTerminalEpsilon(CstInternalNode node)
-    {
-        if (node.Name != "epsilon")
-        {
-            throw new InvalidOperationException();
-        }
-
-        yield return new Epsilon();
-        yield break;
-    }
-
-    /*
-     * translate non terminal
-     */
+    /// <summary>
+    /// Translates a CST internal node representing a non-terminal to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid non-terminal node.</exception>
     public static IEnumerable<ISymbol> TranslateNonTerminal(CstInternalNode node)
     {
         if (node.Name != "non_terminal")
@@ -204,9 +199,12 @@ public class GDefTranslator
         yield return new NonTerminal(leaf.Token.Value.ToString());
     }
 
-    /*
-     * translate macros
-     */
+    /// <summary>
+    /// Translates a CST internal node representing a macro to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid macro node.</exception>
     public static IEnumerable<ISymbol> TranslateMacro(CstInternalNode node)
     {
         if (node.Name != "macro")
@@ -243,6 +241,12 @@ public class GDefTranslator
         }
     }
 
+    /// <summary>
+    /// Translates a CST internal node representing a grouping macro to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid grouping macro node.</exception>
     public static IEnumerable<ISymbol> TranslateGroupingMacro(CstInternalNode node)
     {
         if (node.Name != "grouping")
@@ -263,6 +267,12 @@ public class GDefTranslator
         yield return new GroupingMacro(TranslateSentence(children).ToArray());
     }
 
+    /// <summary>
+    /// Translates a CST internal node representing an option macro to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid option macro node.</exception>
     public static IEnumerable<ISymbol> TranslateOptionMacro(CstInternalNode node)
     {
         if (node.Name != "option")
@@ -283,6 +293,12 @@ public class GDefTranslator
         yield return new OptionMacro(TranslateSentence(children).ToArray());
     }
 
+    /// <summary>
+    /// Translates a CST internal node representing a repetition macro to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid repetition macro node.</exception>
     public static IEnumerable<ISymbol> TranslateRepetitionMacro(CstInternalNode node)
     {
         if (node.Name != "repetition")
@@ -303,6 +319,12 @@ public class GDefTranslator
         yield return new RepetitionMacro(TranslateSentence(children).ToArray());
     }
 
+    /// <summary>
+    /// Translates a CST internal node representing an alternative macro to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid alternative macro node.</exception>
     public static IEnumerable<ISymbol> TranslateAlternativeMacro(CstInternalNode node)
     {
         if (node.Name != "alternative")
@@ -310,12 +332,15 @@ public class GDefTranslator
             throw new InvalidOperationException();
         }
 
-        yield return new AlternativeMacro();
+        yield return new PipeMacro();
     }
 
-    /*
-     * private methods.
-     */
+    /// <summary>
+    /// Determines the symbol type of a CST internal node.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>The symbol type.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node name is not recognized.</exception>
     private static SymbolType GetSymbolType(CstInternalNode node)
     {
         switch (node.Name)
@@ -334,44 +359,12 @@ public class GDefTranslator
         }
     }
 
-    private static string GetLexemeType(CstInternalNode node)
-    {
-        if (node.Name != "lexeme")
-        {
-            throw new InvalidOperationException();
-        }
-        if (node.Children.Length != 2)
-        {
-            throw new InvalidOperationException();
-        }
-
-        if (node.Children[1] is not CstLeafNode lexemeNode)
-        {
-            throw new InvalidOperationException();
-        }
-
-        switch (lexemeNode.Token.Value.ToString())
-        {
-            case "id":
-                return GDefLexemes.Identifier;
-
-            case "string":
-                return GDefLexemes.String;
-
-            case "int":
-                return GDefLexemes.Identifier;
-
-            case "float":
-                return GDefLexemes.Float;
-
-            case "hex":
-                return GDefLexemes.Hexadecimal;
-
-            default:
-                throw new InvalidOperationException();
-        }
-    }
-
+    /// <summary>
+    /// Determines the macro type of a CST internal node.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>The macro type.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node name is not recognized.</exception>
     public static MacroType GetMacroType(CstInternalNode node)
     {
         switch (node.Name)

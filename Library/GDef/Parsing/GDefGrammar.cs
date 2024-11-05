@@ -59,7 +59,7 @@ public class GDefGrammar : Grammar
 
             /* 
              *   lexer_settings
-             *      : { lexer_statement }
+             *      : lexer_statement { lexer_statement }
              *      ;
              */
             new ProductionRule(
@@ -73,8 +73,8 @@ public class GDefGrammar : Grammar
 
             /* 
              *   lexer_statement
-             *      : use charset $id 
-             *      | lexeme $id = $string 
+             *      : use charset $id ';'
+             *      | lexeme $id = $string ';'
              *      ;
              */
             new ProductionRule(

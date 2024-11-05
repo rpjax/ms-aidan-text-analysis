@@ -204,6 +204,7 @@ public class CstBuilder
         if (length == 0)
         {
             throw new InvalidOperationException("Token array is empty.");
+            //return new TokenCollection(Array.Empty<IToken>());
         }
 
         var offset = TokenAccumulator.Count - length;

@@ -2,6 +2,7 @@
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
+using Aidan.TextAnalysis.Parsing.LR1.Tools;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.TableComputation;
 
@@ -73,7 +74,8 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
                 kv => kv.Key,
                 kv => kv.Value
             ),
-            productions: Productions);
+            productions: Productions,
+            states: States);
     }
 
     /// <summary>

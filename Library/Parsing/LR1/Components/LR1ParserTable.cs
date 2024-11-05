@@ -1,5 +1,4 @@
-﻿using Aidan.TextAnalysis.Helpers;
-using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.LR1.TableComputation;
 using System.Runtime.CompilerServices;
 
@@ -26,17 +25,25 @@ public class LR1ParserTable : ILR1ParserTable
     private IProductionRule[] Productions { get; }
 
     /// <summary>
+    /// Gets the computed states of the parser.
+    /// </summary>
+    private LR1State[]? States { get; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="LR1ParserTable"/> class.
     /// </summary>
     /// <param name="stateTransitionsDictionary">The parser table entries.</param>
     /// <param name="productions">The production rules.</param>
+    /// <param name="states">The states of the parser.</param>
     public LR1ParserTable(
         Dictionary<uint, LR1ParserTransition[]> stateTransitionsDictionary,
-        IProductionRule[] productions)
+        IProductionRule[] productions,
+        LR1State[]? states = null)
     {
         SymbolHashTable = ComputeSymbolHashTable(stateTransitionsDictionary);
         Entries = ComputeEntries(stateTransitionsDictionary);
         Productions = productions;
+        States = states;
     }
 
     /// <summary>
