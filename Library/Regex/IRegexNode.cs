@@ -15,7 +15,7 @@ public enum RegexNodeType
 public interface IRegexNode : IEquatable<IRegexNode>
 {
     RegexNodeType Type { get; }
-    bool ProducesEpsilon { get; } // Can match the empty string
+    bool ContainsEpsilon { get; } // Can match the empty string
     IRegexNode Derive(char c); // Derives the regex node with respect to a character
     IRegexNode Simplify(); // Simplifies the regex node
     string ToString();
@@ -51,7 +51,7 @@ public interface IKleeneStarNode : IRegexNode
 public class EpsilonNode : IRegexNode
 {
     public RegexNodeType Type => RegexNodeType.Epsilon;
-    public bool ProducesEpsilon => true;
+    public bool ContainsEpsilon => true;
 
     public EpsilonNode()
     {
@@ -82,7 +82,7 @@ public class EpsilonNode : IRegexNode
 public class EmptySetNode : IRegexNode
 {
     public RegexNodeType Type => RegexNodeType.EmptySet;
-    public bool ProducesEpsilon => false;
+    public bool ContainsEpsilon => false;
 
     public EmptySetNode()
     {
@@ -113,7 +113,7 @@ public class EmptySetNode : IRegexNode
 public class LiteralNode : ILiteralNode
 {
     public RegexNodeType Type => RegexNodeType.Literal;
-    public bool ProducesEpsilon => false;
+    public bool ContainsEpsilon => false;
     public char Literal { get; }
 
     public LiteralNode(char literal)
@@ -148,7 +148,7 @@ public class LiteralNode : ILiteralNode
 public class UnionNode : IUnionNode
 {
     public RegexNodeType Type => RegexNodeType.Union;
-    public bool ProducesEpsilon => Left.ProducesEpsilon || Right.ProducesEpsilon;
+    public bool ContainsEpsilon => Left.ContainsEpsilon || Right.ContainsEpsilon;
     public IRegexNode Left { get; }
     public IRegexNode Right { get; }
 
@@ -190,11 +190,11 @@ public class UnionNode : IUnionNode
             return left;
         }
 
-        if (Left.ProducesEpsilon && Right.Type == RegexNodeType.Epsilon)
+        if (Left.ContainsEpsilon && Right.Type == RegexNodeType.Epsilon)
         {
             return Left;
         }
-        if (Right.ProducesEpsilon && Left.Type == RegexNodeType.Epsilon)
+        if (Right.ContainsEpsilon && Left.Type == RegexNodeType.Epsilon)
         {
             return Right;
         }
@@ -218,7 +218,7 @@ public class UnionNode : IUnionNode
 public class ConcatenationNode : IConcatenationNode
 {
     public RegexNodeType Type => RegexNodeType.Concatenation;
-    public bool ProducesEpsilon => Left.ProducesEpsilon && Right.ProducesEpsilon;
+    public bool ContainsEpsilon => Left.ContainsEpsilon && Right.ContainsEpsilon;
     public IRegexNode Left { get; }
     public IRegexNode Right { get; }
 
@@ -242,7 +242,7 @@ public class ConcatenationNode : IConcatenationNode
             //return new EmptySetNode();
         }
 
-        if (Left.ProducesEpsilon)
+        if (Left.ContainsEpsilon)
         {
             var rightDerivative = Right.Derive(c);
 
@@ -300,7 +300,7 @@ public class ConcatenationNode : IConcatenationNode
 public class StarNode : IKleeneStarNode
 {
     public RegexNodeType Type => RegexNodeType.Star;
-    public bool ProducesEpsilon => true;
+    public bool ContainsEpsilon => true;
     public IRegexNode Child { get; }
 
     public StarNode(IRegexNode child)
@@ -358,168 +358,4 @@ public class StarNode : IKleeneStarNode
     {
         return $"({Child})*";
     }
-}
-
-/* dfa stuff */
-public class Dfa
-{
-
-}
-
-public class DfaState : IEquatable<DfaState>
-{
-    public IRegexNode Node { get; }
-    public bool IsFinal { get; set; }
-
-    public DfaState(IRegexNode node)
-    {
-        Node = node;
-        IsFinal = node.Type == RegexNodeType.Epsilon;
-    }
-
-    public bool Equals(DfaState other) => other.Node.Equals(Node);
-
-    public override string ToString()
-    {
-        return Node.ToString();
-    }
-}
-
-public class DfaStateTransition
-{
-    public DfaState From { get; }
-    public DfaState To { get; }
-    public char Symbol { get; }
-
-    public DfaStateTransition(DfaState from, DfaState to, char symbol)
-    {
-        From = from;
-        To = to;
-        Symbol = symbol;
-    }
-
-    public override string ToString()
-    {
-        return $"{From} --{Symbol}--> {To}";
-    }
-}
-
-public class RegexDfaCalculator
-{
-    private IRegexNode Source { get; }
-
-    public RegexDfaCalculator(IRegexNode source)
-    {
-        Source = source;
-    }
-
-    public Dfa ComputeDfa()
-    {
-        var states = new List<DfaState>();
-        var transitions = new List<DfaStateTransition>();
-        var processedStates = new HashSet<DfaState>();
-
-        var initialState = ComputeInitialState();
-        var alphabet = GetAlphabet();
-
-        states.Add(initialState);
-
-        while (true)
-        {
-            var newStatesCounter = 0;
-            var statesToProcess = states
-                .Except(processedStates)
-                .ToArray();
-
-            foreach (var state in statesToProcess)
-            {
-                if (processedStates.Any(x => x.Equals(state)))
-                {
-                    continue;
-                }
-
-                /* mark the state as processed */
-                processedStates.Add(state);
-
-                if (state.IsFinal)
-                {
-                    //continue;
-                }
-
-                foreach (var c in alphabet)
-                {
-                    var derivative = ComputeDerivativeStates(state, c);
-
-                    if (states.Any(x => x.Equals(derivative)))
-                    {
-                        continue;
-                    }
-
-                    var transition = new DfaStateTransition(state, derivative, c);
-
-                    states.Add(derivative);
-                    transitions.Add(transition);
-                    newStatesCounter++;
-                }
-            }
-
-            if (newStatesCounter == 0)
-            {
-                break;
-            }
-        }
-
-        return new Dfa();
-    }
-
-    private DfaState ComputeInitialState()
-    {
-        return new DfaState(node: Source);
-    }
-
-    private DfaState ComputeDerivativeStates(DfaState state, char c)
-    {
-        var regexNode = state.Node
-            .Derive(c)
-            .Simplify();
-
-        return new DfaState(
-            node: regexNode);
-    }
-
-    private char[] GetAlphabet()
-    {
-        var alphabet = new HashSet<char>();
-
-        var stack = new Stack<IRegexNode>();
-        stack.Push(Source);
-
-        while (stack.Count > 0)
-        {
-            var node = stack.Pop();
-
-            switch (node)
-            {
-                case ILiteralNode literal:
-                    alphabet.Add(literal.Literal);
-                    break;
-                case IConcatenationNode concatenation:
-                    stack.Push(concatenation.Left);
-                    stack.Push(concatenation.Right);
-                    break;
-                case IUnionNode union:
-                    stack.Push(union.Left);
-                    stack.Push(union.Right);
-                    break;
-                case IKleeneStarNode kleeneStar:
-                    stack.Push(kleeneStar.Child);
-                    break;
-            }
-        }
-
-        return alphabet
-            .Reverse()
-            .ToArray();
-    }
-
 }
