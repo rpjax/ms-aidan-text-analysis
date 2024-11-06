@@ -22,6 +22,23 @@ public class Program
             )
         );
 
+        var lexemeRegex = new ConcatenationNode(
+            new LiteralNode('l'),
+            new ConcatenationNode(
+                new LiteralNode('e'),
+                new ConcatenationNode(
+                    new LiteralNode('x'),
+                    new ConcatenationNode(
+                        new LiteralNode('e'),
+                        new ConcatenationNode(
+                            new LiteralNode('m'),
+                            new LiteralNode('e')
+                        )
+                    )
+                )
+            )
+        );
+
         // Represents the regex: ((a|b*)c(d|e)f)* | (g(h|i*|j)*k)
         var complexRegex = new UnionNode(
             new StarNode(
@@ -59,7 +76,7 @@ public class Program
             )
         );
 
-        var dfaCalculator = new RegexDfaCalculator(complexRegex);
+        var dfaCalculator = new RegexDfaCalculator(lexemeRegex);
         var dfa = dfaCalculator.ComputeDfa();
 
         Console.WriteLine();

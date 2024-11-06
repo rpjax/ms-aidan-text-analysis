@@ -1,7 +1,8 @@
 ﻿using Aidan.TextAnalysis.Regexes.Ast;
+using Aidan.TextAnalysis.Regexes.Ast.Extensions;
 using System.Text;
 
-namespace Aidan.TextAnalysis.Regexes.Derivation;
+namespace Aidan.TextAnalysis.Regexes.Derivative;
 
 public class Derivation
 {
@@ -69,14 +70,6 @@ public class DerivativeHistory
         Records.Clear();
     }
 
-    public void Print()
-    {
-        //foreach (var record in Records)
-        //{
-        //    Console.WriteLine($"{record.Regex} --{record.Character}--> {record.Derivative}");
-        //}
-    }
-
     public override string ToString()
     {
         var sb = new StringBuilder();
@@ -90,6 +83,23 @@ public class DerivativeHistory
     }
 
 }
+
+/*
+ * Author Note:
+ * 
+ * Maintance of this code should be done with caution. 
+ * This is an absolutely critical part of the regex engine, and it's a nightmare to debug.
+ * 
+ * The calculator uses Brzozowski's algorithm to calculate the derivative of a regular expression with respect to a character.
+ * The History property is used to keep track of the steps taken to calculate the derivative, it helps with debugging. 
+ * So, if you're changing this code, use and abuse the History property to debug the derivative calculation.
+ * You can easily print the history to the console by calling the ToString() method on the History property.
+ * 
+ * The simplification of the regex seems to be crutial for the correctness of derivative calculation.
+ * 
+ * I don't really understand the math behind this, but I've tried to make the code as adherent to the theory as possible.
+ * If you are a more experienced engineer, feel free to submit any improvements to this code. It would be greatly appreciated.
+ */
 
 public class RegexDerivativeCalculator
 {
@@ -107,27 +117,27 @@ public class RegexDerivativeCalculator
         switch (node.Type)
         {
             case RegexNodeType.Epsilon:
-                derivative = DeriveEpsilonNode((EpsilonNode)node, c);
+                derivative = DeriveEpsilonNode(node.AsEpsilon(), c);
                 break;
 
             case RegexNodeType.EmptySet:
-                derivative = DeriveEmptySetNode((EmptySetNode)node, c);
+                derivative = DeriveEmptySetNode(node.AsEmptySet(), c);
                 break;
 
             case RegexNodeType.Literal:
-                derivative = DeriveLiteralNode((LiteralNode)node, c);
+                derivative = DeriveLiteralNode(node.AsLiteral(), c);
                 break;
 
             case RegexNodeType.Union:
-                derivative = DeriveUnionNode((UnionNode)node, c);
+                derivative = DeriveUnionNode(node.AsUnion(), c);
                 break;
 
             case RegexNodeType.Concatenation:
-                derivative = DeriveConcatenationNode((ConcatenationNode)node, c);
+                derivative = DeriveConcatenationNode(node.AsConcatenation(), c);
                 break;
 
             case RegexNodeType.Star:
-                derivative = DeriveStarNode((StarNode)node, c);
+                derivative = DeriveStarNode(node.AsStar(), c);
                 break;
 
             default:
@@ -137,9 +147,8 @@ public class RegexDerivativeCalculator
         /* todo: add history for debugging */
         History.AddDerivative(node, c, derivative);
 
-        var simplified = Simplify(derivative);
-
-        return simplified;
+        /* simplify the derivative before returning it */
+        return Simplify(derivative);
     }
 
     public IRegexNode Simplify(IRegexNode node)
@@ -149,33 +158,34 @@ public class RegexDerivativeCalculator
         switch (node.Type)
         {
             case RegexNodeType.Epsilon:
-                simplified = SimplifyEpsilonNode((EpsilonNode)node);
+                simplified = SimplifyEpsilonNode(node.AsEpsilon());
                 break;
 
             case RegexNodeType.EmptySet:
-                simplified = SimplifyEmptySetNode((EmptySetNode)node);
+                simplified = SimplifyEmptySetNode(node.AsEmptySet());
                 break;
 
             case RegexNodeType.Literal:
-                simplified = SimplifyLiteralNode((LiteralNode)node);
+                simplified = SimplifyLiteralNode(node.AsLiteral());
                 break;
 
             case RegexNodeType.Union:
-                simplified = SimplifyUnionNode((UnionNode)node);
+                simplified = SimplifyUnionNode(node.AsUnion());
                 break;
 
             case RegexNodeType.Concatenation:
-                simplified = SimplifyConcatenationNode((ConcatenationNode)node);
+                simplified = SimplifyConcatenationNode(node.AsConcatenation());
                 break;
 
             case RegexNodeType.Star:
-                simplified = SimplifyStarNode((StarNode)node);
+                simplified = SimplifyStarNode(node.AsStar());
                 break;
 
             default:
                 throw new InvalidOperationException($"Unknown node type: {node.Type}");
         }
 
+        /* if the simplified node is the same as the original node, we don't need to add it to the history */
         if (!simplified.Equals(node))
         {
             History.AddSimplification(node, simplified);
@@ -206,39 +216,41 @@ public class RegexDerivativeCalculator
 
     private IRegexNode DeriveUnionNode(UnionNode node, char c)
     {
-        var leftDeriv = Derive(node.Left, c);
-        var rightDeriv = Derive(node.Right, c);
+        var leftDerivative = Derive(node.Left, c);
+        var rightDerivative = Derive(node.Right, c);
 
-        if (leftDeriv.Type is RegexNodeType.EmptySet)
-        {
-            return rightDeriv;
-        }
-        if (rightDeriv.Type is RegexNodeType.EmptySet)
-        {
-            return leftDeriv;
-        }
-
-        return new UnionNode(leftDeriv, rightDeriv);
+        return new UnionNode(leftDerivative, rightDerivative);
     }
 
     private IRegexNode DeriveConcatenationNode(ConcatenationNode node, char c)
     {
         var leftDerivative = Derive(node.Left, c);
+        var rightDerivative = Derive(node.Right, c);
 
         /* the concatenation of an empty set with any node is an empty set */
         if (leftDerivative is EmptySetNode)
         {
-            return new EmptySetNode();
+            //return new EmptySetNode();
         }
         /* epsilon concatenated with anything is the anything */
         if (leftDerivative is EpsilonNode)
         {
-            return node.Right;
+            //return node.Right;
         }
 
         if (node.Left.ContainsEpsilon)
         {
-            var rightDerivative = Derive(node.Right, c);
+            // If right derivative is the empty set, skip it in the union.
+            if (rightDerivative.IsEmptySet())
+            {
+                //return new ConcatenationNode(leftDerivative, node.Right);
+            }
+
+            // If right derivative is epsilon, return only the left derivative.
+            if (rightDerivative.IsEpsilon())
+            {
+                //return leftDerivative;
+            }
 
             return new UnionNode(
                 new ConcatenationNode(leftDerivative, node.Right),
@@ -282,78 +294,86 @@ public class RegexDerivativeCalculator
 
     private IRegexNode SimplifyUnionNode(UnionNode node)
     {
-        var left = Simplify(node.Left);
-        var right = Simplify(node.Right);
+        var left = node.Left;
+        var right = node.Right;
+        var simplifiedLeft = Simplify(left);
+        var simplifiedRight = Simplify(right);
 
-        // Union with NullNode simplifies to the other node
-        if (left.Type == RegexNodeType.EmptySet)
+        if (simplifiedLeft.IsEmptySet())
         {
-            return right;
+            return simplifiedRight;
         }
-        if (right.Type == RegexNodeType.EmptySet)
+        if (simplifiedRight.IsEmptySet())
         {
-            return left;
-        }
-
-        if (node.Left.ContainsEpsilon && node.Right.Type == RegexNodeType.Epsilon)
-        {
-            return node.Left;
-        }
-        if (node.Right.ContainsEpsilon && node.Left.Type == RegexNodeType.Epsilon)
-        {
-            return node.Right;
+            return simplifiedLeft;
         }
 
-        return new UnionNode(left, right);
+        if (left.IsEpsilon() && simplifiedRight.ContainsEpsilon)
+        {
+            return simplifiedRight;
+        }
+        if (right.IsEpsilon() && simplifiedLeft.ContainsEpsilon)
+        {
+            return simplifiedLeft;
+        }
+
+        // Avoid duplicate terms (R ∪ R = R)
+        if (simplifiedLeft.Equals(simplifiedRight))
+        {
+            return simplifiedLeft;
+        }
+
+        return new UnionNode(simplifiedLeft, simplifiedRight);
     }
 
     private IRegexNode SimplifyConcatenationNode(ConcatenationNode node)
     {
-        var left = Simplify(node.Left);
-        var right = Simplify(node.Right);
+        var left = node.Left;
+        var right = node.Right;
+        var simplifiedLeft = Simplify(left);
+        var simplifiedRight = Simplify(right);
 
-        var anyIsEmptySet = false
-            || left.Type == RegexNodeType.EmptySet
-            || right.Type == RegexNodeType.EmptySet;
-
-        /* the concatenation of an empty set with any node is an empty set */
-        if (anyIsEmptySet)
+        // Concatenation with Empty Set (∅ ∘ R or R ∘ ∅ = ∅)
+        if (simplifiedLeft.IsEmptySet() || simplifiedRight.IsEmptySet())
         {
             return new EmptySetNode();
         }
 
-        if (left.Type == RegexNodeType.Epsilon)
+        // Concatenation with Epsilon (ε ∘ R = R and R ∘ ε = R)
+        if (simplifiedLeft.IsEpsilon())
         {
-            return right;
+            return simplifiedRight;
         }
-        if (right.Type == RegexNodeType.Epsilon)
+        if (simplifiedRight.IsEpsilon())
         {
-            return left;
+            return simplifiedLeft;
         }
 
-        return new ConcatenationNode(left, right);
+        return new ConcatenationNode(simplifiedLeft, simplifiedRight);
     }
 
     private IRegexNode SimplifyStarNode(StarNode node)
     {
         var simplifiedChild = Simplify(node.Child);
 
-        // If the child is NullNode, Kleene star of NullNode is EmptyNode
-        if (simplifiedChild.Type == RegexNodeType.EmptySet)
+        // Star of Empty Set (∅*) simplifies to Epsilon (ε)
+        if (simplifiedChild.IsEmptySet())
         {
-            Console.WriteLine();
-            //return new EpsilonNode();
-        }
-        if (simplifiedChild.Type == RegexNodeType.Epsilon)
-        {
-            Console.WriteLine();
+            return new EpsilonNode();
         }
 
-        // If the child is already a KleeneStarNode, we avoid unnecessary nesting
+        // Star of Epsilon (ε*) simplifies to Epsilon (ε)
+        if (simplifiedChild.IsEpsilon())
+        {
+            return new EpsilonNode();
+        }
+
+        // Avoid redundant nested stars (if the child is already a star, return the simplified child)
         if (simplifiedChild is StarNode)
         {
             return simplifiedChild;
         }
+
         if (simplifiedChild.Equals(this))
         {
             return simplifiedChild;

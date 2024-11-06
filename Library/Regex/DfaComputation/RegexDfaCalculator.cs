@@ -1,5 +1,6 @@
 ﻿using Aidan.TextAnalysis.Regexes.Ast;
-using Aidan.TextAnalysis.Regexes.Derivation;
+using Aidan.TextAnalysis.Regexes.Ast.Extensions;
+using Aidan.TextAnalysis.Regexes.Derivative;
 
 namespace Aidan.TextAnalysis.Regexes.DfaComputation;
 
@@ -17,7 +18,7 @@ public class DfaState : IEquatable<DfaState>
     public DfaState(IRegexNode node)
     {
         Node = node;
-        IsFinal = node.Type == RegexNodeType.Epsilon;
+        IsFinal = node.ContainsEpsilon;
     }
 
     public bool Equals(DfaState other) => other.Node.Equals(Node);
@@ -92,6 +93,11 @@ public class RegexDfaCalculator
                 foreach (var c in alphabet)
                 {
                     var derivative = ComputeDerivativeStates(state, c);
+
+                    if(derivative.Node.IsEmptySet())
+                    {
+                        continue;
+                    }
 
                     if (states.Any(x => x.Equals(derivative)))
                     {

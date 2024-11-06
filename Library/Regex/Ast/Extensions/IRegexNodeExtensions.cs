@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Regexes.Ast.Extensions;
+﻿using System.Runtime.CompilerServices;
+
+namespace Aidan.TextAnalysis.Regexes.Ast.Extensions;
 
 /// <summary>
 /// Provides extension methods for <see cref="IRegexNode"/>.
@@ -10,6 +12,7 @@ public static class IRegexNodeExtensions
     /// </summary>
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is an epsilon node; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEpsilon(this IRegexNode node)
     {
         return node.Type == RegexNodeType.Epsilon;
@@ -20,6 +23,7 @@ public static class IRegexNodeExtensions
     /// </summary>
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is an empty set node; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEmptySet(this IRegexNode node)
     {
         return node.Type == RegexNodeType.EmptySet;
@@ -30,6 +34,7 @@ public static class IRegexNodeExtensions
     /// </summary>
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a literal node; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsLiteral(this IRegexNode node)
     {
         return node.Type == RegexNodeType.Literal;
@@ -40,6 +45,7 @@ public static class IRegexNodeExtensions
     /// </summary>
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a union node; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsUnion(this IRegexNode node)
     {
         return node.Type == RegexNodeType.Union;
@@ -50,6 +56,7 @@ public static class IRegexNodeExtensions
     /// </summary>
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a concatenation node; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsConcatenation(this IRegexNode node)
     {
         return node.Type == RegexNodeType.Concatenation;
@@ -60,6 +67,7 @@ public static class IRegexNodeExtensions
     /// </summary>
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a star node; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsStar(this IRegexNode node)
     {
         return node.Type == RegexNodeType.Star;
@@ -73,7 +81,8 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns>The <see cref="EpsilonNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="EpsilonNode"/>.</exception>
-    public static EpsilonNode AsEpsilonNode(this IRegexNode node)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static EpsilonNode AsEpsilon(this IRegexNode node)
     {
         return (EpsilonNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to EpsilonNode");
     }
@@ -84,7 +93,8 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns>The <see cref="EmptySetNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="EmptySetNode"/>.</exception>
-    public static EmptySetNode AsEmptySetNode(this IRegexNode node)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static EmptySetNode AsEmptySet(this IRegexNode node)
     {
         return (EmptySetNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to EmptySetNode");
     }
@@ -95,7 +105,8 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns>The <see cref="LiteralNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="LiteralNode"/>.</exception>
-    public static LiteralNode AsLiteralNode(this IRegexNode node)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LiteralNode AsLiteral(this IRegexNode node)
     {
         return (LiteralNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to LiteralNode");
     }
@@ -106,7 +117,8 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns>The <see cref="UnionNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="UnionNode"/>.</exception>
-    public static UnionNode AsUnionNode(this IRegexNode node)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UnionNode AsUnion(this IRegexNode node)
     {
         return (UnionNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to UnionNode");
     }
@@ -117,7 +129,8 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns>The <see cref="ConcatenationNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="ConcatenationNode"/>.</exception>
-    public static ConcatenationNode AsConcatenationNode(this IRegexNode node)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ConcatenationNode AsConcatenation(this IRegexNode node)
     {
         return (ConcatenationNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to ConcatenationNode");
     }
@@ -128,7 +141,8 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns>The <see cref="StarNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="StarNode"/>.</exception>
-    public static StarNode AsStarNode(this IRegexNode node)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static StarNode AsStar(this IRegexNode node)
     {
         return (StarNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to StarNode");
     }
