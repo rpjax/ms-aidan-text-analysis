@@ -1,4 +1,7 @@
-﻿namespace Aidan.TextAnalysis.Regexes;
+﻿using Aidan.TextAnalysis.Regexes.Ast;
+using Aidan.TextAnalysis.Regexes.Derivation;
+
+namespace Aidan.TextAnalysis.Regexes.DfaComputation;
 
 /* dfa stuff */
 public class Dfa
@@ -117,14 +120,24 @@ public class RegexDfaCalculator
         return new DfaState(node: Source);
     }
 
+    private int Counter { get; set; }
+
     private DfaState ComputeDerivativeStates(DfaState state, char c)
     {
-        var regexNode = state.Node
-            .Derive(c)
-            .Simplify();
+        var calculator = new RegexDerivativeCalculator();
+
+        var derivative = calculator
+            .Derive(state.Node, c);
+
+        var history = calculator.History.ToString();
+        Counter++;
+        //var simplified = derivative
+        //    .Simplify();
+
+        var phrase = $"`{state}` with respect to '{c}' = `{derivative}` is it correct ?";
 
         return new DfaState(
-            node: regexNode);
+            node: derivative);
     }
 
     private char[] GetAlphabet()
@@ -151,7 +164,7 @@ public class RegexDfaCalculator
                     stack.Push(union.Left);
                     stack.Push(union.Right);
                     break;
-                case IKleeneStarNode kleeneStar:
+                case IStarNode kleeneStar:
                     stack.Push(kleeneStar.Child);
                     break;
             }

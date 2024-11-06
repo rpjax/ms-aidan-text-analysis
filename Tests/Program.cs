@@ -2,6 +2,8 @@
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Parsing.Extensions;
 using Aidan.TextAnalysis.Regexes;
+using Aidan.TextAnalysis.Regexes.Ast;
+using Aidan.TextAnalysis.Regexes.DfaComputation;
 using System.Diagnostics;
 using System.Globalization;
 
