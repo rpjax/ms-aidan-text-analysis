@@ -194,6 +194,11 @@ public class RegexDerivativeCalculator
         return simplified;
     }
 
+    public string GetHistoryString()
+    {
+        return History.ToString();
+    }
+
     /* derivative calculation */
 
     private IRegexNode DeriveEpsilonNode(EpsilonNode node, char c)
@@ -224,55 +229,35 @@ public class RegexDerivativeCalculator
 
     private IRegexNode DeriveConcatenationNode(ConcatenationNode node, char c)
     {
-        var leftDerivative = Derive(node.Left, c);
-        var rightDerivative = Derive(node.Right, c);
+        var left = node.Left;
+        var right = node.Right;
+        var leftDerivative = Derive(left, c);
+        var rightDerivative = Derive(right, c);
 
-        /* the concatenation of an empty set with any node is an empty set */
-        if (leftDerivative is EmptySetNode)
+        if (left.ContainsEpsilon)
         {
-            //return new EmptySetNode();
-        }
-        /* epsilon concatenated with anything is the anything */
-        if (leftDerivative is EpsilonNode)
-        {
-            //return node.Right;
-        }
-
-        if (node.Left.ContainsEpsilon)
-        {
-            // If right derivative is the empty set, skip it in the union.
-            if (rightDerivative.IsEmptySet())
-            {
-                //return new ConcatenationNode(leftDerivative, node.Right);
-            }
-
-            // If right derivative is epsilon, return only the left derivative.
-            if (rightDerivative.IsEpsilon())
-            {
-                //return leftDerivative;
-            }
-
             return new UnionNode(
-                new ConcatenationNode(leftDerivative, node.Right),
+                new ConcatenationNode(leftDerivative, right),
                 rightDerivative
             );
         }
         else
         {
-            return new ConcatenationNode(leftDerivative, node.Right);
+            return new ConcatenationNode(leftDerivative, right);
         }
     }
 
     private IRegexNode DeriveStarNode(StarNode node, char c)
     {
-        var derivative = Derive(node.Child, c);
+        var child = node.Child;
+        var derivative = Derive(child, c);
 
-        if (derivative is EmptySetNode)
+        if (derivative.IsEmptySet())
         {
             return new EmptySetNode();
         }
 
-        return new ConcatenationNode(derivative, new StarNode(node.Child));
+        return new ConcatenationNode(derivative, new StarNode(child));
     }
 
     /* simplification */
@@ -369,12 +354,7 @@ public class RegexDerivativeCalculator
         }
 
         // Avoid redundant nested stars (if the child is already a star, return the simplified child)
-        if (simplifiedChild is StarNode)
-        {
-            return simplifiedChild;
-        }
-
-        if (simplifiedChild.Equals(this))
+        if (simplifiedChild.IsStar())
         {
             return simplifiedChild;
         }

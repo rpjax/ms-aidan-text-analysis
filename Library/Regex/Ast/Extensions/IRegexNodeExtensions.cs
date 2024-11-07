@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 
 namespace Aidan.TextAnalysis.Regexes.Ast.Extensions;
 
@@ -145,5 +146,64 @@ public static class IRegexNodeExtensions
     public static StarNode AsStar(this IRegexNode node)
     {
         return (StarNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to StarNode");
+    }
+
+    /// <summary>
+    /// Creates a union of the current regex node with the specified other nodes.
+    /// </summary>
+    /// <param name="self">The current regex node.</param>
+    /// <param name="others">The other regex nodes to union with the current node.</param>
+    /// <returns>A new <see cref="IRegexNode"/> representing the union of the current node and the specified nodes.</returns>
+    public static IRegexNode Union(this IRegexNode self, params IRegexNode[] others)
+    {
+        IRegexNode regex = self;
+
+        foreach (var other in others)
+        {
+            regex = new UnionNode(regex, other);
+        }
+
+        return regex;
+    }
+
+    /// <summary>
+    /// Computes the alphabet of the specified regex node.
+    /// </summary>
+    /// <param name="regex">The regex node.</param>
+    /// <param name="chars">The characters to include in the alphabet.</param>
+    /// <returns>An array of characters representing the alphabet of the regex.</returns>
+    public static char[] ComputeAlphabet(this IRegexNode regex, params char[]? chars)
+    {
+        var alphabet = new HashSet<char>(chars ?? Array.Empty<char>());
+
+        var stack = new Stack<IRegexNode>();
+        stack.Push(regex);
+
+        while (stack.Count > 0)
+        {
+            var node = stack.Pop();
+
+            switch (node)
+            {
+                case ILiteralNode literal:
+                    alphabet.Add(literal.Literal);
+                    break;
+                case IConcatenationNode concatenation:
+                    stack.Push(concatenation.Left);
+                    stack.Push(concatenation.Right);
+                    break;
+                case IUnionNode union:
+                    stack.Push(union.Left);
+                    stack.Push(union.Right);
+                    break;
+                case IStarNode kleeneStar:
+                    stack.Push(kleeneStar.Child);
+                    break;
+            }
+        }
+
+        return alphabet
+            .Reverse()
+            .ToArray();
     }
 }

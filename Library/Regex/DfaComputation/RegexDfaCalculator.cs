@@ -1,184 +1,425 @@
-﻿using Aidan.TextAnalysis.Regexes.Ast;
+﻿using Aidan.Core.Extensions;
+using Aidan.Core.Patterns;
+using Aidan.TextAnalysis.Regexes.Ast;
 using Aidan.TextAnalysis.Regexes.Ast.Extensions;
 using Aidan.TextAnalysis.Regexes.Derivative;
+using Aidan.TextAnalysis.Tokenization.StateMachine;
 
 namespace Aidan.TextAnalysis.Regexes.DfaComputation;
 
-/* dfa stuff */
-public class Dfa
-{
+/* regex dfa structures */
 
+public class RegexDfa
+{
+    public IReadOnlyList<RegexDfaState> States { get; }
+    public IReadOnlyList<char> Alphabet { get; }
+
+    public RegexDfa(IEnumerable<RegexDfaState> states, IReadOnlyList<char> alphabet)
+    {
+        States = states.ToArray();
+        Alphabet = alphabet;
+    }
 }
 
-public class DfaState : IEquatable<DfaState>
+public class RegexDfaState : IEquatable<RegexDfaState>
 {
-    public IRegexNode Node { get; }
-    public bool IsFinal { get; set; }
+    public string Name { get; }
+    public IRegexNode Regex { get; }
+    public IReadOnlyList<RegexDfaTransition> Transitions { get; }
+    public bool IsAccepting { get; }
 
-    public DfaState(IRegexNode node)
+    public RegexDfaState(
+        string name,
+        IRegexNode regex,
+        IEnumerable<RegexDfaTransition> transitions)
     {
-        Node = node;
-        IsFinal = node.ContainsEpsilon;
+        Name = name;
+        Regex = regex;
+        Transitions = transitions.ToArray();
+        IsAccepting = Regex.ContainsEpsilon;
     }
 
-    public bool Equals(DfaState other) => other.Node.Equals(Node);
+    public static RegexDfaStateBuilder Create() => new RegexDfaStateBuilder();
+
+    public bool Equals(RegexDfaState other)
+    {
+        return other.Regex.Equals(Regex);
+    }
 
     public override string ToString()
     {
-        return Node.ToString();
+        return $"{Name}: `{Regex}` {(IsAccepting ? "(accepting)" : "")}";
     }
 }
 
-public class DfaStateTransition
+public class RegexDfaStateBuilder : IBuilder<RegexDfaState>
 {
-    public DfaState From { get; }
-    public DfaState To { get; }
+    private string? Name { get; set; }
+    private IRegexNode? Pattern { get; set; }
+    private List<RegexDfaTransition> Transitions { get; } = new List<RegexDfaTransition>();
+
+    public RegexDfaStateBuilder WithName(string name)
+    {
+        Name = name;
+        return this;
+    }
+
+    public RegexDfaStateBuilder WithPattern(IRegexNode pattern)
+    {
+        Pattern = pattern;
+        return this;
+    }
+
+    public RegexDfaStateBuilder WithTransition(RegexDfaTransition transition)
+    {
+        Transitions.Add(transition);
+        return this;
+    }
+
+    public RegexDfaStateBuilder WithTransitions(IEnumerable<RegexDfaTransition> transitions)
+    {
+        Transitions.AddRange(transitions);
+        return this;
+    }
+
+    public RegexDfaState Build()
+    {
+        return new RegexDfaState(
+            name: Name ?? throw new InvalidOperationException("Name is required"),
+            regex: Pattern ?? throw new InvalidOperationException("Pattern is required"),
+            transitions: Transitions);
+    }
+
+}
+
+public class RegexDfaTransition
+{
+    public IRegexNode Source { get; }
+    public IRegexNode Derivative { get; }
     public char Symbol { get; }
 
-    public DfaStateTransition(DfaState from, DfaState to, char symbol)
+    public RegexDfaTransition(
+        IRegexNode source,
+        IRegexNode derivative,
+        char symbol)
     {
-        From = from;
-        To = to;
+        Source = source;
+        Derivative = derivative;
         Symbol = symbol;
     }
 
     public override string ToString()
     {
-        return $"{From} --{Symbol}--> {To}";
+        return $"FROM `{Source}` ON '{Symbol}' GOTO `{Derivative}`";
     }
 }
 
+/* dfa 
+
+/* calculators */
+
 public class RegexDfaCalculator
 {
-    private IRegexNode Source { get; }
+    private IReadOnlyList<RegexLexeme> Lexemes { get; }
+    private IRegexNode Regex { get; }
+    private IReadOnlyList<char> Alphabet { get; }
 
-    public RegexDfaCalculator(IRegexNode source)
+    public RegexDfaCalculator(
+        IReadOnlyList<RegexLexeme> lexemes,
+        params char[] alphabetComplement)
     {
-        Source = source;
+        if(lexemes.Count == 0)
+        {
+            throw new ArgumentException("At least one lexeme is required");
+        }
+
+        Lexemes = lexemes;
+
+        Regex = lexemes
+            .Select(x => x.Pattern)
+            .Aggregate((x, y) => x.Union(y));
+
+        Alphabet = ComputeAlphabet(Regex)
+            .Concat(alphabetComplement)
+            .ToArray();
     }
 
-    public Dfa ComputeDfa()
+    private char[] ComputeAlphabet(IRegexNode regex)
     {
-        var states = new List<DfaState>();
-        var transitions = new List<DfaStateTransition>();
-        var processedStates = new HashSet<DfaState>();
+        return regex.ComputeAlphabet();
+    }
 
+    public RegexDfa ComputeRegexDfa()
+    {
+        var states = new List<RegexDfaState>();
         var initialState = ComputeInitialState();
-        var alphabet = GetAlphabet();
+        var queue = new Queue<RegexDfaState>();
 
         states.Add(initialState);
+        queue.Enqueue(initialState);
 
-        while (true)
+        while (queue.TryDequeue(out var state))
         {
-            var newStatesCounter = 0;
-            var statesToProcess = states
-                .Except(processedStates)
-                .ToArray();
+            var nextStates = ComputeNextStates(state);
 
-            foreach (var state in statesToProcess)
+            foreach (var nextState in nextStates)
             {
-                if (processedStates.Any(x => x.Equals(state)))
+                if (states.Any(x => x.Equals(nextState)))
                 {
                     continue;
                 }
 
+                states.Add(nextState);
+                queue.Enqueue(nextState);
+            }
+        }
+
+        return new RegexDfa(states, Alphabet);
+    }
+
+    private RegexDfaState ComputeInitialState()
+    {
+        var transitions = ComputeTransitions(Regex);
+
+        return new RegexDfaState(
+            name: Regex.ToString(),
+            regex: Regex,
+            transitions: transitions);
+    }
+
+    private RegexDfaTransition[] ComputeTransitions(IRegexNode source)
+    {
+        var transitions = new List<RegexDfaTransition>();
+        var regexes = new List<IRegexNode>();
+        var processedRegexes = new HashSet<IRegexNode>();
+
+        regexes.Add(source);
+
+        while (true)
+        {
+            var newTransitionCounter = 0;
+            var regexesToProcess = regexes
+                .Except(processedRegexes)
+                .ToArray();
+
+            foreach (var regex in regexesToProcess)
+            {
                 /* mark the state as processed */
-                processedStates.Add(state);
+                processedRegexes.Add(regex);
 
-                if (state.IsFinal)
+                foreach (var c in Alphabet)
                 {
-                    //continue;
-                }
+                    var derivative = ComputeDerivative(regex, c);
 
-                foreach (var c in alphabet)
-                {
-                    var derivative = ComputeDerivativeStates(state, c);
-
-                    if(derivative.Node.IsEmptySet())
+                    /* the empty set is the sink state */
+                    if (derivative.IsEmptySet())
                     {
                         continue;
                     }
 
-                    if (states.Any(x => x.Equals(derivative)))
+                    /* prevents duplicates */
+                    if (!derivative.IsEpsilon() && regexes.Any(x => x.Equals(derivative)))
                     {
                         continue;
                     }
 
-                    var transition = new DfaStateTransition(state, derivative, c);
+                    var transition = new RegexDfaTransition(regex, derivative, c);
 
-                    states.Add(derivative);
                     transitions.Add(transition);
-                    newStatesCounter++;
+                    newTransitionCounter++;
                 }
             }
 
-            if (newStatesCounter == 0)
+            if (newTransitionCounter == 0)
             {
                 break;
             }
         }
 
-        return new Dfa();
+        foreach (var regex in regexes)
+        {
+            if (regex.IsEpsilon() || !regex.ContainsEpsilon)
+            {
+                continue;
+            }
+
+            var regexTransitions = transitions
+                    .Where(x => x.Source.Equals(regex))
+                    .ToArray();
+
+            var transitionChars = regexTransitions
+                .Select(x => x.Symbol)
+                .ToArray();
+
+            foreach (var c in Alphabet.Except(transitionChars))
+            {
+                var transition = new RegexDfaTransition(regex, new EpsilonNode(), c);
+                transitions.Add(transition);
+            }
+        }
+        return transitions.ToArray();
     }
 
-    private DfaState ComputeInitialState()
-    {
-        return new DfaState(node: Source);
-    }
-
-    private int Counter { get; set; }
-
-    private DfaState ComputeDerivativeStates(DfaState state, char c)
+    private IRegexNode ComputeDerivative(IRegexNode regex, char c)
     {
         var calculator = new RegexDerivativeCalculator();
 
         var derivative = calculator
-            .Derive(state.Node, c);
+            .Derive(regex, c);
 
-        var history = calculator.History.ToString();
-        Counter++;
-        //var simplified = derivative
-        //    .Simplify();
+        /* debugging */
+        //var history = calculator.GetHistoryString();
+        //var phrase = $"`{state}` with respect to '{c}' = `{derivative}` is it correct ?";
 
-        var phrase = $"`{state}` with respect to '{c}' = `{derivative}` is it correct ?";
-
-        return new DfaState(
-            node: derivative);
+        return derivative;
     }
 
-    private char[] GetAlphabet()
+    private RegexDfaState[] ComputeNextStates(RegexDfaState state)
     {
-        var alphabet = new HashSet<char>();
+        var transitions = state.Transitions;
+        var nextStates = new List<RegexDfaState>();
 
-        var stack = new Stack<IRegexNode>();
-        stack.Push(Source);
-
-        while (stack.Count > 0)
+        foreach (var transition in transitions)
         {
-            var node = stack.Pop();
+            var nextState = new RegexDfaState(
+                name: $"{transition.Derivative}",
+                regex: transition.Derivative,
+                transitions: ComputeTransitions(transition.Derivative));
 
-            switch (node)
-            {
-                case ILiteralNode literal:
-                    alphabet.Add(literal.Literal);
-                    break;
-                case IConcatenationNode concatenation:
-                    stack.Push(concatenation.Left);
-                    stack.Push(concatenation.Right);
-                    break;
-                case IUnionNode union:
-                    stack.Push(union.Left);
-                    stack.Push(union.Right);
-                    break;
-                case IStarNode kleeneStar:
-                    stack.Push(kleeneStar.Child);
-                    break;
-            }
+            nextStates.Add(nextState);
         }
 
-        return alphabet
-            .Reverse()
-            .ToArray();
+        return nextStates.ToArray();
     }
 
 }
+
+/*
+ */
+
+public class TokenizerCalculator
+{
+    private RegexLexeme[] Lexemes { get; }
+    private RegexDfaCalculator DfaCalculator { get; }
+
+    public TokenizerCalculator(params RegexLexeme[] lexemes)
+    {
+        Lexemes = lexemes.ToArray();
+        DfaCalculator = new RegexDfaCalculator(Lexemes, ' ', '\0');
+    }
+
+    public static void Test()
+    {
+        var fooRegex = new ConcatenationNode(
+            new LiteralNode('f'),
+            new ConcatenationNode(
+                new LiteralNode('o'),
+                new LiteralNode('o')
+            )
+        );
+
+        var foobarRegex = new ConcatenationNode(
+            new LiteralNode('f'),
+            new ConcatenationNode(
+                new LiteralNode('o'),
+                new ConcatenationNode(
+                    new LiteralNode('o'),
+                    new ConcatenationNode(
+                        new LiteralNode('b'),
+                        new ConcatenationNode(
+                            new LiteralNode('a'),
+                            new LiteralNode('r')
+                        )
+                    )
+                )
+            )
+        );
+
+        var useRegex = new ConcatenationNode(
+            new LiteralNode('u'),
+            new ConcatenationNode(
+                new LiteralNode('s'),
+                new LiteralNode('e')
+            )
+        );
+
+        var lexemes = new[]
+        {
+            new RegexLexeme("foo_statement", fooRegex),
+            new RegexLexeme("foobar_statement", foobarRegex),
+            new RegexLexeme("use_statement", useRegex)
+        };
+
+        var tokenizer = new TokenizerCalculator(lexemes)
+            .CreateTokenizer();
+
+        var tokens = tokenizer
+            .Tokenize(" foo foo foobar foo foobar use")
+            .ToArray();
+    }
+
+    public TokenizerMachine CreateTokenizer()
+    {
+        var dfa = DfaCalculator.ComputeRegexDfa();
+        var builder = new TokenizerDfaBuilder(dfa.States.First().Name);
+
+        builder.SetCharset(dfa.Alphabet.ToArray());
+
+        builder.FromInitialState()
+            .OnWhitespace()
+            .OnEoi()
+            .Recurse();
+
+        foreach (var state in dfa.States)
+        {
+            foreach (var transition in state.Transitions)
+            {
+                var derivativeIsAccepting = transition.Derivative.IsEpsilon();
+                var sourceContainsEpsilon = transition.Source.ContainsEpsilon;
+                var stateName = transition.Derivative.ToString();
+
+                if (derivativeIsAccepting)
+                {
+                    var acceptName = Guid.NewGuid().ToString();
+
+                    if (sourceContainsEpsilon)
+                    {
+                        builder
+                            .FromState(transition.Source.ToString())
+                            .OnCharacter(transition.Symbol)
+                            .Accept(Guid.NewGuid().ToString())
+                            ;
+                    }
+                    else
+                    {
+                        var intermediateName = Guid.NewGuid().ToString();
+
+                        builder
+                            .FromState(transition.Source.ToString())
+                            .OnCharacter(transition.Symbol)
+                            .GoTo(intermediateName)
+                            ;
+
+                        builder
+                            .FromState(intermediateName)
+                            .OnAnyCharacter()
+                            .Accept(acceptName)
+                            ;
+                    }      
+                }
+                else
+                {
+                    builder
+                        .FromState(transition.Source.ToString())
+                        .OnCharacter(transition.Symbol)
+                        .GoTo(transition.Derivative.ToString());
+                }
+                
+            }
+        }
+
+        return builder.Build();
+    }
+
+}
+

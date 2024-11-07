@@ -13,6 +13,9 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        TokenizerCalculator.Test();
+        return;
+
         /* regex tests */
         var regex = new ConcatenationNode(
             new LiteralNode('a'),
@@ -39,7 +42,7 @@ public class Program
             )
         );
 
-        // Represents the regex: ((a|b*)c(d|e)f)* | (g(h|i*|j)*k)
+        // Represents the regex: `(a|(b)*cd|ef)*|g(h|(i)*|j)*k`
         var complexRegex = new UnionNode(
             new StarNode(
                 new ConcatenationNode(
@@ -75,9 +78,6 @@ public class Program
                 )
             )
         );
-
-        var dfaCalculator = new RegexDfaCalculator(lexemeRegex);
-        var dfa = dfaCalculator.ComputeDfa();
 
         Console.WriteLine();
 
