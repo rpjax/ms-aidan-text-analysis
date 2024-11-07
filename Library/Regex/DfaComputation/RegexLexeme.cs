@@ -7,11 +7,11 @@ namespace Aidan.TextAnalysis.Regexes.DfaComputation;
 public class RegexLexeme
 {
     public string Name { get; }
-    public IRegexNode Pattern { get; }
+    public RegexNode Pattern { get; }
 
     public RegexLexeme(
         string name, 
-        IRegexNode pattern)
+        RegexNode pattern)
     {
         Name = name;
         Pattern = pattern;

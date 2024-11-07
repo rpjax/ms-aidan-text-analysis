@@ -1,12 +1,13 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
+﻿using Aidan.TextAnalysis.Regexes.DfaComputation;
+using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 
 namespace Aidan.TextAnalysis.Regexes.Ast.Extensions;
 
 /// <summary>
-/// Provides extension methods for <see cref="IRegexNode"/>.
+/// Provides extension methods for <see cref="RegexNode"/>.
 /// </summary>
-public static class IRegexNodeExtensions
+public static class RegexNodeExtensions
 {
     /// <summary>
     /// Determines whether the specified node is an epsilon node.
@@ -14,7 +15,7 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is an epsilon node; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEpsilon(this IRegexNode node)
+    public static bool IsEpsilon(this RegexNode node)
     {
         return node.Type == RegexNodeType.Epsilon;
     }
@@ -25,7 +26,7 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is an empty set node; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsEmptySet(this IRegexNode node)
+    public static bool IsEmptySet(this RegexNode node)
     {
         return node.Type == RegexNodeType.EmptySet;
     }
@@ -36,7 +37,7 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a literal node; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLiteral(this IRegexNode node)
+    public static bool IsLiteral(this RegexNode node)
     {
         return node.Type == RegexNodeType.Literal;
     }
@@ -47,7 +48,7 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a union node; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsUnion(this IRegexNode node)
+    public static bool IsUnion(this RegexNode node)
     {
         return node.Type == RegexNodeType.Union;
     }
@@ -58,7 +59,7 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a concatenation node; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsConcatenation(this IRegexNode node)
+    public static bool IsConcatenation(this RegexNode node)
     {
         return node.Type == RegexNodeType.Concatenation;
     }
@@ -69,7 +70,7 @@ public static class IRegexNodeExtensions
     /// <param name="node">The regex node.</param>
     /// <returns><c>true</c> if the node is a star node; otherwise, <c>false</c>.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsStar(this IRegexNode node)
+    public static bool IsStar(this RegexNode node)
     {
         return node.Type == RegexNodeType.Star;
     }
@@ -83,7 +84,7 @@ public static class IRegexNodeExtensions
     /// <returns>The <see cref="EpsilonNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="EpsilonNode"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static EpsilonNode AsEpsilon(this IRegexNode node)
+    public static EpsilonNode AsEpsilon(this RegexNode node)
     {
         return (EpsilonNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to EpsilonNode");
     }
@@ -95,7 +96,7 @@ public static class IRegexNodeExtensions
     /// <returns>The <see cref="EmptySetNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="EmptySetNode"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static EmptySetNode AsEmptySet(this IRegexNode node)
+    public static EmptySetNode AsEmptySet(this RegexNode node)
     {
         return (EmptySetNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to EmptySetNode");
     }
@@ -107,7 +108,7 @@ public static class IRegexNodeExtensions
     /// <returns>The <see cref="LiteralNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="LiteralNode"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static LiteralNode AsLiteral(this IRegexNode node)
+    public static LiteralNode AsLiteral(this RegexNode node)
     {
         return (LiteralNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to LiteralNode");
     }
@@ -119,7 +120,7 @@ public static class IRegexNodeExtensions
     /// <returns>The <see cref="UnionNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="UnionNode"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UnionNode AsUnion(this IRegexNode node)
+    public static UnionNode AsUnion(this RegexNode node)
     {
         return (UnionNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to UnionNode");
     }
@@ -131,7 +132,7 @@ public static class IRegexNodeExtensions
     /// <returns>The <see cref="ConcatenationNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="ConcatenationNode"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ConcatenationNode AsConcatenation(this IRegexNode node)
+    public static ConcatenationNode AsConcatenation(this RegexNode node)
     {
         return (ConcatenationNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to ConcatenationNode");
     }
@@ -143,9 +144,23 @@ public static class IRegexNodeExtensions
     /// <returns>The <see cref="StarNode"/>.</returns>
     /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="StarNode"/>.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static StarNode AsStar(this IRegexNode node)
+    public static StarNode AsStar(this RegexNode node)
     {
         return (StarNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to StarNode");
+    }
+
+    /* utility methods */
+
+    /// <summary>
+    /// Sets the parent of the specified regex node.
+    /// </summary>
+    /// <param name="node">The regex node whose parent is to be set.</param>
+    /// <param name="parent">The parent regex node.</param>
+    public static void SetParent(
+        this RegexNode node,
+        RegexNode parent)
+    {
+        node.Parent = parent;
     }
 
     /// <summary>
@@ -153,10 +168,12 @@ public static class IRegexNodeExtensions
     /// </summary>
     /// <param name="self">The current regex node.</param>
     /// <param name="others">The other regex nodes to union with the current node.</param>
-    /// <returns>A new <see cref="IRegexNode"/> representing the union of the current node and the specified nodes.</returns>
-    public static IRegexNode Union(this IRegexNode self, params IRegexNode[] others)
+    /// <returns>A new <see cref="RegexNode"/> representing the union of the current node and the specified nodes.</returns>
+    public static RegexNode Union(
+        this RegexNode self,
+        params RegexNode[] others)
     {
-        IRegexNode regex = self;
+        RegexNode regex = self;
 
         foreach (var other in others)
         {
@@ -170,40 +187,144 @@ public static class IRegexNodeExtensions
     /// Computes the alphabet of the specified regex node.
     /// </summary>
     /// <param name="regex">The regex node.</param>
-    /// <param name="chars">The characters to include in the alphabet.</param>
+    /// <param name="extraChars">A set of extra characters to include in the alphabet. 
+    /// <br/>Useful for adding whitespace, EOF, control characters, etc.</param>
     /// <returns>An array of characters representing the alphabet of the regex.</returns>
-    public static char[] ComputeAlphabet(this IRegexNode regex, params char[]? chars)
+    public static char[] ComputeAlphabet(
+        this RegexNode regex,
+        params char[]? extraChars)
     {
-        var alphabet = new HashSet<char>(chars ?? Array.Empty<char>());
+        var alphabet = new HashSet<char>(extraChars ?? Array.Empty<char>());
+        var stack = new Stack<RegexNode>();
 
-        var stack = new Stack<IRegexNode>();
         stack.Push(regex);
 
         while (stack.Count > 0)
         {
             var node = stack.Pop();
+            var children = node.GetChildren();
 
-            switch (node)
+            if (node is LiteralNode literalNode)
             {
-                case ILiteralNode literal:
-                    alphabet.Add(literal.Literal);
-                    break;
-                case IConcatenationNode concatenation:
-                    stack.Push(concatenation.Left);
-                    stack.Push(concatenation.Right);
-                    break;
-                case IUnionNode union:
-                    stack.Push(union.Left);
-                    stack.Push(union.Right);
-                    break;
-                case IStarNode kleeneStar:
-                    stack.Push(kleeneStar.Child);
-                    break;
+                alphabet.Add(literalNode.Literal);
+            }
+
+            foreach (var child in children)
+            {
+                stack.Push(child);
             }
         }
 
+        /* it's reversed to make it easier to read, there's no practical effect */
         return alphabet
             .Reverse()
             .ToArray();
+    }
+
+    /* metadata manipulation */
+
+    public static void SetMetadata(
+        this RegexNode node,
+        string key,
+        object value)
+    {
+        node.Metadata[key] = value;
+    }
+
+    public static object? GetMetadata(
+        this RegexNode node,
+        string key)
+    {
+        if (node.Metadata.TryGetValue(key, out var value))
+        {
+            return value;
+        }
+
+        return null;
+    }
+
+    public static void PropagateMetadata(
+        this RegexNode node,
+        string key,
+        object value)
+    {
+        node.SetMetadata(key, value);
+
+        foreach (var child in node.GetChildren())
+        {
+            child.PropagateMetadata(key, value);
+        }
+    }
+
+    /* lexeme metadata */
+
+    public static RegexLexeme? GetLexeme(
+        this RegexNode node)
+    {
+        var lexeme = node.GetMetadata("lexeme");
+
+        if (lexeme is null)
+        {
+            return null;
+        }
+
+        if (lexeme is not RegexLexeme cast)
+        {
+            throw new InvalidCastException($"Invalid cast from {lexeme?.GetType()} to RegexLexeme");
+        }
+
+        return cast;
+    }
+
+    public static void SetLexeme(
+        this RegexNode node,
+        RegexLexeme lexeme)
+    {
+        node.SetMetadata("lexeme", lexeme);
+    }
+
+    public static RegexNode PropagateLexeme(
+        this RegexNode node,
+        RegexNode source)
+    {
+        var lexeme = source.GetLexeme();
+
+        if (lexeme is null)
+        {
+            return node;
+        }
+
+        return node.PropagateLexeme(lexeme);
+    }
+
+    public static RegexNode PropagateLexeme(
+        this RegexNode node,
+        RegexLexeme lexeme)
+    {
+        node.SetLexeme(lexeme);
+
+        foreach (var child in node.GetChildren())
+        {
+            child.PropagateLexeme(lexeme);
+        }
+
+        return node;
+
+    }
+
+    public static RegexNode[] GetEpsilonBranches(
+        this RegexNode node)
+    {
+        var branches = new List<RegexNode>();
+
+        foreach (var child in node.GetChildren())
+        {
+            if (child.ContainsEpsilon)
+            {
+                branches.Add(child);
+            }
+        }
+
+        return branches.ToArray();
     }
 }

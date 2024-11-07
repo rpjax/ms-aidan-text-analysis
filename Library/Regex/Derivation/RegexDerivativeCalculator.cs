@@ -6,14 +6,14 @@ namespace Aidan.TextAnalysis.Regexes.Derivative;
 
 public class Derivation
 {
-    public IRegexNode Regex { get; }
+    public RegexNode Regex { get; }
     public char Character { get; }
-    public IRegexNode Derivative { get; }
+    public RegexNode Derivative { get; }
 
     public Derivation(
-        IRegexNode regex,
+        RegexNode regex,
         char character,
-        IRegexNode derivative)
+        RegexNode derivative)
     {
         Regex = regex;
         Character = character;
@@ -28,12 +28,12 @@ public class Derivation
 
 public class Simplification
 {
-    public IRegexNode Regex { get; }
-    public IRegexNode SimplifiedRegex { get; }
+    public RegexNode Regex { get; }
+    public RegexNode SimplifiedRegex { get; }
 
     public Simplification(
-        IRegexNode regex,
-        IRegexNode simplifiedRegex)
+        RegexNode regex,
+        RegexNode simplifiedRegex)
     {
         Regex = regex;
         SimplifiedRegex = simplifiedRegex;
@@ -55,12 +55,12 @@ public class DerivativeHistory
         Records = new List<object>();
     }
 
-    public void AddDerivative(IRegexNode regex, char character, IRegexNode derivative)
+    public void AddDerivative(RegexNode regex, char character, RegexNode derivative)
     {
         Records.Add(new Derivation(regex, character, derivative));
     }
 
-    public void AddSimplification(IRegexNode regex, IRegexNode simplifiedRegex)
+    public void AddSimplification(RegexNode regex, RegexNode simplifiedRegex)
     {
         Records.Add(new Simplification(regex, simplifiedRegex));
     }
@@ -110,9 +110,9 @@ public class RegexDerivativeCalculator
         History = new DerivativeHistory();
     }
 
-    public IRegexNode Derive(IRegexNode node, char c)
+    public RegexNode Derive(RegexNode node, char c)
     {
-        IRegexNode derivative;
+        RegexNode derivative;
 
         switch (node.Type)
         {
@@ -151,9 +151,9 @@ public class RegexDerivativeCalculator
         return Simplify(derivative);
     }
 
-    public IRegexNode Simplify(IRegexNode node)
+    public RegexNode Simplify(RegexNode node)
     {
-        IRegexNode simplified;
+        RegexNode simplified;
 
         switch (node.Type)
         {
@@ -201,83 +201,89 @@ public class RegexDerivativeCalculator
 
     /* derivative calculation */
 
-    private IRegexNode DeriveEpsilonNode(EpsilonNode node, char c)
+    private RegexNode DeriveEpsilonNode(EpsilonNode node, char c)
     {
-        return new EmptySetNode();
+        return new EmptySetNode()
+            .PropagateLexeme(node);
     }
 
-    private IRegexNode DeriveEmptySetNode(EmptySetNode node, char c)
+    private RegexNode DeriveEmptySetNode(EmptySetNode node, char c)
     {
-        return new EmptySetNode();
+        return new EmptySetNode()
+            .PropagateLexeme(node);
     }
 
-    private IRegexNode DeriveLiteralNode(LiteralNode node, char c)
+    private RegexNode DeriveLiteralNode(LiteralNode node, char c)
     {
         return c == node.Literal
-            ? new EpsilonNode()
-            : new EmptySetNode()
+            ? new EpsilonNode().PropagateLexeme(node)
+            : new EmptySetNode().PropagateLexeme(node)
             ;
     }
 
-    private IRegexNode DeriveUnionNode(UnionNode node, char c)
+    private RegexNode DeriveUnionNode(UnionNode node, char c)
     {
         var leftDerivative = Derive(node.Left, c);
         var rightDerivative = Derive(node.Right, c);
 
-        return new UnionNode(leftDerivative, rightDerivative);
+        return new UnionNode(leftDerivative, rightDerivative)
+            .PropagateLexeme(node);
     }
 
-    private IRegexNode DeriveConcatenationNode(ConcatenationNode node, char c)
+    private RegexNode DeriveConcatenationNode(ConcatenationNode node, char c)
     {
         var left = node.Left;
         var right = node.Right;
         var leftDerivative = Derive(left, c);
         var rightDerivative = Derive(right, c);
 
+        var concatenation = new ConcatenationNode(leftDerivative, right);
+
         if (left.ContainsEpsilon)
         {
-            return new UnionNode(
-                new ConcatenationNode(leftDerivative, right),
-                rightDerivative
-            );
+            return new UnionNode(concatenation, rightDerivative)
+                .PropagateLexeme(node);
         }
         else
         {
-            return new ConcatenationNode(leftDerivative, right);
+            return concatenation
+                .PropagateLexeme(node);
         }
     }
 
-    private IRegexNode DeriveStarNode(StarNode node, char c)
+    private RegexNode DeriveStarNode(StarNode node, char c)
     {
         var child = node.Child;
         var derivative = Derive(child, c);
 
         if (derivative.IsEmptySet())
         {
-            return new EmptySetNode();
+            return new EmptySetNode()
+                .PropagateLexeme(node);
         }
 
-        return new ConcatenationNode(derivative, new StarNode(child));
+        return new ConcatenationNode(derivative, new StarNode(child))
+            .PropagateLexeme(node);
     }
 
     /* simplification */
 
-    private IRegexNode SimplifyEpsilonNode(EpsilonNode node)
+    private RegexNode SimplifyEpsilonNode(EpsilonNode node)
     {
         return node;
     }
 
-    private IRegexNode SimplifyEmptySetNode(EmptySetNode node)
+    private RegexNode SimplifyEmptySetNode(EmptySetNode node)
     {
         return node;
     }
 
-    private IRegexNode SimplifyLiteralNode(LiteralNode node)
+    private RegexNode SimplifyLiteralNode(LiteralNode node)
     {
         return node;
     }
 
-    private IRegexNode SimplifyUnionNode(UnionNode node)
+    private RegexNode SimplifyUnionNode(UnionNode node)
     {
         var left = node.Left;
         var right = node.Right;
@@ -286,32 +292,38 @@ public class RegexDerivativeCalculator
 
         if (simplifiedLeft.IsEmptySet())
         {
-            return simplifiedRight;
+            return simplifiedRight
+                .PropagateLexeme(node);
         }
         if (simplifiedRight.IsEmptySet())
         {
-            return simplifiedLeft;
+            return simplifiedLeft
+                .PropagateLexeme(node);
         }
 
         if (left.IsEpsilon() && simplifiedRight.ContainsEpsilon)
         {
-            return simplifiedRight;
+            return simplifiedRight
+                .PropagateLexeme(node);
         }
         if (right.IsEpsilon() && simplifiedLeft.ContainsEpsilon)
         {
-            return simplifiedLeft;
+            return simplifiedLeft
+                .PropagateLexeme(node);
         }
 
         // Avoid duplicate terms (R ∪ R = R)
         if (simplifiedLeft.Equals(simplifiedRight))
         {
-            return simplifiedLeft;
+            return simplifiedLeft
+                .PropagateLexeme(node);
         }
 
-        return new UnionNode(simplifiedLeft, simplifiedRight);
+        return new UnionNode(simplifiedLeft, simplifiedRight)
+            .PropagateLexeme(node);
     }
 
-    private IRegexNode SimplifyConcatenationNode(ConcatenationNode node)
+    private RegexNode SimplifyConcatenationNode(ConcatenationNode node)
     {
         var left = node.Left;
         var right = node.Right;
@@ -321,45 +333,53 @@ public class RegexDerivativeCalculator
         // Concatenation with Empty Set (∅ ∘ R or R ∘ ∅ = ∅)
         if (simplifiedLeft.IsEmptySet() || simplifiedRight.IsEmptySet())
         {
-            return new EmptySetNode();
+            return new EmptySetNode()
+                .PropagateLexeme(node);
         }
 
         // Concatenation with Epsilon (ε ∘ R = R and R ∘ ε = R)
         if (simplifiedLeft.IsEpsilon())
         {
-            return simplifiedRight;
+            return simplifiedRight
+                .PropagateLexeme(node);
         }
         if (simplifiedRight.IsEpsilon())
         {
-            return simplifiedLeft;
+            return simplifiedLeft
+                .PropagateLexeme(node);
         }
 
-        return new ConcatenationNode(simplifiedLeft, simplifiedRight);
+        return new ConcatenationNode(simplifiedLeft, simplifiedRight)
+            .PropagateLexeme(node);
     }
 
-    private IRegexNode SimplifyStarNode(StarNode node)
+    private RegexNode SimplifyStarNode(StarNode node)
     {
         var simplifiedChild = Simplify(node.Child);
 
         // Star of Empty Set (∅*) simplifies to Epsilon (ε)
         if (simplifiedChild.IsEmptySet())
         {
-            return new EpsilonNode();
+            return new EpsilonNode()
+                .PropagateLexeme(node);
         }
 
         // Star of Epsilon (ε*) simplifies to Epsilon (ε)
         if (simplifiedChild.IsEpsilon())
         {
-            return new EpsilonNode();
+            return new EpsilonNode()
+                .PropagateLexeme(node);
         }
 
         // Avoid redundant nested stars (if the child is already a star, return the simplified child)
         if (simplifiedChild.IsStar())
         {
-            return simplifiedChild;
+            return simplifiedChild
+                .PropagateLexeme(node);
         }
 
-        return new StarNode(simplifiedChild);
+        return new StarNode(simplifiedChild)
+            .PropagateLexeme(node);
     }
 
 }
