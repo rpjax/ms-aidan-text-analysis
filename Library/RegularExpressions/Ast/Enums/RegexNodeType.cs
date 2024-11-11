@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Regexes.Ast;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
 /// Represents the type of a regex node.

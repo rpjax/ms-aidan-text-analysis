@@ -1,6 +1,6 @@
-﻿using Aidan.TextAnalysis.Regexes.Ast.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 
-namespace Aidan.TextAnalysis.Regexes.Ast;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
 /// Represents a concatenation node in a regex, matching a sequence of patterns.

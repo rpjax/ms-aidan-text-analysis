@@ -24,14 +24,8 @@ public enum CharType
 /// </summary>
 public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
 {
-    /// <summary>
-    /// A dictionary mapping state names to their corresponding states.
-    /// </summary>
     private Dictionary<string, State> States { get; }
 
-    /// <summary>
-    /// A dictionary mapping state names to their corresponding transitions.
-    /// </summary>
     private Dictionary<string, List<Transition>> Transitions { get; }
 
     private string InitialStateName { get; set; }
@@ -54,9 +48,42 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         var initialState = new State(
             id: 0,
             name: InitialStateName,
-            isAccepting: false);
+            isAccepting: false,
+            isRecursiveOnNoTransition: false);
 
         States.Add(initialState.Name, initialState);
+    }
+
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TokenizerDfaBuilder"/> class using an existing <see cref="TokenizerTable"/>.
+    /// </summary>
+    /// <param name="table">The tokenizer table to initialize the builder with.</param>
+    public TokenizerDfaBuilder(ITokenizerTable table)
+    {
+        var entries = table.GetEntries();
+        var initialState = table.GetInitialState();
+        var states = entries
+            .Select(x => x.Key)
+            .ToArray();
+
+        States = new Dictionary<string, State>();
+        Transitions = new Dictionary<string, List<Transition>>();
+        Charset = ComputeCharset(CharsetType.Ascii);
+        InitialStateName = initialState.Name;
+
+        foreach (var state in states)
+        {
+            States.Add(state.Name, state);
+
+            var stateTransitions = entries
+                .Where(x => x.Key.Id == state.Id)
+                .Select(x => x.Value)
+                .First()
+                .ToList();
+
+            Transitions.Add(state.Name, stateTransitions);
+        }
     }
 
     public static char[] ComputeCharset(CharsetType charset)
@@ -147,7 +174,8 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         state = new State(
             id: States.Count,
             name: name,
-            isAccepting: isAcceptingState);
+            isAccepting: isAcceptingState,
+            isRecursiveOnNoTransition: false);
 
         States.Add(name, state);
 
@@ -160,12 +188,14 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// <param name="currentState">The current state.</param>
     /// <param name="character">The character triggering the transition.</param>
     /// <param name="nextState">The next state.</param>
+    /// <param name="enableOverride">Whether to enable overriding existing transitions.</param>
     /// <returns>The current <see cref="TokenizerDfaBuilder"/> instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the current or next state does not exist.</exception>
     public TokenizerDfaBuilder AddTransition(
         State currentState,
         char character,
-        State nextState)
+        State nextState,
+        bool enableOverride = false)
     {
         EnsureStateIsListed(currentState);
         EnsureStateIsListed(nextState);
@@ -176,16 +206,23 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
             character: character,
             stateId: nextState.Id);
 
+        var alreadyExists = transitions.Any(t => t.Character == character);
+
+        if (alreadyExists)
+        {
+            if (!enableOverride)
+            {
+                throw new InvalidOperationException($"Transition on character '{character}' already exists.");
+            }
+
+            transitions.RemoveAll(t => t.Character == character);
+        }
+
         transitions.Add(transition);
 
         return this;
     }
 
-    /// <summary>
-    /// Ensures that the specified state is listed in the states dictionary.
-    /// </summary>
-    /// <param name="state">The state to check.</param>
-    /// <exception cref="InvalidOperationException">Thrown when the state does not exist.</exception>
     private void EnsureStateIsListed(State state)
     {
         if (!States.ContainsKey(state.Name))
@@ -194,11 +231,6 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         }
     }
 
-    /// <summary>
-    /// Gets the list of transitions for the specified state.
-    /// </summary>
-    /// <param name="state">The state to get transitions for.</param>
-    /// <returns>The list of transitions for the specified state.</returns>
     private List<Transition> GetTransitions(State state)
     {
         if (!Transitions.TryGetValue(state.Name, out var transitions))
@@ -213,36 +245,35 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// <summary>
     /// Creates a <see cref="TableTransitionBuilder"/> for adding transitions from the initial state.
     /// </summary>
+    /// <param name="enableOverride">Whether to enable overriding existing transitions.</param>
     /// <returns>A <see cref="TableTransitionBuilder"/> instance.</returns>
-    public TableTransitionBuilder FromInitialState()
+    public TableTransitionBuilder FromInitialState(bool enableOverride = false)
     {
         return new TableTransitionBuilder(
             builder: this,
-            currentState: GetInitialState());
+            currentState: GetInitialState(),
+            enableOverride: enableOverride);
     }
 
     /// <summary>
     /// Creates a <see cref="TableTransitionBuilder"/> for adding transitions from the specified state.
     /// </summary>
     /// <param name="name">The name of the state.</param>
+    /// <param name="enableOverride">Whether to enable overriding existing transitions.</param>
     /// <returns>A <see cref="TableTransitionBuilder"/> instance.</returns>
-    public TableTransitionBuilder FromState(string name)
+    public TableTransitionBuilder FromState(string name, bool enableOverride = false)
     {
         var state = FindState(name);
 
         if (state is null)
         {
-            state = new State(
-                id: States.Count,
-                name: name,
-                isAccepting: false);
-
-            States.Add(name, state);
+            state = CreateState(name, isAcceptingState: false);
         }
 
         return new TableTransitionBuilder(
             builder: this,
-            currentState: state);
+            currentState: state,
+            enableOverride: enableOverride);
     }
 
     /// <summary>
@@ -277,4 +308,21 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
             table: new TokenizerTable(entries),
             useDebugger: UseDebugger);
     }
+
+    /// <summary>
+    /// Builds the <see cref="TokenizerTable"/> from the current states and transitions.
+    /// </summary>
+    /// <returns>The constructed <see cref="TokenizerTable"/>.</returns>
+    public TokenizerTable BuildTable()
+    {
+        var entries = new Dictionary<State, Transition[]>();
+
+        foreach (var state in States.Values)
+        {
+            entries.Add(state, GetTransitions(state).ToArray());
+        }
+
+        return new TokenizerTable(entries);
+    }
+
 }

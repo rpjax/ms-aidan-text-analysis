@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace Aidan.TextAnalysis.Regexes.Ast;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
 /// Represents a literal node in a regex, matching a specific character.

@@ -1,88 +1,7 @@
-﻿using Aidan.TextAnalysis.Regexes.Ast;
-using Aidan.TextAnalysis.Regexes.Ast.Extensions;
-using System.Text;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 
-namespace Aidan.TextAnalysis.Regexes.Derivative;
-
-public class Derivation
-{
-    public RegexNode Regex { get; }
-    public char Character { get; }
-    public RegexNode Derivative { get; }
-
-    public Derivation(
-        RegexNode regex,
-        char character,
-        RegexNode derivative)
-    {
-        Regex = regex;
-        Character = character;
-        Derivative = derivative;
-    }
-
-    public override string ToString()
-    {
-        return $"`{Regex}` with respect to `{Character}` = `{Derivative}`";
-    }
-}
-
-public class Simplification
-{
-    public RegexNode Regex { get; }
-    public RegexNode SimplifiedRegex { get; }
-
-    public Simplification(
-        RegexNode regex,
-        RegexNode simplifiedRegex)
-    {
-        Regex = regex;
-        SimplifiedRegex = simplifiedRegex;
-
-    }
-
-    public override string ToString()
-    {
-        return $"`{Regex}` simplified to `{SimplifiedRegex}`";
-    }
-}
-
-public class DerivativeHistory
-{
-    public List<object> Records { get; }
-
-    public DerivativeHistory()
-    {
-        Records = new List<object>();
-    }
-
-    public void AddDerivative(RegexNode regex, char character, RegexNode derivative)
-    {
-        Records.Add(new Derivation(regex, character, derivative));
-    }
-
-    public void AddSimplification(RegexNode regex, RegexNode simplifiedRegex)
-    {
-        Records.Add(new Simplification(regex, simplifiedRegex));
-    }
-
-    public void Clear()
-    {
-        Records.Clear();
-    }
-
-    public override string ToString()
-    {
-        var sb = new StringBuilder();
-
-        foreach (var record in Records)
-        {
-            sb.AppendLine(record.ToString());
-        }
-
-        return sb.ToString();
-    }
-
-}
+namespace Aidan.TextAnalysis.RegularExpressions.Derivative;
 
 /*
  * Author Note:
@@ -101,15 +20,32 @@ public class DerivativeHistory
  * If you are a more experienced engineer, feel free to submit any improvements to this code. It would be greatly appreciated.
  */
 
+/// <summary>
+/// Provides methods to calculate the derivative of a regular expression with respect to a character
+/// and to simplify regular expression nodes.
+/// </summary>
 public class RegexDerivativeCalculator
 {
-    public DerivativeHistory History { get; }
+    /// <summary>
+    /// Gets the history of derivative calculations and simplifications.
+    /// </summary>
+    public CalculatorHistory History { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RegexDerivativeCalculator"/> class.
+    /// </summary>
     public RegexDerivativeCalculator()
     {
-        History = new DerivativeHistory();
+        History = new CalculatorHistory();
     }
 
+    /// <summary>
+    /// Calculates the derivative of the given regular expression node with respect to the specified character.
+    /// </summary>
+    /// <param name="node">The regular expression node.</param>
+    /// <param name="c">The character with respect to which the derivative is calculated.</param>
+    /// <returns>The derivative of the regular expression node.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node type is unknown.</exception>
     public RegexNode Derive(RegexNode node, char c)
     {
         RegexNode derivative;
@@ -151,6 +87,12 @@ public class RegexDerivativeCalculator
         return Simplify(derivative);
     }
 
+    /// <summary>
+    /// Simplifies the given regular expression node.
+    /// </summary>
+    /// <param name="node">The regular expression node to simplify.</param>
+    /// <returns>The simplified regular expression node.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node type is unknown.</exception>
     public RegexNode Simplify(RegexNode node)
     {
         RegexNode simplified;
@@ -194,6 +136,10 @@ public class RegexDerivativeCalculator
         return simplified;
     }
 
+    /// <summary>
+    /// Returns a string that represents the history of derivative calculations and simplifications.
+    /// </summary>
+    /// <returns>A string that represents the history.</returns>
     public string GetHistoryString()
     {
         return History.ToString();
@@ -301,15 +247,26 @@ public class RegexDerivativeCalculator
                 .PropagateLexeme(node);
         }
 
+        /*
+         * This simplification has been removed because it would eliminate accepting branches.
+         * For example, `a|a(b)*` becomes `ε|(b)*` after consuming 'a', and if 'b' is not seen,
+         * the regex should still accept.
+         */
         if (left.IsEpsilon() && simplifiedRight.ContainsEpsilon)
         {
-            return simplifiedRight
-                .PropagateLexeme(node);
+            // return simplifiedRight
+            //     .PropagateLexeme(node);
         }
+
+        /*
+         * This simplification has been removed because it would eliminate accepting branches.
+         * For example, `a(b)*|a` becomes `(b)*|ε` after consuming 'a', and if 'b' is not seen,
+         * the regex should still accept.
+         */
         if (right.IsEpsilon() && simplifiedLeft.ContainsEpsilon)
         {
-            return simplifiedLeft
-                .PropagateLexeme(node);
+            // return simplifiedLeft
+            //     .PropagateLexeme(node);
         }
 
         // Avoid duplicate terms (R ∪ R = R)

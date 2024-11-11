@@ -20,17 +20,22 @@ public class TableTransitionBuilder
     /// </summary>
     private List<char> Characters { get; } = new();
 
+    private bool EnableOverride { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TableTransitionBuilder"/> class.
     /// </summary>
     /// <param name="builder">The parent <see cref="TokenizerDfaBuilder"/> instance.</param>
     /// <param name="currentState">The current state from which transitions are being added.</param>
+    /// <param name="enableOverride">A value indicating whether to enable overriding transitions.</param>
     public TableTransitionBuilder(
         TokenizerDfaBuilder builder,
-        State currentState)
+        State currentState,
+        bool enableOverride)
     {
         Builder = builder;
         CurrentState = currentState;
+        EnableOverride = enableOverride;
     }
 
     /// <summary>
@@ -179,7 +184,7 @@ public class TableTransitionBuilder
 
         foreach (var character in Characters)
         {
-            Builder.AddTransition(CurrentState, character, nextState);
+            Builder.AddTransition(CurrentState, character, nextState, EnableOverride);
         }
 
         return Builder;
@@ -202,7 +207,7 @@ public class TableTransitionBuilder
 
         foreach (var character in Characters)
         {
-            Builder.AddTransition(CurrentState, character, nextState);
+            Builder.AddTransition(CurrentState, character, nextState, EnableOverride);
         }
 
         return Builder;
@@ -222,7 +227,7 @@ public class TableTransitionBuilder
 
         foreach (var character in Characters)
         {
-            Builder.AddTransition(CurrentState, character, CurrentState);
+            Builder.AddTransition(CurrentState, character, CurrentState, EnableOverride);
         }
 
         return Builder;
@@ -244,7 +249,7 @@ public class TableTransitionBuilder
 
         foreach (var character in Characters)
         {
-            Builder.AddTransition(CurrentState, character, initialState);
+            Builder.AddTransition(CurrentState, character, initialState, EnableOverride);
         }
 
         return Builder;
@@ -264,6 +269,10 @@ public class TableTransitionBuilder
         if (!Builder.GetCharset().Contains(character))
         {
             throw new InvalidOperationException($"Character '{character}' is not in the charset.");
+        }
+        if (EnableOverride && Characters.Contains(character))
+        {
+            Characters.Remove(character);
         }
 
         Characters.Add(character);

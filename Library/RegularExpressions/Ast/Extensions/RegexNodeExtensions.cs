@@ -1,8 +1,7 @@
-﻿using Aidan.TextAnalysis.Regexes.DfaComputation;
+﻿using Aidan.TextAnalysis.RegularExpressions.Automata;
 using System.Runtime.CompilerServices;
-using System.Xml.Linq;
 
-namespace Aidan.TextAnalysis.Regexes.Ast.Extensions;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 
 /// <summary>
 /// Provides extension methods for <see cref="RegexNode"/>.
@@ -223,6 +222,12 @@ public static class RegexNodeExtensions
 
     /* metadata manipulation */
 
+    /// <summary>
+    /// Sets the metadata for the specified regex node.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <param name="key">The key of the metadata.</param>
+    /// <param name="value">The value of the metadata.</param>
     public static void SetMetadata(
         this RegexNode node,
         string key,
@@ -231,6 +236,12 @@ public static class RegexNodeExtensions
         node.Metadata[key] = value;
     }
 
+    /// <summary>
+    /// Gets the metadata for the specified regex node.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <param name="key">The key of the metadata.</param>
+    /// <returns>The value of the metadata if found; otherwise, <c>null</c>.</returns>
     public static object? GetMetadata(
         this RegexNode node,
         string key)
@@ -243,6 +254,12 @@ public static class RegexNodeExtensions
         return null;
     }
 
+    /// <summary>
+    /// Propagates the metadata to the specified regex node and its children.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <param name="key">The key of the metadata.</param>
+    /// <param name="value">The value of the metadata.</param>
     public static void PropagateMetadata(
         this RegexNode node,
         string key,
@@ -256,9 +273,15 @@ public static class RegexNodeExtensions
         }
     }
 
-    /* lexeme metadata */
+    /* lexeme related methods */
 
-    public static RegexLexeme? GetLexeme(
+    /// <summary>
+    /// Gets the lexeme associated with the specified regex node.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <returns>The lexeme if found; otherwise, <c>null</c>.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the metadata cannot be cast to <see cref="Lexeme"/>.</exception>
+    public static Lexeme? GetLexeme(
         this RegexNode node)
     {
         var lexeme = node.GetMetadata("lexeme");
@@ -268,7 +291,7 @@ public static class RegexNodeExtensions
             return null;
         }
 
-        if (lexeme is not RegexLexeme cast)
+        if (lexeme is not Lexeme cast)
         {
             throw new InvalidCastException($"Invalid cast from {lexeme?.GetType()} to RegexLexeme");
         }
@@ -276,13 +299,24 @@ public static class RegexNodeExtensions
         return cast;
     }
 
+    /// <summary>
+    /// Sets the lexeme for the specified regex node.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <param name="lexeme">The lexeme to set.</param>
     public static void SetLexeme(
         this RegexNode node,
-        RegexLexeme lexeme)
+        Lexeme lexeme)
     {
         node.SetMetadata("lexeme", lexeme);
     }
 
+    /// <summary>
+    /// Propagates the lexeme from the source node to the specified regex node and its children.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <param name="source">The source regex node.</param>
+    /// <returns>The regex node with the propagated lexeme.</returns>
     public static RegexNode PropagateLexeme(
         this RegexNode node,
         RegexNode source)
@@ -297,9 +331,15 @@ public static class RegexNodeExtensions
         return node.PropagateLexeme(lexeme);
     }
 
+    /// <summary>
+    /// Propagates the lexeme to the specified regex node and its children.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <param name="lexeme">The lexeme to propagate.</param>
+    /// <returns>The regex node with the propagated lexeme.</returns>
     public static RegexNode PropagateLexeme(
         this RegexNode node,
-        RegexLexeme lexeme)
+        Lexeme lexeme)
     {
         node.SetLexeme(lexeme);
 
@@ -309,9 +349,13 @@ public static class RegexNodeExtensions
         }
 
         return node;
-
     }
 
+    /// <summary>
+    /// Gets the epsilon branches of the specified regex node.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <returns>An array of regex nodes representing the epsilon branches.</returns>
     public static RegexNode[] GetEpsilonBranches(
         this RegexNode node)
     {
@@ -327,4 +371,5 @@ public static class RegexNodeExtensions
 
         return branches.ToArray();
     }
+
 }

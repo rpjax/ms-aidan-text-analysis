@@ -1,9 +1,9 @@
 ﻿using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Parsing.Extensions;
-using Aidan.TextAnalysis.Regexes;
-using Aidan.TextAnalysis.Regexes.Ast;
-using Aidan.TextAnalysis.Regexes.DfaComputation;
+using Aidan.TextAnalysis.RegularExpressions;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Automata;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -13,146 +13,17 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        TokenizerCalculator.Test();
-        return;
+        var tokenizer = new GrammarTokenizerBuilder()
+            .Build();
 
-        /* regex tests */
-        var regex = new ConcatenationNode(
-            new LiteralNode('a'),
-            new ConcatenationNode(
-                new LiteralNode('b'),
-                new StarNode(new LiteralNode('a'))
-            )
-        );
+        var input = @"foobar lexeme user use charset baz";
 
-        var lexemeRegex = new ConcatenationNode(
-            new LiteralNode('l'),
-            new ConcatenationNode(
-                new LiteralNode('e'),
-                new ConcatenationNode(
-                    new LiteralNode('x'),
-                    new ConcatenationNode(
-                        new LiteralNode('e'),
-                        new ConcatenationNode(
-                            new LiteralNode('m'),
-                            new LiteralNode('e')
-                        )
-                    )
-                )
-            )
-        );
+        var tokens = tokenizer.TokenizeToArray(input);
 
-        // Represents the regex: `(a|(b)*cd|ef)*|g(h|(i)*|j)*k`
-        var complexRegex = new UnionNode(
-            new StarNode(
-                new ConcatenationNode(
-                    new ConcatenationNode(
-                        new ConcatenationNode(
-                            new UnionNode(
-                                new LiteralNode('a'),
-                                new StarNode(new LiteralNode('b'))
-                            ),
-                            new LiteralNode('c')
-                        ),
-                        new UnionNode(
-                            new LiteralNode('d'),
-                            new LiteralNode('e')
-                        )
-                    ),
-                    new LiteralNode('f')
-                )
-            ),
-            new ConcatenationNode(
-                new LiteralNode('g'),
-                new ConcatenationNode(
-                    new StarNode(
-                        new UnionNode(
-                            new LiteralNode('h'),
-                            new UnionNode(
-                                new StarNode(new LiteralNode('i')),
-                                new LiteralNode('j')
-                            )
-                        )
-                    ),
-                    new LiteralNode('k')
-                )
-            )
-        );
-
-        Console.WriteLine();
-
-        /* parser tests */
-
-        var testGrammar = @"
-/*
-	lexer stuff
-*/
-
-lexeme if = 'if' ;
-
-start
-	: json 
-	;
-
-json
-	: object
-	| array
-	;
-
-object
-	: '{' { members } '}' 
-	;
-
-members
-	: pair  { ',' members } 
-	;
-
-pair
-	: $string ':' value 
-	;
-
-array
-	: '[' [ elements ] ']'
-	;
-
-elements
-	: value { ',' value }
-	;
-
-value 
-	: number 
-	| object 
-	| array
-	| $string
-	| bool
-	| null 
-	;
-
-bool
-	: 'true' 
-	| 'false' 
-	;
-
-null
-	: 'null' 
-	;
-
-number
-	: $int 
-	| $float 
-	| $hex 
-	;
-
-";
-
-        var tokens = GDefTokenizers.GrammarTokenizer
-            .Tokenize(testGrammar)
-            .ToArray();
-
-        var grammarCst = GDefParser.Parse(testGrammar);
-        var html = grammarCst.ToHtmlTreeView();
-        var grammar = GDefParser.ParseGrammar(testGrammar);
-        Console.WriteLine(grammar);
+        foreach (var token in tokens)
+        {
+            Console.WriteLine(token);
+        }
     }
 
     private static string FormatTime(double seconds)

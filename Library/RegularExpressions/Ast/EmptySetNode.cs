@@ -1,21 +1,21 @@
-﻿using Aidan.TextAnalysis.Regexes.Ast.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 
-namespace Aidan.TextAnalysis.Regexes.Ast;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
-/// Represents an epsilon node in a regex, which matches the empty string ε.
+/// Represents an empty set node in a regex, which matches nothing (∅).
 /// </summary>
-public class EpsilonNode : RegexNode
+public class EmptySetNode : RegexNode
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="EpsilonNode"/> class.
+    /// Initializes a new instance of the <see cref="EmptySetNode"/> class.
     /// </summary>
     /// <param name="metadata">The metadata associated with the node.</param>
-    public EpsilonNode(
+    public EmptySetNode(
         Dictionary<string, object>? metadata = null)
         : base(
-            type: RegexNodeType.Epsilon,
-            containsEpsilon: true,
+            type: RegexNodeType.EmptySet,
+            containsEpsilon: false,
             children: Array.Empty<RegexNode>(),
             metadata: metadata)
     {
@@ -25,19 +25,19 @@ public class EpsilonNode : RegexNode
     /// <inheritdoc />
     public override string ToString()
     {
-        return "ε";
+        return "∅";
     }
 
     /// <inheritdoc />
     public override bool Equals(RegexNode? other)
     {
-        return other?.IsEpsilon() == true;
+        return other?.IsEmptySet() == true;
     }
 
     /// <inheritdoc />
     public override IReadOnlyList<RegexNode> GetChildren()
     {
-        return new RegexNode[0];
+        return Array.Empty<RegexNode>();
     }
 
 }

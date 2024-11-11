@@ -28,6 +28,11 @@ public class TokenizerTable : ITokenizerTable
     private Dictionary<int, Transition> Transitions { get; }
 
     /// <summary>
+    /// Gets the state and transition entries.
+    /// </summary>
+    private Dictionary<State, Transition[]> Entries { get; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TokenizerTable"/> class with the specified state and transition entries.
     /// </summary>
     /// <param name="entries">A dictionary containing states and their corresponding transitions.</param>
@@ -40,6 +45,8 @@ public class TokenizerTable : ITokenizerTable
             .ToDictionary(x => x.Id, x => x);
 
         Transitions = new Dictionary<int, Transition>();
+
+        Entries = entries;
 
         if (States.Count > MaxStateCount)
         {
@@ -59,12 +66,13 @@ public class TokenizerTable : ITokenizerTable
             {
                 var key = Combine(state.Id, transition.Character);
                 var stateName = state.Name;
-                var c = transition.Character == '\0' 
-                    ? "EOF" 
-                    : transition.Character.ToString();
 
                 if (Transitions.ContainsKey(key))
                 {
+                    var c = transition.Character == '\0'
+                        ? "EOF"
+                        : transition.Character.ToString();
+
                     throw new InvalidOperationException($"Duplicate transition for state '{stateName}' on character '{c}'");
                 }
 
@@ -105,6 +113,15 @@ public class TokenizerTable : ITokenizerTable
         }
 
         return nextState;
+    }
+
+    /// <summary>
+    /// Gets the state and transition entries.
+    /// </summary>
+    /// <returns>A dictionary containing states and their corresponding transitions.</returns>
+    public Dictionary<State, Transition[]> GetEntries()
+    {
+        return Entries;
     }
 
     /// <summary>
