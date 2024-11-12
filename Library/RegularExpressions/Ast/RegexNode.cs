@@ -116,10 +116,12 @@ public abstract class RegexNode : IEquatable<RegexNode>
         char end)
     {
         var chars = new List<char>();
+        var _start = (int)start;
+        var _end = (int)end;
 
-        for (var i = start; i <= end; i++)
+        for (int i = _start; i <= _end; i++)
         {
-            chars.Add(i);
+            chars.Add((char)i);
         }
 
         if (chars.Count == 0)

@@ -13,7 +13,7 @@ public class TableTransitionBuilder
     /// <summary>
     /// The current state from which transitions are being added.
     /// </summary>
-    private State CurrentState { get; }
+    private TokenizerState CurrentState { get; }
 
     /// <summary>
     /// A list of characters that trigger transitions.
@@ -30,7 +30,7 @@ public class TableTransitionBuilder
     /// <param name="enableOverride">A value indicating whether to enable overriding transitions.</param>
     public TableTransitionBuilder(
         TokenizerDfaBuilder builder,
-        State currentState,
+        TokenizerState currentState,
         bool enableOverride)
     {
         Builder = builder;

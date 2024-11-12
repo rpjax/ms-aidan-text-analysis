@@ -40,4 +40,19 @@ public static class AutomatonNodeExtensions
         return node.Regexes
             .Any(x => x.Regex.IsEpsilon());
     }
+
+    /// <summary>
+    /// Determines whether the specified <see cref="AutomatonNode"/> is an epsilon state.
+    /// </summary>
+    /// <remarks> 
+    /// A node is considered an epsilon state if it contains exactly one regex, and that regex is epsilon.
+    /// This means that the state can only be epsilon itself, not just produce epsilon.
+    /// <br/> Example: <c>/ε/</c> qualifies as an epsilon state, but <c>/a|ε/</c> does not.
+    /// </remarks>
+    /// <param name="node">The automaton node to check.</param>
+    /// <returns><c>true</c> if the node is an epsilon state; otherwise, <c>false</c>.</returns>
+    public static bool IsEpsilonState(this AutomatonNode node)
+    {
+        return node.Regexes.Length == 1 && node.Regexes[0].Regex.IsEpsilon();
+    }
 }

@@ -23,12 +23,16 @@ public static class GDefLexemes
 
     public static Lexeme[] GetLexemes()
     {
+        /* 
+         * The order of lexemes matters. 
+         * If a lexeme is a subset of another lexeme, the subset lexeme should be defined first 
+         */
         var lexemes = new List<Lexeme>
         {
-            GetIdentifierLexeme(),
             GetLexemeLexeme(),
             GetUseLexeme(),
-            GetCharsetLexeme()
+            GetCharsetLexeme(),
+            GetIdentifierLexeme(),
         };
 
         lexemes.AddRange(GetSpecialCharsLexemes());

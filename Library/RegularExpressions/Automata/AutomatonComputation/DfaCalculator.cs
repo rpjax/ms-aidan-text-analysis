@@ -1,9 +1,6 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Ast;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
 using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Derivative;
-using Aidan.TextAnalysis.Tokenization.StateMachine;
-using System.Text.RegularExpressions;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 
@@ -63,58 +60,14 @@ public class DfaCalculator
             }
         }
 
-        /* dfa building */
-        var states = new List<DfaState>();
-        var stateIdMap = new Dictionary<AutomatonNode, int>();
+        /* add transitions to the initial state to skip over ignored characters */
+        var ignoredTransitions = IgnoredCharacters
+            .Select(x => new AutomatonTransition(x, initialState))
+            .ToArray();
 
-        for (int i = 0; i < processedStates.Count; i++)
-        {
-            stateIdMap.Add(processedStates.ElementAt(i), i);
-        }
+        initialState.AddChildren(ignoredTransitions);
 
-        for (int i = 0; i < processedStates.Count; i++)
-        {
-            var node = processedStates.ElementAt(i);
-
-            var transitions = new List<DfaTransition>();
-
-            foreach (var item in node.Transitions)
-            {
-                var nextStateIsAccepting = item.NextState.Regexes.Length == 1
-                    && item.NextState.Regexes[0].Regex.IsEpsilon();
-
-                var nextState = nextStateIsAccepting
-                    ? item.NextState.Regexes[0].Name
-                    : $"q{stateIdMap[item.NextState]}";
-
-                var transition = new DfaTransition(
-                    character: item.Character,
-                    nextState: nextState);
-
-                transitions.Add(transition);
-            }
-
-            var isAccepting = node.Regexes.Length == 1
-                && node.Regexes[0].Regex.IsEpsilon();
-
-            if (isAccepting && node.Regexes.Length != 1)
-            {
-                throw new InvalidOperationException("Invalid accepting state");
-            }
-
-            var name = isAccepting
-                ? node.Regexes[0].Name
-                : $"q{i}";
-
-            var dfaState = new DfaState(
-                name: name,
-                transitions: transitions,
-                isAccepting: isAccepting);
-
-            states.Add(dfaState);
-        }
-
-        return new Dfa(states, Alphabet);
+        return new RegexDfa(Alphabet, processedStates);
     }
 
     private AutomatonTransition[] ComputeChildren(AutomatonNode node)

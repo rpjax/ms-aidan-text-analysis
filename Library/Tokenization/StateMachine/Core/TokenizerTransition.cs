@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a transition in the state machine.
 /// </summary>
-public class Transition
+public class TokenizerTransition
 {
     /// <summary>
     /// Gets the character that triggers the transition.
@@ -16,11 +16,11 @@ public class Transition
     public int StateId { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Transition"/> class.
+    /// Initializes a new instance of the <see cref="TokenizerTransition"/> class.
     /// </summary>
     /// <param name="character">The character that triggers the transition.</param>
     /// <param name="stateId">The identifier of the state to transition to.</param>
-    public Transition(char character, int stateId)
+    public TokenizerTransition(char character, int stateId)
     {
         Character = character;
         StateId = stateId;
@@ -49,13 +49,13 @@ public class TransitionTable
     /// <summary>
     /// Gets the dictionary of transitions.
     /// </summary>
-    private Dictionary<char, Transition> Entries { get; }
+    private Dictionary<char, TokenizerTransition> Entries { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransitionTable"/> class.
     /// </summary>
     /// <param name="entries">The dictionary of transitions.</param>
-    public TransitionTable(Dictionary<char, Transition> entries)
+    public TransitionTable(Dictionary<char, TokenizerTransition> entries)
     {
         Entries = entries;
     }

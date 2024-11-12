@@ -31,13 +31,13 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
     {
         var lexemes = GDefLexemes.GetLexemes();
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
-        var calculator = new DfaCalculator(lexemes, ignoredChars);
-        var dfa = calculator.ComputeDfa();
-        var builder = new TokenizerDfaBuilder();
+        var calculator = new TokenizerCalculator(lexemes, ignoredChars);
+        var table = calculator.ComputeTokenizerTable();
+        var builder = new TokenizerDfaBuilder(table);
 
-        //builder.SetCharset(calculator.GetAlphabet());
+        builder.SetCharset(calculator.GetAlphabet());
 
-        //StringLexemes(builder);
+        StringLexemes(builder);
         //CStyleComment(builder);
 
         builder.EnableDebugger();

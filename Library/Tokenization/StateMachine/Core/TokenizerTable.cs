@@ -20,17 +20,17 @@ public class TokenizerTable : ITokenizerTable
     /// <summary>
     /// A dictionary mapping state IDs to their corresponding states.
     /// </summary>
-    private Dictionary<int, State> States { get; }
+    private Dictionary<int, TokenizerState> States { get; }
 
     /// <summary>
     /// A dictionary mapping combined state and character keys to their corresponding transitions.
     /// </summary>
-    private Dictionary<int, Transition> Transitions { get; }
+    private Dictionary<int, TokenizerTransition> Transitions { get; }
 
     /// <summary>
     /// Gets the state and transition entries.
     /// </summary>
-    private Dictionary<State, Transition[]> Entries { get; }
+    private Dictionary<TokenizerState, TokenizerTransition[]> Entries { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TokenizerTable"/> class with the specified state and transition entries.
@@ -39,12 +39,12 @@ public class TokenizerTable : ITokenizerTable
     /// <exception cref="InvalidOperationException">
     /// Thrown when the number of states exceeds the maximum allowed count or when a state ID exceeds the maximum allowed value.
     /// </exception>
-    public TokenizerTable(Dictionary<State, Transition[]> entries)
+    public TokenizerTable(Dictionary<TokenizerState, TokenizerTransition[]> entries)
     {
         States = entries.Keys
             .ToDictionary(x => x.Id, x => x);
 
-        Transitions = new Dictionary<int, Transition>();
+        Transitions = new Dictionary<int, TokenizerTransition>();
 
         Entries = entries;
 
@@ -86,7 +86,7 @@ public class TokenizerTable : ITokenizerTable
     /// </summary>
     /// <returns>The initial state.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public State GetInitialState()
+    public TokenizerState GetInitialState()
     {
         return States[0];
     }
@@ -98,16 +98,16 @@ public class TokenizerTable : ITokenizerTable
     /// <param name="character">The current character.</param>
     /// <returns>The next state, or <c>null</c> if no transition is found.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public State? LookUp(int state, char character)
+    public TokenizerState? LookUp(int state, char character)
     {
         var key = Combine(state, character);
 
-        if (!Transitions.TryGetValue(key, out Transition? transition))
+        if (!Transitions.TryGetValue(key, out TokenizerTransition? transition))
         {
             return null;
         }
 
-        if (!States.TryGetValue(transition.StateId, out State? nextState))
+        if (!States.TryGetValue(transition.StateId, out TokenizerState? nextState))
         {
             return null;
         }
@@ -119,7 +119,7 @@ public class TokenizerTable : ITokenizerTable
     /// Gets the state and transition entries.
     /// </summary>
     /// <returns>A dictionary containing states and their corresponding transitions.</returns>
-    public Dictionary<State, Transition[]> GetEntries()
+    public Dictionary<TokenizerState, TokenizerTransition[]> GetEntries()
     {
         return Entries;
     }

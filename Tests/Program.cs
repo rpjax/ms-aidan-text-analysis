@@ -24,7 +24,29 @@ public class Program
             //)),
             //new Lexeme("lexeme 'c'", RegexNode.FromString("c")),
         };
-                                   
+
+        var foo = new Lexeme("lexeme '(a|b)*.a.b.b#'",
+            new ConcatenationNode(
+                new ConcatenationNode(
+                    new ConcatenationNode(
+                        new ConcatenationNode(
+                            new StarNode(
+                                new UnionNode(
+                                    new LiteralNode('a'),
+                                    new LiteralNode('b')
+                                )
+                            ),
+                            new LiteralNode('a')
+                        ),
+                        new LiteralNode('b')
+                    ),
+                    new LiteralNode('b')
+                ),
+                new LiteralNode('#')
+            )
+        );
+
+
         /* GDef test */
         var lexemes = GDefLexemes.GetLexemes();
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
@@ -35,8 +57,8 @@ public class Program
             ignoredChars: ignoredChars,
             useDebug: true);
 
-        var tokenizer = calculator.ComputeTokenizer();
-        var input = "aab";
+        var tokenizer = new GrammarTokenizerBuilder().Build();
+        var input = ";;  $use charset 'utf8';";
 
         var tokens = tokenizer.TokenizeToArray(input);
 

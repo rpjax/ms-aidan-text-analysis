@@ -12,7 +12,7 @@ public class RegexTokenizerBuilder : IBuilder<TokenizerMachine>
 
     public TokenizerMachine Build()
     {
-        var builder = new TokenizerDfaBuilder(initialStateName: States.InitialState);
+        var builder = new TokenizerDfaBuilder(initialState: States.InitialState);
 
         SkipWhitespace(builder);
         EscapeSequence(builder);

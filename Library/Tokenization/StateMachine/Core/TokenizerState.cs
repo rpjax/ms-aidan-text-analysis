@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a state in the state machine.
 /// </summary>
-public class State
+public class TokenizerState
 {
     /// <summary>
     /// Gets the unique identifier of the state.
@@ -29,13 +29,13 @@ public class State
     //public uint Hash { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="State"/> class.
+    /// Initializes a new instance of the <see cref="TokenizerState"/> class.
     /// </summary>
     /// <param name="id">The unique identifier of the state.</param>
     /// <param name="name">The name of the state.</param>
     /// <param name="isAccepting">A value indicating whether the state is an accepting state.</param>
     /// <param name="isRecursiveOnNoTransition">A value indicating whether the state is recursive on no transition.</param>
-    public State(
+    public TokenizerState(
         int id,
         string name,
         bool isAccepting,

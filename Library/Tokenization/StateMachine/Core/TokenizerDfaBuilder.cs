@@ -24,9 +24,9 @@ public enum CharType
 /// </summary>
 public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
 {
-    private Dictionary<string, State> States { get; }
+    private Dictionary<string, TokenizerState> States { get; }
 
-    private Dictionary<string, List<Transition>> Transitions { get; }
+    private Dictionary<string, List<TokenizerTransition>> Transitions { get; }
 
     private string InitialStateName { get; set; }
 
@@ -37,21 +37,21 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// <summary>
     /// Initializes a new instance of the <see cref="TokenizerDfaBuilder"/> class.
     /// </summary>
-    public TokenizerDfaBuilder(string initialStateName = "0")
+    public TokenizerDfaBuilder(string initialState = "q0")
     {
-        States = new Dictionary<string, State>();
-        Transitions = new Dictionary<string, List<Transition>>();
+        States = new Dictionary<string, TokenizerState>();
+        Transitions = new Dictionary<string, List<TokenizerTransition>>();
         Charset = ComputeCharset(CharsetType.Ascii);
-        InitialStateName = initialStateName;
+        InitialStateName = initialState;
 
         /* adds the initial state */
-        var initialState = new State(
+        var q0 = new TokenizerState(
             id: 0,
             name: InitialStateName,
             isAccepting: false,
             isRecursiveOnNoTransition: false);
 
-        States.Add(initialState.Name, initialState);
+        States.Add(q0.Name, q0);
     }
 
 
@@ -67,8 +67,8 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
             .Select(x => x.Key)
             .ToArray();
 
-        States = new Dictionary<string, State>();
-        Transitions = new Dictionary<string, List<Transition>>();
+        States = new Dictionary<string, TokenizerState>();
+        Transitions = new Dictionary<string, List<TokenizerTransition>>();
         Charset = ComputeCharset(CharsetType.Ascii);
         InitialStateName = initialState.Name;
 
@@ -126,6 +126,11 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         return this;
     }
 
+    public TokenizerDfaBuilder SetCharset(IEnumerable<char> chars)
+    {
+        return SetCharset(chars.ToArray());
+    }
+
     public TokenizerDfaBuilder SetCharset(CharsetType charset)
     {
         Charset = ComputeCharset(charset);
@@ -142,7 +147,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// Gets the initial state of the tokenizer.
     /// </summary>
     /// <returns>The initial state.</returns>
-    public State GetInitialState()
+    public TokenizerState GetInitialState()
     {
         if (States.Count == 0)
         {
@@ -159,7 +164,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// <param name="isAccepting">Whether the state is an accepting state.</param>
     /// <returns>The created state.</returns>
     /// <exception cref="InvalidOperationException">Thrown when a state with the same name but different acceptance status already exists.</exception>
-    public State CreateState(string name, bool isAccepting)
+    public TokenizerState CreateState(string name, bool isAccepting)
     {
         if (States.TryGetValue(name, out var state))
         {
@@ -171,7 +176,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
             return state;
         }
 
-        state = new State(
+        state = new TokenizerState(
             id: States.Count,
             name: name,
             isAccepting: isAccepting,
@@ -192,9 +197,9 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// <returns>The current <see cref="TokenizerDfaBuilder"/> instance.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the current or next state does not exist.</exception>
     public TokenizerDfaBuilder AddTransition(
-        State currentState,
+        TokenizerState currentState,
         char character,
-        State nextState,
+        TokenizerState nextState,
         bool enableOverride = false)
     {
         EnsureStateIsListed(currentState);
@@ -202,7 +207,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
 
         var transitions = GetTransitions(currentState);
 
-        var transition = new Transition(
+        var transition = new TokenizerTransition(
             character: character,
             stateId: nextState.Id);
 
@@ -223,7 +228,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         return this;
     }
 
-    private void EnsureStateIsListed(State state)
+    private void EnsureStateIsListed(TokenizerState state)
     {
         if (!States.ContainsKey(state.Name))
         {
@@ -231,11 +236,11 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         }
     }
 
-    private List<Transition> GetTransitions(State state)
+    private List<TokenizerTransition> GetTransitions(TokenizerState state)
     {
         if (!Transitions.TryGetValue(state.Name, out var transitions))
         {
-            transitions = new List<Transition>();
+            transitions = new List<TokenizerTransition>();
             Transitions.Add(state.Name, transitions);
         }
 
@@ -292,7 +297,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// </summary>
     /// <param name="name">The name of the state.</param>
     /// <returns>The state if found; otherwise, <c>null</c>.</returns>
-    private State? FindState(string name)
+    private TokenizerState? FindState(string name)
     {
         if (!States.TryGetValue(name, out var state))
         {
@@ -302,7 +307,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         return state;
     }
 
-    private State GetState(string name)
+    private TokenizerState GetState(string name)
     {
         if (!States.TryGetValue(name, out var state))
         {
@@ -318,7 +323,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// <returns>The constructed <see cref="TokenizerTable"/>.</returns>
     public TokenizerMachine Build()
     {
-        var entries = new Dictionary<State, Transition[]>();
+        var entries = new Dictionary<TokenizerState, TokenizerTransition[]>();
 
         foreach (var state in States.Values)
         {
@@ -336,7 +341,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// <returns>The constructed <see cref="TokenizerTable"/>.</returns>
     public TokenizerTable BuildTable()
     {
-        var entries = new Dictionary<State, Transition[]>();
+        var entries = new Dictionary<TokenizerState, TokenizerTransition[]>();
 
         foreach (var state in States.Values)
         {
