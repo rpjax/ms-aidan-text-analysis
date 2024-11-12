@@ -148,6 +148,12 @@ public abstract class RegexNode : IEquatable<RegexNode>
      */
 
     /// <summary>
+    /// Returns a string representation of the regex node.
+    /// </summary>
+    /// <returns>A string representation of the regex node.</returns>
+    public abstract override string ToString();
+
+    /// <summary>
     /// Determines whether the specified <see cref="RegexNode"/> is equal to the current <see cref="RegexNode"/>.
     /// </summary>
     /// <param name="other">The <see cref="RegexNode"/> to compare with the current <see cref="RegexNode"/>.</param>
@@ -155,14 +161,53 @@ public abstract class RegexNode : IEquatable<RegexNode>
     public abstract bool Equals(RegexNode? other);
 
     /// <summary>
-    /// Returns a string representation of the regex node.
-    /// </summary>
-    /// <returns>A string representation of the regex node.</returns>
-    public abstract override string ToString();
-
-    /// <summary>
     /// Gets the children of the regex node.
     /// </summary>
     /// <returns>A read-only list of child regex nodes.</returns>
     public abstract IReadOnlyList<RegexNode> GetChildren();
+
+    /// <summary>
+    /// Serves as the default hash function.
+    /// </summary>
+    /// <returns>A hash code for the current <see cref="RegexNode"/>.</returns>
+    public override int GetHashCode()
+    {
+        object[] terms;
+
+        switch (Type)
+        {
+            case RegexNodeType.Epsilon:
+                terms = new object[] { Type };
+                break;
+
+            case RegexNodeType.EmptySet:
+                terms = new object[] { Type };
+                break;
+
+            case RegexNodeType.Literal:
+                terms = new object[] { Type, this.AsLiteral().Character.ToString() };
+                break;
+
+            case RegexNodeType.Union:
+            case RegexNodeType.Concatenation:
+            case RegexNodeType.Star:
+                terms = new object[] { Type }.Concat(GetChildren()).ToArray();
+                break;
+
+            default:
+                throw new InvalidOperationException("Unknown node type");
+        }
+
+        unchecked
+        {
+            int hash = 17;
+
+            foreach (var term in terms)
+            {
+                hash = hash * 23 + term.GetHashCode();
+            }
+
+            return hash;
+        }
+    }
 }

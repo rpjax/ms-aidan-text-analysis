@@ -16,11 +16,6 @@ public class DfaState : IEquatable<DfaState>
     public string Name { get; }
 
     /// <summary>
-    /// Gets the regular expression associated with the DFA state.
-    /// </summary>
-    public RegexNode Regex { get; }
-
-    /// <summary>
     /// Gets the transitions from the DFA state.
     /// </summary>
     public IReadOnlyList<DfaTransition> Transitions { get; }
@@ -31,26 +26,19 @@ public class DfaState : IEquatable<DfaState>
     public bool IsAccepting { get; }
 
     /// <summary>
-    /// Gets the lexeme associated with the DFA state, if any.
-    /// </summary>
-    public Lexeme? Lexeme { get; }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="DfaState"/> class.
     /// </summary>
     /// <param name="name">The name of the DFA state.</param>
-    /// <param name="regex">The regular expression associated with the DFA state.</param>
     /// <param name="transitions">The transitions from the DFA state.</param>
+    /// <param name="isAccepting">A value indicating whether the DFA state is an accepting state.</param>
     public DfaState(
         string name,
-        RegexNode regex,
-        IEnumerable<DfaTransition> transitions)
+        IEnumerable<DfaTransition> transitions,
+        bool isAccepting)
     {
         Name = name;
-        Regex = regex;
         Transitions = transitions.ToArray();
-        IsAccepting = Regex.IsEpsilon();
-        Lexeme = Regex.GetLexeme();
+        IsAccepting = isAccepting;
     }
 
     /// <summary>
@@ -66,19 +54,8 @@ public class DfaState : IEquatable<DfaState>
     /// <returns>true if the specified <see cref="DfaState"/> is equal to the current <see cref="DfaState"/>; otherwise, false.</returns>
     public bool Equals(DfaState? other)
     {
-        if (other is null)
-        {
-            return false;
-        }
-
-        var isLexemeEqual = false
-            || Lexeme is null && other.Lexeme is null
-            || Lexeme?.Equals(other.Lexeme) == true;
-
-        return true
+        return other is not null
             && Name == other.Name
-            && Regex.Equals(other.Regex)
-            && isLexemeEqual
             ;
     }
 
@@ -89,18 +66,13 @@ public class DfaState : IEquatable<DfaState>
     public override string ToString()
     {
         var sb = new StringBuilder();
-        var name = Name;
-        var lexeme = Lexeme?.Name ?? "NULL LEXEME";
-        var regex = Regex.ToString();
 
-        sb.Append(name);
+        sb.Append(Name);
 
         if(IsAccepting)
         {
-            sb.Append($" (accept {lexeme})");
+            sb.Append($" (accept)");
         }
-
-        sb.Append($" pattern: /{regex}/");
 
         return sb.ToString();
     }
@@ -112,8 +84,8 @@ public class DfaState : IEquatable<DfaState>
 public class DfaStateBuilder : IBuilder<DfaState>
 {
     private string? Name { get; set; }
-    private RegexNode? Pattern { get; set; }
     private List<DfaTransition> Transitions { get; } = new List<DfaTransition>();
+    private bool IsAccepting { get; set; }
 
     /// <summary>
     /// Sets the name of the DFA state.
@@ -127,25 +99,14 @@ public class DfaStateBuilder : IBuilder<DfaState>
     }
 
     /// <summary>
-    /// Sets the pattern of the DFA state.
-    /// </summary>
-    /// <param name="pattern">The pattern of the DFA state.</param>
-    /// <returns>The current instance of the <see cref="DfaStateBuilder"/> class.</returns>
-    public DfaStateBuilder WithPattern(RegexNode pattern)
-    {
-        Pattern = pattern;
-        return this;
-    }
-
-    /// <summary>
     /// Adds a transition to the DFA state.
     /// </summary>
     /// <param name="character">The character that triggers the transition.</param>
     /// <param name="nextState">The name of the next state.</param>
     /// <returns>The current instance of the <see cref="DfaStateBuilder"/> class.</returns>
-    public DfaStateBuilder WithTransition(char character, string nextState, RegexNode derivative)
+    public DfaStateBuilder WithTransition(char character, string nextState)
     {
-        Transitions.Add(new DfaTransition(character, nextState, derivative));
+        Transitions.Add(new DfaTransition(character, nextState));
         return this;
     }
 
@@ -161,6 +122,16 @@ public class DfaStateBuilder : IBuilder<DfaState>
     }
 
     /// <summary>
+    /// Sets the DFA state as accepting.
+    /// </summary>
+    /// <returns>The current instance of the <see cref="DfaStateBuilder"/> class.</returns>
+    public DfaStateBuilder SetAccepting()
+    {
+        IsAccepting = true;
+        return this;
+    }
+
+    /// <summary>
     /// Builds a new instance of the <see cref="DfaState"/> class.
     /// </summary>
     /// <returns>A new instance of the <see cref="DfaState"/> class.</returns>
@@ -169,7 +140,7 @@ public class DfaStateBuilder : IBuilder<DfaState>
     {
         return new DfaState(
             name: Name ?? throw new InvalidOperationException("Name is required"),
-            regex: Pattern ?? throw new InvalidOperationException("Pattern is required"),
-            transitions: Transitions);
+            transitions: Transitions,
+            isAccepting: IsAccepting);
     }
 }

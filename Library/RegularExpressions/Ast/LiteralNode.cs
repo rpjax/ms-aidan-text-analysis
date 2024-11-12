@@ -10,7 +10,7 @@ public class LiteralNode : RegexNode
     /// <summary>
     /// Gets the literal character to match.
     /// </summary>
-    public char Literal { get; }
+    public char Character { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LiteralNode"/> class.
@@ -26,20 +26,20 @@ public class LiteralNode : RegexNode
             children: Array.Empty<RegexNode>(),
             metadata: metadata)
     {
-        Literal = literal;
+        Character = literal;
     }
 
     /// <inheritdoc />
     public override string ToString()
     {
-        return Literal.ToString(CultureInfo.InvariantCulture);
+        return Character.ToString(CultureInfo.InvariantCulture);
     }
 
     /// <inheritdoc />
     public override bool Equals(RegexNode? other)
     {
         return other is LiteralNode literal
-            && literal.Literal == Literal;
+            && literal.Character == Character;
     }
 
     /// <inheritdoc />

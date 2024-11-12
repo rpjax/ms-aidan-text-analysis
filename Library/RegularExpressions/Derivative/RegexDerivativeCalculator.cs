@@ -161,7 +161,7 @@ public class RegexDerivativeCalculator
 
     private RegexNode DeriveLiteralNode(LiteralNode node, char c)
     {
-        return c == node.Literal
+        return c == node.Character
             ? new EpsilonNode().PropagateLexeme(node)
             : new EmptySetNode().PropagateLexeme(node)
             ;

@@ -205,7 +205,7 @@ public static class RegexNodeExtensions
 
             if (node is LiteralNode literalNode)
             {
-                alphabet.Add(literalNode.Literal);
+                alphabet.Add(literalNode.Character);
             }
 
             foreach (var child in children)

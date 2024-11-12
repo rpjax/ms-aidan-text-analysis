@@ -529,7 +529,7 @@ internal class MachineHistory
 
         foreach (var entry in Entries)
         {
-            sb.AppendLine($"FROM {entry.SourceState.Name} TO {entry.TargetState.Name} ON '{entry.Character}' at position {entry.Position}. Line {entry.Line}, column {entry.Column}");
+            sb.AppendLine($"FROM {entry.SourceState.Name} ON '{entry.Character}' GOTO {entry.TargetState.Name}");
         }
 
         return sb.ToString();

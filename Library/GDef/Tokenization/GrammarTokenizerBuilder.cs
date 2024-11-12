@@ -20,21 +20,22 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
 
     private Lexeme[] Lexemes { get; }
     private char[] IgnoredChars { get; }
-    private TokenizerCalculator Calculator { get; }
 
     public GrammarTokenizerBuilder()
     {
         Lexemes = GDefLexemes.GetLexemes();
         IgnoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
-        Calculator = new TokenizerCalculator(Lexemes, IgnoredChars);
     }
 
     public TokenizerMachine Build()
     {
-        var table = Calculator.ComputeTokenizerTable();
-        var builder = new TokenizerDfaBuilder(table);
+        var lexemes = GDefLexemes.GetLexemes();
+        var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
+        var calculator = new DfaCalculator(lexemes, ignoredChars);
+        var dfa = calculator.ComputeDfa();
+        var builder = new TokenizerDfaBuilder();
 
-        builder.SetCharset(Calculator.GetAlphabet());
+        //builder.SetCharset(calculator.GetAlphabet());
 
         //StringLexemes(builder);
         //CStyleComment(builder);

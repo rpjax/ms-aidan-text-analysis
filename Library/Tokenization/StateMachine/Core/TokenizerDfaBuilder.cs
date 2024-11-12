@@ -156,14 +156,14 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
     /// Creates a new state with the specified name and acceptance status.
     /// </summary>
     /// <param name="name">The name of the state.</param>
-    /// <param name="isAcceptingState">Whether the state is an accepting state.</param>
+    /// <param name="isAccepting">Whether the state is an accepting state.</param>
     /// <returns>The created state.</returns>
     /// <exception cref="InvalidOperationException">Thrown when a state with the same name but different acceptance status already exists.</exception>
-    public State CreateState(string name, bool isAcceptingState)
+    public State CreateState(string name, bool isAccepting)
     {
         if (States.TryGetValue(name, out var state))
         {
-            if (state.IsAccepting != isAcceptingState)
+            if (state.IsAccepting != isAccepting)
             {
                 throw new InvalidOperationException($"State {name} already exists with different accepting state.");
             }
@@ -174,7 +174,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         state = new State(
             id: States.Count,
             name: name,
-            isAccepting: isAcceptingState,
+            isAccepting: isAccepting,
             isRecursiveOnNoTransition: false);
 
         States.Add(name, state);
@@ -242,6 +242,17 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         return transitions;
     }
 
+    public TokenizerDfaBuilder AddTransition(
+        string currentState,
+        char character,
+        string nextState)
+    {
+        return AddTransition(
+            currentState: GetState(currentState),
+            character: character,
+            nextState: GetState(nextState));
+    }
+
     /// <summary>
     /// Creates a <see cref="TableTransitionBuilder"/> for adding transitions from the initial state.
     /// </summary>
@@ -267,7 +278,7 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
 
         if (state is null)
         {
-            state = CreateState(name, isAcceptingState: false);
+            state = CreateState(name, isAccepting: false);
         }
 
         return new TableTransitionBuilder(
@@ -286,6 +297,16 @@ public class TokenizerDfaBuilder : IBuilder<TokenizerMachine>
         if (!States.TryGetValue(name, out var state))
         {
             return null;
+        }
+
+        return state;
+    }
+
+    private State GetState(string name)
+    {
+        if (!States.TryGetValue(name, out var state))
+        {
+            throw new InvalidOperationException($"State {name} does not exist.");
         }
 
         return state;

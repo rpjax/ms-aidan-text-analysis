@@ -13,10 +13,30 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        var tokenizer = new GrammarTokenizerBuilder()
-            .Build();
+        /* debug test */
+        var testLexemes = new Lexeme[]
+        {
+            new Lexeme("lexeme 'a'", RegexNode.FromString("a")),
+            new Lexeme("lexeme 'ab'", RegexNode.FromString("ab")),
+            //new Lexeme("lexeme 'ab'", new ConcatenationNode(
+            //    new LiteralNode('a'),
+            //    new StarNode(new LiteralNode('b'))
+            //)),
+            //new Lexeme("lexeme 'c'", RegexNode.FromString("c")),
+        };
+                                   
+        /* GDef test */
+        var lexemes = GDefLexemes.GetLexemes();
+        var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
 
-        var input = @"foobar lexeme user use charset baz";
+        /* tokenizer test */
+        var calculator = new TokenizerCalculator(
+            lexemes: lexemes,
+            ignoredChars: ignoredChars,
+            useDebug: true);
+
+        var tokenizer = calculator.ComputeTokenizer();
+        var input = "aab";
 
         var tokens = tokenizer.TokenizeToArray(input);
 
@@ -24,6 +44,7 @@ public class Program
         {
             Console.WriteLine(token);
         }
+
     }
 
     private static string FormatTime(double seconds)

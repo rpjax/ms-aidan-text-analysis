@@ -1,6 +1,4 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
-
-namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 
 /// <summary>
 /// Represents a transition in a deterministic finite automaton (DFA).
@@ -18,24 +16,16 @@ public class DfaTransition : IEquatable<DfaTransition>
     public string NextState { get; }
 
     /// <summary>
-    /// Gets the derivative of the transition.
-    /// </summary>
-    public RegexNode Derivative { get; }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="DfaTransition"/> class.
     /// </summary>
     /// <param name="character">The character that triggers the transition.</param>
     /// <param name="nextState">The next state of the transition.</param>
-    /// <param name="derivative">The derivative of the transition.</param>
     public DfaTransition(
         char character,
-        string nextState,
-        RegexNode derivative)
+        string nextState)
     {
         Character = character;
         NextState = nextState;
-        Derivative = derivative;
     }
 
     /// <summary>

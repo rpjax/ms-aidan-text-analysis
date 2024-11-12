@@ -16,20 +16,31 @@ public class Dfa
     public IReadOnlyList<char> Alphabet { get; }
 
     /// <summary>
+    /// Gets the initial state of the DFA.
+    /// </summary>
+    public DfaState InitialState { get; }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="Dfa"/> class.
     /// </summary>
     /// <param name="states">The states of the DFA.</param>
     /// <param name="alphabet">The alphabet of the DFA.</param>
     public Dfa(IEnumerable<DfaState> states, IReadOnlyList<char> alphabet)
     {
+        Validate(states);
         States = states.ToArray();
         Alphabet = alphabet;
-        Validate();
+        InitialState = States.First();
     }
 
-    private void Validate()
+    private static void Validate(IEnumerable<DfaState> states)
     {
-        foreach (var state in States)
+        if (!states.Any())
+        {
+            throw new InvalidOperationException("No states detected");
+        }
+
+        foreach (var state in states)
         {
             var chars = state.Transitions
                 .Select(x => x.Character)
@@ -47,3 +58,14 @@ public class Dfa
     }
 }
 
+public class RegexDfa
+{
+    public IReadOnlyList<AutomatonNode> States { get; }
+    public AutomatonNode InitialState { get; }
+
+    public RegexDfa(IEnumerable<AutomatonNode> states)
+    {
+        States = states.ToArray();
+        InitialState = States.First();
+    }
+}

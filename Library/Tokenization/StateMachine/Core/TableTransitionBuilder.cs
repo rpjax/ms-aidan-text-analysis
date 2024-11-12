@@ -180,7 +180,7 @@ public class TableTransitionBuilder
             throw new InvalidOperationException("Characters not set.");
         }
 
-        var nextState = Builder.CreateState(name, isAcceptingState: false);
+        var nextState = Builder.CreateState(name, isAccepting: false);
 
         foreach (var character in Characters)
         {
@@ -203,7 +203,7 @@ public class TableTransitionBuilder
             throw new InvalidOperationException("Characters not set.");
         }
 
-        var nextState = Builder.CreateState(name, isAcceptingState: true);
+        var nextState = Builder.CreateState(name, isAccepting: true);
 
         foreach (var character in Characters)
         {
