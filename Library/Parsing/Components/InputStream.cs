@@ -19,7 +19,7 @@ public class InputStream : IDisposable
     /// <param name="ignoreSet">The set of token types to ignore.</param>
     public InputStream(
         string input,
-        Tokenizer tokenizer,
+        LegacyTokenizer tokenizer,
         TokenType[]? ignoreSet = null)
     {
         TokenStream = tokenizer.Tokenize(input).GetEnumerator();

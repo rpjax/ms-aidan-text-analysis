@@ -22,7 +22,7 @@ namespace Aidan.TextAnalysis.Tokenization;
 /// <br/>
 /// Refer to <see cref="TokenType"/> for the list of supported token types, and their respective formation rules.
 /// </remarks>
-public class Tokenizer
+public class LegacyTokenizer
 {
     /*
      * Design Principles:
@@ -38,7 +38,7 @@ public class Tokenizer
     /// <summary>
     /// Gets the singleton instance of the Tokenizer class.
     /// </summary>
-    public static Tokenizer Instance { get; } = new();
+    public static LegacyTokenizer Instance { get; } = new();
 
     private static InitialState InitialState { get; } = new();
     private static NumberZeroState NumberZeroState { get; } = new();
@@ -79,7 +79,7 @@ public class Tokenizer
     /// <summary>
     /// Initializes a new instance of the Tokenizer class.
     /// </summary>
-    public Tokenizer()
+    public LegacyTokenizer()
     {
 
     }

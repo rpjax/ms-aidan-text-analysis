@@ -43,7 +43,7 @@ public class DfaCalculator
         while (statesToProcess.TryDequeue(out var state))
         {
             processedStates.Add(state);
-            state.AddChildren(ComputeChildren(state));
+            state.AddChildren(ComputeChildren(state, processedStates));
 
             var nextStates = state.Transitions
                 .Select(x => x.NextState)
@@ -70,7 +70,9 @@ public class DfaCalculator
         return new RegexDfa(Alphabet, processedStates);
     }
 
-    private AutomatonTransition[] ComputeChildren(AutomatonNode node)
+    private AutomatonTransition[] ComputeChildren(
+        AutomatonNode node,
+        HashSet<AutomatonNode> processedStates)
     {
         /* if the state has only one lexeme and it is an epsilon, then no transitions are needed */
         if (node.Regexes.Length == 1 && node.Regexes[0].Regex.IsEpsilon())
@@ -97,9 +99,8 @@ public class DfaCalculator
             }
 
             var nextState = new AutomatonNode(validDerivatives);
-            var recursiveState = node.FindRecursiveState(nextState);
 
-            if (recursiveState is not null)
+            if (processedStates.TryGetValue(nextState, out var recursiveState))
             {
                 var recursiveTransition = new AutomatonTransition(c, recursiveState);
                 transitions.Add(recursiveTransition);

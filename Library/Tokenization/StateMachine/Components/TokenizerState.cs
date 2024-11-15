@@ -1,24 +1,24 @@
-﻿namespace Aidan.TextAnalysis.Tokenization.StateMachine;
+﻿namespace Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 /// <summary>
 /// Represents a state in the state machine.
 /// </summary>
-public class TokenizerState
+public class TokenizerState : IEquatable<TokenizerState>
 {
     /// <summary>
     /// Gets the unique identifier of the state.
     /// </summary>
-    public int Id { get; }
+    public uint Id { get; }
 
     /// <summary>
     /// Gets the name of the state.
     /// </summary>
-    public string Name { get; }
+    public string Name { get; internal set; }
 
     /// <summary>
     /// Gets a value indicating whether the state is an accepting state.
     /// </summary>
-    public bool IsAccepting { get; }
+    public bool IsAccepting { get; internal set; }
 
     /// <summary>
     /// Gets a value indicating whether the state is recursive on no transition.
@@ -36,7 +36,7 @@ public class TokenizerState
     /// <param name="isAccepting">A value indicating whether the state is an accepting state.</param>
     /// <param name="isRecursiveOnNoTransition">A value indicating whether the state is recursive on no transition.</param>
     public TokenizerState(
-        int id,
+        uint id,
         string name,
         bool isAccepting,
         bool isRecursiveOnNoTransition)
@@ -53,6 +53,40 @@ public class TokenizerState
     /// <returns>A string that represents the current state.</returns>
     public override string ToString()
     {
-        return $"{Name} ({Id}) {(IsAccepting ? "Accepting" : "")}";
+        return $"q{Id} {(IsAccepting ? $"accepts '{Name}'" : "")}";
     }
+
+    /// <summary>
+    /// Calculates the hash code for the state.
+    /// </summary>
+    /// <returns>The hash code for the state.</returns>
+    public override int GetHashCode()
+    {
+        unchecked
+        {
+            int hash = 17;
+            hash = hash * 23 + Id.GetHashCode();
+            hash = hash * 23 + Name.GetHashCode();
+            hash = hash * 23 + IsAccepting.GetHashCode();
+            return hash;
+        }
+    }
+
+    /// <summary>
+    /// Determines whether the specified object is equal to the current object.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns> Returns <c>true</c> if the specified object is equal to the current object; otherwise, <c>false</c>.</returns>
+    public bool Equals(TokenizerState? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        return Id == other.Id
+            && Name == other.Name
+            && IsAccepting == other.IsAccepting;
+    }
+
 }

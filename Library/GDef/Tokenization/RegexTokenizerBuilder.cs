@@ -1,18 +1,20 @@
 ﻿using Aidan.Core.Patterns;
+using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
 namespace Aidan.TextAnalysis.GDef.Tokenization;
 
-public class RegexTokenizerBuilder : IBuilder<TokenizerMachine>
+public class RegexTokenizerBuilder : IBuilder<Tokenizer>
 {
     internal static class States
     {
         public static string InitialState { get; } = "initial_state";
     }
 
-    public TokenizerMachine Build()
+    public Tokenizer Build()
     {
-        var builder = new TokenizerDfaBuilder(initialState: States.InitialState);
+        var builder = new TokenizerBuilder();
 
         SkipWhitespace(builder);
         EscapeSequence(builder);
@@ -44,7 +46,7 @@ public class RegexTokenizerBuilder : IBuilder<TokenizerMachine>
         };
     }
 
-    private void SkipWhitespace(TokenizerDfaBuilder builder)
+    private void SkipWhitespace(TokenizerBuilder builder)
     {
         builder.FromInitialState()
             .OnWhitespace()
@@ -52,85 +54,22 @@ public class RegexTokenizerBuilder : IBuilder<TokenizerMachine>
             ;
     }
 
-    private void EscapeSequence(TokenizerDfaBuilder builder)
+    private void EscapeSequence(TokenizerBuilder builder)
     {
         builder.SetCharset(CharsetType.Ascii);
-
-        builder
-            .FromInitialState()
-            .OnCharacter('\\')
-            .GoTo("escape_sequence_start")
-            ;
-
-        builder
-            .FromState("escape_sequence_start")
-            .OnAnyCharacter()
-            .Except(' ')
-            .GoTo("escape_sequence_char")
-            ;
-
-        builder
-            .FromState("escape_sequence_char")
-            .OnAnyCharacter()
-            .Accept("escaped_char")
-            ;
     }
 
-    private void OperatorChars(TokenizerDfaBuilder builder)
+    private void OperatorChars(TokenizerBuilder builder)
     {
         builder.SetCharset(CharsetType.Ascii);
-
-        foreach (var c in GetOperatorChars())
-        {
-            var stateName = $"operator '{c}'";
-            var acceptName = $"{c}";
-
-            builder
-                .FromInitialState()
-                .OnCharacter(c)
-                .GoTo(stateName)
-                ;
-
-            builder
-                .FromState(stateName)
-                .OnAnyCharacter()
-                .Accept(acceptName)
-                ;
-        }
     }
 
-    private void Utf8Chars(TokenizerDfaBuilder builder)
+    private void Utf8Chars(TokenizerBuilder builder)
     {
-        var charset = TokenizerDfaBuilder.ComputeCharset(CharsetType.Ascii);
+        var charset = TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
 
         builder.SetCharset(charset);
 
-        foreach (var c in charset.Except(GetOperatorChars()))
-        {
-            if (c == ' ')
-            {
-                continue;
-            }
-            if (c == '\\')
-            {
-                continue;
-            }
-
-            var stateName = $"char '{c}'";
-            var acceptName = $"char";
-
-            builder
-                .FromInitialState()
-                .OnCharacter(c)
-                .GoTo(stateName)
-                ;
-
-            builder
-                .FromState(stateName)
-                .OnAnyCharacter()
-                .Accept(acceptName)
-                ;
-        }
     }
 
 }

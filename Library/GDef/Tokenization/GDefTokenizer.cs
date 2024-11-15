@@ -1,15 +1,15 @@
-﻿using Aidan.TextAnalysis.Tokenization.StateMachine;
+﻿using Aidan.TextAnalysis.Tokenization;
 
 namespace Aidan.TextAnalysis.GDef.Tokenization;
 
 public static class GDefTokenizers
 {
-    public static TokenizerMachine GrammarTokenizer { get; } 
-    public static TokenizerMachine RegexTokenizer { get; } 
+    public static Tokenizer GrammarTokenizer { get; } 
+    public static Tokenizer RegexTokenizer { get; } 
 
     static GDefTokenizers()
     {
-        GrammarTokenizer = new GrammarTokenizerBuilder().Build();
+        //GrammarTokenizer = new GrammarTokenizerBuilder().Build();
         RegexTokenizer = new RegexTokenizerBuilder().Build();
     }
 }

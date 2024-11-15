@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace Aidan.TextAnalysis.Tokenization.StateMachine;
+namespace Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 /// <summary>
 /// Represents a table used for tokenization, containing states and transitions.
@@ -10,22 +10,22 @@ public class TokenizerTable : ITokenizerTable
     /// <summary>
     /// The maximum allowed state ID.
     /// </summary>
-    public const int MaxStateId = short.MaxValue;
+    public const uint MaxStateId = (uint) short.MaxValue;
 
     /// <summary>
     /// The maximum number of states allowed.
     /// </summary>
-    public const int MaxStateCount = MaxStateId + 1;
+    public const uint MaxStateCount = MaxStateId + 1;
 
     /// <summary>
     /// A dictionary mapping state IDs to their corresponding states.
     /// </summary>
-    private Dictionary<int, TokenizerState> States { get; }
+    private Dictionary<uint, TokenizerState> States { get; }
 
     /// <summary>
     /// A dictionary mapping combined state and character keys to their corresponding transitions.
     /// </summary>
-    private Dictionary<int, TokenizerTransition> Transitions { get; }
+    private Dictionary<uint, TokenizerTransition> Transitions { get; }
 
     /// <summary>
     /// Gets the state and transition entries.
@@ -44,7 +44,7 @@ public class TokenizerTable : ITokenizerTable
         States = entries.Keys
             .ToDictionary(x => x.Id, x => x);
 
-        Transitions = new Dictionary<int, TokenizerTransition>();
+        Transitions = new Dictionary<uint, TokenizerTransition>();
 
         Entries = entries;
 
@@ -98,7 +98,7 @@ public class TokenizerTable : ITokenizerTable
     /// <param name="character">The current character.</param>
     /// <returns>The next state, or <c>null</c> if no transition is found.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TokenizerState? LookUp(int state, char character)
+    public TokenizerState? LookUp(uint state, char character)
     {
         var key = Combine(state, character);
 
@@ -131,7 +131,7 @@ public class TokenizerTable : ITokenizerTable
     /// <param name="character">The character.</param>
     /// <returns>A combined key representing the state and character.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int Combine(int state, char character)
+    private uint Combine(uint state, char character)
     {
         return (state << 16) | character;
     }

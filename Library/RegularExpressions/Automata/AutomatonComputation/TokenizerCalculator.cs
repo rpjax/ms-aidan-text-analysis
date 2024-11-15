@@ -1,17 +1,25 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
-using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
-using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
-using Aidan.TextAnalysis.Tokenization.Experimental.RegexTokenization;
-using Aidan.TextAnalysis.Tokenization.StateMachine;
+﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 
+/// <summary>
+/// Responsible for calculating the tokenizer table and creating a tokenizer.
+/// </summary>
 public class TokenizerCalculator
 {
     private Lexeme[] Lexemes { get; }
     private DfaCalculator DfaCalculator { get; }
     private bool UseDebugger { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TokenizerCalculator"/> class.
+    /// </summary>
+    /// <param name="lexemes">The lexemes to be used in the tokenizer.</param>
+    /// <param name="ignoredChars">The characters to be ignored during tokenization.</param>
+    /// <param name="useDebug">Indicates whether to use the debugger.</param>
     public TokenizerCalculator(
         IEnumerable<Lexeme> lexemes,
         IEnumerable<char> ignoredChars,
@@ -22,177 +30,60 @@ public class TokenizerCalculator
         UseDebugger = useDebug;
     }
 
+    /// <summary>
+    /// Computes the tokenizer table based on the provided lexemes and ignored characters.
+    /// </summary>
+    /// <returns>A <see cref="TokenizerTable"/> representing the tokenizer state machine.</returns>
     public TokenizerTable ComputeTokenizerTable()
     {
-        var builder = new TokenizerDfaBuilder("q0");
+        var builder = new TokenizerBuilder(useDebugger: false);
         var dfa = DfaCalculator.ComputeDfa();
-            
-        builder.SetCharset(dfa.Alphabet.ToArray());
-        CreateStates(dfa, builder);
-        CreateTransitions(dfa, builder);
+        var states = dfa.States.ToList();
+
+        foreach (var state in dfa.States)
+        {
+            var currentStateIsAccepting = state.IsEpsilonState();
+            var currentStateId = (uint)states.IndexOf(state);
+
+            /* the accepted lexeme is the first listed in the calculator input */
+            var currentStateName = currentStateIsAccepting
+                ? state.GetEpsilonLexemes().First().Name
+                : $"q{currentStateId}";
+
+            var currentState = builder.CreateState(
+                id: currentStateId,
+                name: currentStateName,
+                isAccepting: currentStateIsAccepting);
+
+            foreach (var transition in state.Transitions)
+            {
+                var nextStateIsAccepting = transition.NextState.IsEpsilonState();
+                var nextStateId = (uint)states.IndexOf(transition.NextState);
+
+                builder.FromState(currentStateId)
+                    .OnCharacter(transition.Character)
+                    .GoTo(nextStateId);
+            }
+        }
+
         return builder.BuildTable();
     }
 
-    public TokenizerMachine ComputeTokenizer()
+    /// <summary>
+    /// Computes the tokenizer based on the tokenizer table.
+    /// </summary>
+    /// <returns>A <see cref="Tokenizer"/> instance.</returns>
+    public Tokenizer ComputeTokenizer()
     {
-        return new TokenizerMachine(ComputeTokenizerTable(), UseDebugger);
+        return new Tokenizer(ComputeTokenizerTable(), UseDebugger);
     }
 
+    /// <summary>
+    /// Gets the alphabet used by the DFA calculator.
+    /// </summary>
+    /// <returns>A read-only list of characters representing the alphabet.</returns>
     public IReadOnlyList<char> GetAlphabet()
     {
         return DfaCalculator.Alphabet;
     }
-
-    private void CreateStates(RegexDfa dfa, TokenizerDfaBuilder builder)
-    {
-        var stateNameMap = new Dictionary<AutomatonNode, string>();
-
-        for (int i = 0; i < dfa.States.Count; i++)
-        {
-            var state = dfa.States[i];
-            var isAccepting = state.IsEpsilonState();
-            var name = isAccepting
-                ? state.Regexes[0].Name
-                : $"q{i}";
-            stateNameMap[state] = name;
-        }
-
-        foreach (var state in dfa.States)
-        {
-            if(state.IsEpsilonState())
-            {
-                var epsilonRegex = state.Regexes[0];
-
-                builder.CreateState(epsilonRegex.Name, true);
-                continue;
-            }
-
-            var currentStateName = stateNameMap[state];
-
-            builder.CreateState(currentStateName, false);
-
-            //foreach (var transition in state.Transitions)
-            //{
-            //    var nextStateName = stateNameMap[transition.NextState];
-
-            //    builder.AddTransition(
-            //        currentState: currentStateName,
-            //        character: transition.Character,
-            //        nextState: nextStateName);
-            //}
-
-            if(!state.CanProduceEpsilon())
-            {
-                continue;
-            }
-
-            var firstEpsilonRegex = state.Regexes
-                .First(x => x.Regex.ContainsEpsilon);
-
-            //var gotoCharacters = state.Transitions
-            //    .Select(x => x.Character)
-            //    .ToArray();
-
-            //var leftoverCharacters = dfa.Alphabet
-            //    .Except(gotoCharacters)
-            //    .ToArray();
-
-            var epsilonStateName = firstEpsilonRegex.Name;
-
-            builder.CreateState(epsilonStateName, true);
-
-            //foreach (var c in leftoverCharacters)
-            //{
-            //    builder.AddTransition(
-            //        currentState: currentStateName,
-            //        character: c,
-            //        nextState: epsilonStateName);
-            //}
-        }
-    }
-
-    private void CreateTransitions(RegexDfa dfa, TokenizerDfaBuilder builder)
-    {
-        var stateNameMap = new Dictionary<AutomatonNode, string>();
-
-        for (int i = 0; i < dfa.States.Count; i++)
-        {
-            var state = dfa.States[i];
-            var isAccepting = state.IsEpsilonState();
-            var name = isAccepting
-                ? state.Regexes[0].Name
-                : $"q{i}";
-            stateNameMap[state] = name;
-        }
-
-        foreach (var state in dfa.States)
-        {
-            if (state.IsEpsilonState())
-            {
-                continue;
-            }
-
-            var currentStateName = stateNameMap[state];
-
-            foreach (var transition in state.Transitions)
-            {
-                var isNextStateEpsilon = transition.NextState.IsEpsilonState();
-                var nextStateName = stateNameMap[transition.NextState];
-
-                if(isNextStateEpsilon)
-                {
-                    var intermediaryStateName = $"{currentStateName}_{transition.Character}";
-
-                    builder.CreateState(intermediaryStateName, false);
-
-                    builder.AddTransition(
-                        currentState: currentStateName,
-                        character: transition.Character,
-                        nextState: intermediaryStateName);
-
-                    foreach (var c in dfa.Alphabet)
-                    {
-                        builder.AddTransition(
-                            currentState: intermediaryStateName,
-                            character: c,
-                            nextState: nextStateName);
-                    }
-                }   
-                else
-                {
-                    builder.AddTransition(
-                        currentState: currentStateName,
-                        character: transition.Character,
-                        nextState: nextStateName);
-                }
-            }
-
-            if (!state.CanProduceEpsilon())
-            {
-                continue;
-            }
-
-            var firstEpsilonRegex = state.Regexes
-                .First(x => x.Regex.ContainsEpsilon);
-
-            var gotoCharacters = state.Transitions
-                .Select(x => x.Character)
-                .ToArray();
-
-            var leftoverCharacters = dfa.Alphabet
-                .Except(gotoCharacters)
-                .ToArray();
-
-            var epsilonStateName = firstEpsilonRegex.Name;
-
-            foreach (var c in leftoverCharacters)
-            {
-                builder.AddTransition(
-                    currentState: currentStateName,
-                    character: c,
-                    nextState: epsilonStateName);
-            }
-        }
-    }
-
 }

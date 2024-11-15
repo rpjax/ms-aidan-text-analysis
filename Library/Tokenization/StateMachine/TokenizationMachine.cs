@@ -1,23 +1,21 @@
-﻿using Aidan.TextAnalysis.Tokenization.Machine;
-using System.Data.Common;
+﻿using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine;
 
-internal class TokenizationProcess
+internal class TokenizationMachine
 {
     /* Constants */
-    private const char EoiChar = TokenizerMachine.EoiChar;
+    private const char EoiChar = Tokenizer.EoiChar;
 
     /* Dependencies */
-    private ITokenizerTable Table { get; }
+    private TokenizerTable Table { get; }
     private string Input { get; }
 
     /* Settings */
     private bool UseDebugger { get; }
 
     /* Internal State */
-
     private TokenizerState InitialState { get; }
     private TokenizerState CurrentState { get; set; }
     private char Character { get; set; }
@@ -28,8 +26,8 @@ internal class TokenizationProcess
 
     private MachineHistory History { get; }
 
-    public TokenizationProcess(
-        ITokenizerTable table,
+    public TokenizationMachine(
+        TokenizerTable table,
         string input,
         bool useDebugger)
     {
@@ -39,8 +37,8 @@ internal class TokenizationProcess
 
         InitialState = Table.GetInitialState();
         CurrentState = InitialState;
-        Character = input.Length > 0 
-            ? input[0] 
+        Character = input.Length > 0
+            ? input[0]
             : EoiChar;
         Position = 0;
         Line = 1;
@@ -54,26 +52,26 @@ internal class TokenizationProcess
     /// </summary>
     /// <param name="input">The input string to tokenize.</param>
     /// <returns>An enumerable of tokens.</returns>
-    public IEnumerable<IToken> Tokenize(string input)
+    public IEnumerable<IToken> Tokenize()
     {
         if (UseDebugger)
         {
-            return TokenizeWithDebugger(input);
+            return TokenizeWithDebugger();
         }
         else
         {
-            return TokenizeWithoutDebugger(input);
+            return TokenizeWithoutDebugger();
         }
     }
 
-    private IEnumerable<IToken> TokenizeWithDebugger(string input)
-    {        
+    private IEnumerable<IToken> TokenizeWithDebugger()
+    {
         /* machine body */
         while (true)
         {
-            /* current state declarations */
             bool isCharEoi = Character == EoiChar;
             bool isCurrentStateInitialState = CurrentState.Id == InitialState.Id;
+            bool isCurrentStateAccepting = CurrentState.IsAccepting;
 
             /* handle end of input (loop break) */
             if (isCharEoi && isCurrentStateInitialState)
@@ -84,83 +82,50 @@ internal class TokenizationProcess
             /* lookup next state */
             TokenizerState? nextState = Table.LookUp(CurrentState.Id, Character);
 
-            if (nextState is null && isCharEoi)
-            {
-                throw CreateUnexpectedEndOfInputException();
-            }
-
             if (nextState is null && CurrentState.IsRecursiveOnNoTransition)
             {
+                GoToState(CurrentState);
+                continue;
+            }
+
+            if (nextState is not null)
+            {
+                GoToState(nextState);
                 History.AddEntry(
                     sourceState: CurrentState,
-                    targetState: CurrentState,
+                    targetState: nextState,
                     character: Character,
                     position: Position,
                     line: Line,
                     column: Column);
-                AdvanceInput();
-                continue;
             }
-
-            if (nextState is null)
-            {
-                throw CreateUnknownCharacterException(History);
-            }
-
-            History.AddEntry(
-                sourceState: CurrentState,
-                targetState: nextState,
-                character: Character,
-                position: Position,
-                line: Line,
-                column: Column);
-
-            /* next state declarations */
-            bool isNextStateAccepting = nextState.IsAccepting;
-            bool isNextStateInitialState = nextState.Id == InitialState.Id;
-
-            /* state transition */
-
-            /* handle accepting state */
-            if (isNextStateAccepting)
-            {
-                yield return CreateToken(
-                    type: nextState.Name,
-                    value: input.AsMemory(TokenStart, Position - TokenStart));
-
-                /* reset machine state */
-                CurrentState = InitialState;
-                TokenStart = Position;
-                History.Clear();
-                continue;
-            }
-
-            /* handle non-accepting state */
             else
             {
-                /* transition to next state */
-                CurrentState = nextState;
-
-                /* advances the input stream */
-                AdvanceInput();
-
-                /* handles char skipping */
-                if (isNextStateInitialState)
+                if (!isCurrentStateAccepting)
                 {
-                    TokenStart++;
+                    if (isCharEoi)
+                    {
+                        throw CreateUnexpectedEndOfInputException();
+                    }
+
+                    throw CreateUnexpectedCharacterException();
                 }
-                continue;
+
+                yield return CreateToken();
+                Reset();
+                History.Clear();
             }
         }
     }
 
-    private IEnumerable<IToken> TokenizeWithoutDebugger(string input)
+    private IEnumerable<IToken> TokenizeWithoutDebugger()
     {
         /* machine body */
         while (true)
         {
             bool isCharEoi = Character == EoiChar;
             bool isCurrentStateInitialState = CurrentState.Id == InitialState.Id;
+            bool isCurrentStateAccepting = CurrentState.IsAccepting;
 
             /* handle end of input (loop break) */
             if (isCharEoi && isCurrentStateInitialState)
@@ -170,6 +135,12 @@ internal class TokenizationProcess
 
             /* lookup next state */
             TokenizerState? nextState = Table.LookUp(CurrentState.Id, Character);
+
+            if(nextState is null && CurrentState.IsRecursiveOnNoTransition)
+            {
+                GoToState(CurrentState);
+                continue;
+            }
 
             if (nextState is not null)
             {
@@ -177,14 +148,24 @@ internal class TokenizationProcess
             }
             else
             {
+                if (!isCurrentStateAccepting)
+                {
+                    if (isCharEoi)
+                    {
+                        throw CreateUnexpectedEndOfInputException();
+                    }
+
+                    throw CreateUnexpectedCharacterException();
+                }
+
                 yield return CreateToken();
                 Reset();
-            }           
+            }
         }
     }
 
     /* actions */
- 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void GoToState(TokenizerState nextState)
     {
@@ -204,19 +185,6 @@ internal class TokenizationProcess
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private IToken CreateToken()
     {
-        var isCharEoi = Character == EoiChar;
-        var isCurrentStateAccepting = CurrentState.IsAccepting;
-
-        if (!isCurrentStateAccepting)
-        {
-            if (isCharEoi)
-            {
-                throw CreateUnexpectedEndOfInputException();
-            }
-
-            throw CreateUnknownCharacterException();
-        }
-
         var type = CurrentState.Name;
         var value = Input.AsMemory(TokenStart, Position - TokenStart);
 
@@ -289,15 +257,20 @@ internal class TokenizationProcess
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Exception CreateUnexpectedEndOfInputException()
     {
+        if (UseDebugger)
+        {
+            return new Exception($"Unexpected end of input. At position {Position}. Line {Line}, column {Column}.\n\n{History}");
+        }
+
         return new Exception($"Unexpected end of input. At position {Position}. Line {Line}, column {Column}.");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Exception CreateUnknownCharacterException(MachineHistory? history = null)
+    private Exception CreateUnexpectedCharacterException()
     {
-        if (history is not null)
+        if (UseDebugger)
         {
-            return new Exception($"No state found for character '{Character}' in state {CurrentState.Name}. At position {Position}. Line {Line}, column {Column}.\n\n{history}");
+            return new Exception($"No state found for character '{Character}' in state {CurrentState.Name}. At position {Position}. Line {Line}, column {Column}.\n\n{History}");
         }
 
         return new Exception($"No state found for character '{Character}' in state {CurrentState.Name}. At position {Position}. Line {Line}, column {Column}.");

@@ -1,10 +1,13 @@
-﻿using Aidan.TextAnalysis.GDef;
+﻿using Aidan.Core.Patterns;
+using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Parsing.Extensions;
 using Aidan.TextAnalysis.RegularExpressions;
 using Aidan.TextAnalysis.RegularExpressions.Ast;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
-using System.Diagnostics;
+using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.Tokenization.StateMachine;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 using System.Globalization;
 
 namespace Aidan.TextAnalysis.Tests;
@@ -46,7 +49,6 @@ public class Program
             )
         );
 
-
         /* GDef test */
         var lexemes = GDefLexemes.GetLexemes();
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
@@ -57,8 +59,8 @@ public class Program
             ignoredChars: ignoredChars,
             useDebug: true);
 
-        var tokenizer = new GrammarTokenizerBuilder().Build();
-        var input = ";;  $use charset 'utf8';";
+        var tokenizer = calculator.ComputeTokenizer();
+        var input = ";;  $use charset utf8; foobar_id";
 
         var tokens = tokenizer.TokenizeToArray(input);
 
@@ -75,29 +77,87 @@ public class Program
     }
 }
 
-public class Benchmark
+public class DebugTokenizerBuilder : IBuilder<Tokenizer>
 {
-    private Action Action { get; }
-    private int WarmupIterations { get; } = 10;
-    private int Iterations { get; } = 1000;
-
-    public Benchmark(Action action)
+    public DebugTokenizerBuilder()
     {
-        Action = action;
+
     }
 
-    public double Run(int iterations)
+    public Tokenizer Build()
     {
-        var sw = new Stopwatch();
-        sw.Start();
+        var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
+        var builder = new TokenizerBuilder();
 
-        for (var i = 0; i < iterations; i++)
+        builder.SetCharset(CharsetType.Ascii);
+
+        StringLexemes(builder);
+        //CStyleComment(builder);
+
+        builder.EnableDebugger();
+
+        return builder.Build();
+    }
+
+    /* tokenization rules */
+
+    private void FooLexeme(TokenizerBuilder builder)
+    {
+
+    }
+
+    /* strings*/
+    private void StringLexemes(TokenizerBuilder builder)
+    {
+        var delimiters = GDefLexemes.StringDelimiters;
+        var escapeChar = '\\';
+
+        var originalCharset = builder.GetCharset();
+
+        var workingCharset = originalCharset
+            .Concat(delimiters)
+            .Distinct()
+            .ToArray();
+
+        var stringCharset = TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
+
+        builder.SetCharset(workingCharset);
+
+        foreach (var delimiter in delimiters)
         {
-            Action();
+            var stringState = $"{delimiter}-string start";
+            var stringEndState = $"{delimiter}-string end";
+            var escapeState = $"{delimiter}-string escape char";
+            var acceptName = GDefLexemes.String;
+
+            var otherDelimiters = delimiters
+                .Where(d => d != delimiter)
+                .ToArray();
         }
 
-        sw.Stop();
-        return sw.Elapsed.TotalSeconds;
     }
 
+    /* comments */
+    private void CStyleComment(TokenizerBuilder builder)
+    {
+        var cStyleCommentStart = "c_style_comment_start";
+
+        var cStyleInlineComment = "c_style_inline_comment";
+        var cStyleInlineCommentEnd = "c_style_inline_comment_end";
+
+        var cStyleBlockComment = "c_style_block_comment";
+        var cStyleBlockCommentEnd = "c_style_block_comment_end";
+        var acceptName = GDefLexemes.Comment;
+
+        var originalCharset = builder.GetCharset();
+
+        var workingCharset = originalCharset
+            .Concat(new char[] { '/', '*' })
+            .Distinct()
+            .ToArray();
+
+        var commentCharset = TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
+
+    }
 }
+

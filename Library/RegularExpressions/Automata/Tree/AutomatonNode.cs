@@ -62,7 +62,7 @@ public class AutomatonNode : IEquatable<AutomatonNode>
 
         for (int i = 0; i < Regexes.Length; i++)
         {
-            if (!Regexes[i].Regex.Equals(other.Regexes[i].Regex))
+            if (!Regexes[i].Equals(other.Regexes[i]))
             {
                 return false;
             }

@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Tokenization.StateMachine;
+﻿namespace Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 /// <summary>
 /// Represents a tokenizer table for managing states and transitions in a tokenizer DFA.
@@ -17,7 +17,7 @@ public interface ITokenizerTable
     /// <param name="state">The current state.</param>
     /// <param name="character">The input character.</param>
     /// <returns>The next state if found; otherwise, <c>null</c>.</returns>
-    TokenizerState? LookUp(int state, char character);
+    TokenizerState? LookUp(uint state, char character);
 
     /// <summary>
     /// Gets the entries of the tokenizer table.

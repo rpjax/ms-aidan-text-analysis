@@ -1,10 +1,12 @@
 ﻿using Aidan.Core.Patterns;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
+using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
 namespace Aidan.TextAnalysis.GDef.Tokenization;
 
-public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
+public class GrammarTokenizerBuilder : IBuilder<Tokenizer>
 {
     /*
         identifier
@@ -27,13 +29,13 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
         IgnoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
     }
 
-    public TokenizerMachine Build()
+    public Tokenizer Build()
     {
         var lexemes = GDefLexemes.GetLexemes();
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
         var calculator = new TokenizerCalculator(lexemes, ignoredChars);
         var table = calculator.ComputeTokenizerTable();
-        var builder = new TokenizerDfaBuilder(table);
+        var builder = new ManualTokenizerBuilder(table);
 
         builder.SetCharset(calculator.GetAlphabet());
 
@@ -47,21 +49,10 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
 
     /* tokenization rules */
 
-    private void StringLexemes(TokenizerDfaBuilder builder)
+    private void StringLexemes(ManualTokenizerBuilder builder)
     {
         var delimiters = GDefLexemes.StringDelimiters;
         var escapeChar = '\\';
-
-        var originalCharset = builder.GetCharset();
-
-        var workingCharset = originalCharset
-            .Concat(delimiters)
-            .Distinct()
-            .ToArray();
-
-        var stringCharset = TokenizerDfaBuilder.ComputeCharset(CharsetType.Ascii);
-
-        builder.SetCharset(workingCharset);
 
         foreach (var delimiter in delimiters)
         {
@@ -69,59 +60,16 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
             var stringEndState = $"{delimiter}-string end";
             var escapeState = $"{delimiter}-string escape char";
             var acceptName = GDefLexemes.String;
-
-            var otherDelimiters = delimiters
-                .Where(d => d != delimiter)
-                .ToArray();
-
-            builder
-                .FromInitialState()
+            
+            builder.FromInitialState()
                 .OnCharacter(delimiter)
-                .GoTo(stringState)
-                ;
-
-            builder.SetCharset(stringCharset);
-
-            builder
-                .FromState(stringState)
-                .OnAnyCharacterExcept(delimiter, escapeChar)
-                .Recurse()
-                ;
-
-            builder
-                .FromState(stringState)
-                .OnCharacter(delimiter)
-                .GoTo(stringEndState)
-                ;
-
-            /* escape character */
-            builder
-                .FromState(stringState)
-                .OnCharacter(escapeChar)
-                .GoTo(escapeState)
-                ;
-
-            builder
-                .FromState(escapeState)
-                .OnAnyCharacter()
-                .GoTo(stringState)
-                ;
-
-            builder.SetCharset(workingCharset);
-
-            builder
-                .FromState(stringEndState)
-                .OnAnyCharacter()
-                .Accept(acceptName)
-                ;
+                .GoTo(stringState);
         }
-
-        builder.SetCharset(originalCharset);
     }
 
     /* comments */
 
-    private void CStyleComment(TokenizerDfaBuilder builder)
+    private void CStyleComment(TokenizerBuilder builder)
     {
         var cStyleCommentStart = "c_style_comment_start";
 
@@ -139,7 +87,7 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
             .Distinct()
             .ToArray();
 
-        var commentCharset = TokenizerDfaBuilder.ComputeCharset(CharsetType.Ascii);
+        var commentCharset = TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
 
         //builder.SetCharset(CharsetType.Utf8);
 
@@ -181,7 +129,7 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
         builder
             .FromState(cStyleInlineCommentEnd)
             .OnAnyCharacter()
-            .Accept(acceptName)
+            .Accept()
             ;
 
         /* from block comment, recurse on any character except '*' */
@@ -215,9 +163,10 @@ public class GrammarTokenizerBuilder : IBuilder<TokenizerMachine>
         builder
             .FromState("c_style_block_comment_finilizer")
             .OnAnyCharacter()
-            .Accept(acceptName)
+            .Accept()
             ;
 
     }
 
 }
+

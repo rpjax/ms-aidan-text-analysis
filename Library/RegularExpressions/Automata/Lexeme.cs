@@ -36,7 +36,7 @@ public class Lexeme : IEquatable<Lexeme>
     /// <returns>A string that represents the current lexeme.</returns>
     public override string ToString()
     {
-        return $"lexeme {Name} = /{Pattern}/";
+        return $"{Name} = /{Pattern}/";
     }
 
     /// <summary>
