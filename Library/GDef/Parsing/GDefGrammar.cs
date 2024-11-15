@@ -80,12 +80,12 @@ public class GDefGrammar : Grammar
             new ProductionRule(
                 new NonTerminal("lexer_statement"),
 
-                new Terminal("use"),
-                new Terminal("charset"),
+                new Terminal(GDefLexemes.Use),
+                new Terminal(GDefLexemes.Charset),
                 new Terminal(GDefLexemes.Identifier),
                 new Terminal(";"),
                 new PipeMacro(), // pipe
-                new Terminal("lexeme"),
+                new Terminal(GDefLexemes.Lexeme),
                 new Terminal(GDefLexemes.Identifier),
                 new Terminal("="),
                 new Terminal(GDefLexemes.String),

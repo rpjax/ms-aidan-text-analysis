@@ -4,12 +4,20 @@ using Aidan.TextAnalysis.RegularExpressions.Derivative;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 
+/// <summary>
+/// Responsible for calculating the DFA (Deterministic Finite Automaton) from a set of lexemes and ignored characters.
+/// </summary>
 public class DfaCalculator
 {
     public Lexeme[] Lexemes { get; }
     public IReadOnlyList<char> Alphabet { get; }
     public IReadOnlyList<char> IgnoredCharacters { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DfaCalculator"/> class.
+    /// </summary>
+    /// <param name="lexemes">The lexemes to be used in the DFA.</param>
+    /// <param name="ignoredCharacters">The characters to be ignored during DFA computation.</param>
     public DfaCalculator(
         IEnumerable<Lexeme> lexemes,
         IEnumerable<char> ignoredCharacters)
@@ -25,6 +33,10 @@ public class DfaCalculator
         IgnoredCharacters = ignoredCharacters.ToArray();
     }
 
+    /// <summary>
+    /// Computes the DFA based on the provided lexemes and ignored characters.
+    /// </summary>
+    /// <returns>A <see cref="RegexDfa"/> representing the computed DFA.</returns>
     public RegexDfa ComputeDfa()
     {
         var lexemes = Lexemes
@@ -70,6 +82,12 @@ public class DfaCalculator
         return new RegexDfa(Alphabet, processedStates);
     }
 
+    /// <summary>
+    /// Computes the transitions for a given state.
+    /// </summary>
+    /// <param name="node">The current state node.</param>
+    /// <param name="processedStates">The set of already processed states.</param>
+    /// <returns>An array of <see cref="AutomatonTransition"/> representing the transitions from the current state.</returns>
     private AutomatonTransition[] ComputeChildren(
         AutomatonNode node,
         HashSet<AutomatonNode> processedStates)
@@ -111,9 +129,15 @@ public class DfaCalculator
             transitions.Add(gotoTransition);
         }
 
-        return transitions.ToArray();       
+        return transitions.ToArray();
     }
 
+    /// <summary>
+    /// Computes the derivative of a regex with respect to a character.
+    /// </summary>
+    /// <param name="regex">The regex to compute the derivative for.</param>
+    /// <param name="c">The character to derive with respect to.</param>
+    /// <returns>A <see cref="RegexNode"/> representing the derivative of the regex.</returns>
     private RegexNode ComputeDerivative(RegexNode regex, char c)
     {
         var calculator = new RegexDerivativeCalculator();

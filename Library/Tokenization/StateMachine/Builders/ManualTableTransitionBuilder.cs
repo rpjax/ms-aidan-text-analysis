@@ -52,6 +52,16 @@ public class ManualTableTransitionBuilder : TableTransitionBuilderBase<ManualTab
         return Builder;
     }
 
+    public ManualTokenizerBuilder RecurseOnNoTransition()
+    {
+        if (!CurrentState.IsRecursiveOnNoTransition)
+        {
+            CurrentState.IsRecursiveOnNoTransition = true;
+        }
+
+        return Builder;
+    }
+
     public ManualTokenizerBuilder Recurse()
     {
         if (Characters.Count == 0)

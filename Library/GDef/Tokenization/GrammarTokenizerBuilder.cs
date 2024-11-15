@@ -1,7 +1,6 @@
 ﻿using Aidan.Core.Patterns;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
 using Aidan.TextAnalysis.Tokenization;
-using Aidan.TextAnalysis.Tokenization.StateMachine;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
 namespace Aidan.TextAnalysis.GDef.Tokenization;
@@ -20,24 +19,17 @@ public class GrammarTokenizerBuilder : IBuilder<Tokenizer>
         '|' for alternative macros
      */
 
-    private Lexeme[] Lexemes { get; }
-    private char[] IgnoredChars { get; }
-
-    public GrammarTokenizerBuilder()
-    {
-        Lexemes = GDefLexemes.GetLexemes();
-        IgnoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
-    }
-
     public Tokenizer Build()
     {
         var lexemes = GDefLexemes.GetLexemes();
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
+
         var calculator = new TokenizerCalculator(lexemes, ignoredChars);
         var table = calculator.ComputeTokenizerTable();
-        var builder = new ManualTokenizerBuilder(table);
 
-        builder.SetCharset(calculator.GetAlphabet());
+        var builder = new ManualTokenizerBuilder(
+            table: table, 
+            charset: calculator.GetAlphabet());
 
         StringLexemes(builder);
         //CStyleComment(builder);
@@ -54,17 +46,50 @@ public class GrammarTokenizerBuilder : IBuilder<Tokenizer>
         var delimiters = GDefLexemes.StringDelimiters;
         var escapeChar = '\\';
 
-        foreach (var delimiter in delimiters)
-        {
-            var stringState = $"{delimiter}-string start";
-            var stringEndState = $"{delimiter}-string end";
-            var escapeState = $"{delimiter}-string escape char";
-            var acceptName = GDefLexemes.String;
-            
-            builder.FromInitialState()
-                .OnCharacter(delimiter)
-                .GoTo(stringState);
-        }
+        /* single quote string */
+        builder.FromInitialState()
+            .OnCharacter('\'')
+            .GoTo("single-quote-string");
+
+        builder.FromState("single-quote-string")
+            .RecurseOnNoTransition();
+
+        builder.FromState("single-quote-string")
+            .OnCharacter(escapeChar)
+            .GoTo("single-quote-string-escape");
+
+        builder.FromState("single-quote-string-escape")
+            .OnCharacter('\'')
+            .OnCharacter(escapeChar)
+            .GoTo("single-quote-string");
+
+        builder.FromState("single-quote-string")
+            .OnCharacter('\'')
+            .GoTo(GDefLexemes.String);
+
+        /* double quote string */
+        builder.FromInitialState()
+             .OnCharacter('\"')
+             .GoTo("double-quote-string");
+
+        builder.FromState("double-quote-string")
+            .RecurseOnNoTransition();
+
+        builder.FromState("double-quote-string")
+            .OnCharacter(escapeChar)
+            .GoTo("double-quote-string-escape");
+
+        builder.FromState("double-quote-string-escape")
+            .OnCharacter('\"')
+            .OnCharacter(escapeChar)
+            .GoTo("double-quote-string");
+
+        builder.FromState("double-quote-string")
+            .OnCharacter('\"')
+            .GoTo(GDefLexemes.String);
+
+        builder.FromState(GDefLexemes.String)
+            .Accept();
     }
 
     /* comments */
@@ -81,90 +106,6 @@ public class GrammarTokenizerBuilder : IBuilder<Tokenizer>
         var acceptName = GDefLexemes.Comment;
 
         var originalCharset = builder.GetCharset();
-
-        var workingCharset = originalCharset
-            .Concat(new char[] { '/', '*' })
-            .Distinct()
-            .ToArray();
-
-        var commentCharset = TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
-
-        //builder.SetCharset(CharsetType.Utf8);
-
-        /* on '/' goto c style comment start */
-        builder
-            .FromInitialState()
-            .OnCharacter('/')
-            .GoTo(cStyleCommentStart)
-            ;
-
-        /* on the second '/' goto inline comment */
-        builder
-            .FromState(cStyleCommentStart)
-            .OnCharacter('/')
-            .GoTo(cStyleInlineComment)
-            ;
-
-        /* on '*' goto block comment */
-        builder
-            .FromState(cStyleCommentStart)
-            .OnCharacter('*')
-            .GoTo(cStyleBlockComment)
-            ;
-
-        /* from inline comment, recurse on any character except '\n' */
-        builder
-            .FromState(cStyleInlineComment)
-            .OnAnyCharacterExcept('\n')
-            .Recurse()
-            ;
-
-        /* from inline comment, on '\n' accept the comment */
-        builder
-            .FromState(cStyleInlineComment)
-            .OnCharacter('\n')
-            .GoTo(cStyleInlineCommentEnd)
-            ;
-
-        builder
-            .FromState(cStyleInlineCommentEnd)
-            .OnAnyCharacter()
-            .Accept()
-            ;
-
-        /* from block comment, recurse on any character except '*' */
-        builder
-            .FromState(cStyleBlockComment)
-            .OnAnyCharacterExcept('*')
-            .Recurse()
-            ;
-
-        /* from block comment, on '*' go to block comment end */
-        builder
-            .FromState(cStyleBlockComment)
-            .OnCharacter('*')
-            .GoTo(cStyleBlockCommentEnd)
-            ;
-
-        /* from block comment end, recurse on any character except '/' */
-        builder
-            .FromState(cStyleBlockCommentEnd)
-            .OnAnyCharacterExcept('/')
-            .GoTo(cStyleBlockComment)
-            ;
-
-        /* from block comment end, on '/' accept the comment */
-        builder
-            .FromState(cStyleBlockCommentEnd)
-            .OnCharacter('/')
-            .GoTo("c_style_block_comment_finilizer")
-            ;
-
-        builder
-            .FromState("c_style_block_comment_finilizer")
-            .OnAnyCharacter()
-            .Accept()
-            ;
 
     }
 

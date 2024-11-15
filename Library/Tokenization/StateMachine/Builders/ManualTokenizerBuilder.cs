@@ -4,8 +4,9 @@ namespace Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
 public class ManualTokenizerBuilder
 {
-    private Dictionary<string, TokenizerState> States { get; }
-    private Dictionary<string, List<TokenizerTransition>> Transitions { get; }
+    private List<TokenizerState> States { get; }
+    private Dictionary<string, TokenizerState> NameStateMap { get; }
+    private Dictionary<TokenizerState, List<TokenizerTransition>> Transitions { get; }
     private char[] Charset { get; set; }
     private bool UseDebugger { get; set; }
 
@@ -14,9 +15,44 @@ public class ManualTokenizerBuilder
         bool useDebugger = false)
     {
         States = new();
+        NameStateMap = new();
         Transitions = new();
         Charset = charset?.ToArray() ?? TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
         UseDebugger = useDebugger;
+    }
+
+    public ManualTokenizerBuilder(
+        TokenizerTable table,
+        IEnumerable<char>? charset = null,
+        bool useDebugger = false)
+    {
+        States = new();
+        NameStateMap = new();
+        Transitions = new();
+        Charset = charset?.ToArray() ?? TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
+        UseDebugger = useDebugger;
+
+        var entries = table.GetEntries();
+        var initialState = table.GetInitialState();
+
+        foreach (var entry in entries)
+        {
+            var state = entry.Key;
+            var transitions = entry.Value;
+
+            if (state == initialState)
+            {
+                NameStateMap.Add(state.Name, state);
+            }
+
+            States.Add(state);
+            Transitions.Add(state, new List<TokenizerTransition>());
+
+            foreach (var transition in transitions)
+            {
+                Transitions[state].Add(transition);
+            }
+        }
     }
 
     /* getter methods */
@@ -28,7 +64,7 @@ public class ManualTokenizerBuilder
 
     public TokenizerState? FindState(string name)
     {
-        if (!States.TryGetValue(name, out var state))
+        if (!NameStateMap.TryGetValue(name, out var state))
         {
             return null;
         }
@@ -38,7 +74,7 @@ public class ManualTokenizerBuilder
 
     public TokenizerState GetState(string name)
     {
-        if (!States.TryGetValue(name, out var state))
+        if (!NameStateMap.TryGetValue(name, out var state))
         {
             throw new InvalidOperationException($"State {name} does not exist.");
         }
@@ -53,7 +89,7 @@ public class ManualTokenizerBuilder
             throw new InvalidOperationException("No initial state defined.");
         }
 
-        return States.First().Value;
+        return States.First();
     }
 
     /* setter methods */
@@ -96,20 +132,20 @@ public class ManualTokenizerBuilder
             isAccepting: isAccepting,
             isRecursiveOnNoTransition: false);
 
-        if (States.ContainsKey(name))
+        if (NameStateMap.ContainsKey(name))
         {
             throw new InvalidOperationException($"State '{name}' already exists.");
         }
-        if (Transitions.ContainsKey(name))
+        if (Transitions.ContainsKey(state))
         {
             throw new InvalidOperationException($"State '{name}' already has transitions.");
         }
 
-        States.Add(name, state);
-        Transitions.Add(name, new List<TokenizerTransition>());
+        States.Add(state);
+        NameStateMap.Add(name, state);
+        Transitions.Add(state, new List<TokenizerTransition>());
         return state;
     }
-
 
     public ManualTokenizerBuilder AddTransition(
         string currentState,
@@ -123,7 +159,7 @@ public class ManualTokenizerBuilder
             character: character,
             stateId: GetState(nextState).Id);
 
-        GetStateTransitions(currentState).Add(transition);
+        GetStateTransitions(GetState(currentState)).Add(transition);
         return this;
     }
 
@@ -149,9 +185,14 @@ public class ManualTokenizerBuilder
     {
         var entries = new Dictionary<TokenizerState, TokenizerTransition[]>();
 
-        foreach (var state in States.Values)
+        foreach (var state in States)
         {
-            entries.Add(state, GetStateTransitions(state.Name).ToArray());
+            var transitions = Transitions.ContainsKey(state)
+                ? Transitions[state].ToArray()
+                : Array.Empty<TokenizerTransition>()
+                ;
+
+            entries.Add(state, transitions);
         }
 
         return new TokenizerTable(entries);
@@ -173,16 +214,20 @@ public class ManualTokenizerBuilder
 
     private void EnsureStateIsListed(string name)
     {
-        if (!States.ContainsKey(name))
+        if (!NameStateMap.ContainsKey(name))
         {
             throw new InvalidOperationException($"State '{name}' does not exist.");
         }
     }
 
-    private List<TokenizerTransition> GetStateTransitions(string name)
+    private List<TokenizerTransition> GetStateTransitions(TokenizerState state)
     {
-        EnsureStateIsListed(name);
-        return Transitions[name];
+        if (!Transitions.TryGetValue(state, out var transitions))
+        {
+            throw new InvalidOperationException($"State '{state.Name}' does not have transitions.");
+        }
+
+        return transitions;
     }
 
 }

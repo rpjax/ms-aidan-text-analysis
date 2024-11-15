@@ -9,7 +9,7 @@ public static class GDefTokenizers
 
     static GDefTokenizers()
     {
-        //GrammarTokenizer = new GrammarTokenizerBuilder().Build();
-        RegexTokenizer = new RegexTokenizerBuilder().Build();
+        GrammarTokenizer = new GrammarTokenizerBuilder().Build();
+        //RegexTokenizer = new RegexTokenizerBuilder().Build();
     }
 }

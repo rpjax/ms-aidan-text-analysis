@@ -18,7 +18,6 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
     private Dictionary<uint, TokenizerState> States { get; }
     private Dictionary<uint, List<TokenizerTransition>> Transitions { get; }
     private char[] Charset { get; set; }
-
     private bool UseDebugger { get; set; }
 
     public TokenizerBuilder(

@@ -64,22 +64,22 @@ public static class GDefLexemes
         // Full identifier regex: start with a letter or underscore, followed by any combination of letters, digits, or underscores
         var identifierRegex = new ConcatenationNode(startRegex, restRegex);
 
-        return new Lexeme(name: "identifier", pattern: identifierRegex);
+        return new Lexeme(name: Identifier, pattern: identifierRegex);
     }
 
     private static Lexeme GetLexemeLexeme()
     {
-        return new Lexeme(name: "lexeme", pattern: RegexNode.FromString("lexeme"));
+        return new Lexeme(name: Lexeme, pattern: RegexNode.FromString("lexeme"));
     }
 
     private static Lexeme GetUseLexeme()
     {
-        return new Lexeme(name: "use", pattern: RegexNode.FromString("use"));
+        return new Lexeme(name: Use, pattern: RegexNode.FromString("use"));
     }
 
     private static Lexeme GetCharsetLexeme()
     {
-        return new Lexeme(name: "charset", pattern: RegexNode.FromString("charset"));
+        return new Lexeme(name: Charset, pattern: RegexNode.FromString("charset"));
     }
 
     private static IEnumerable<Lexeme> GetSpecialCharsLexemes()

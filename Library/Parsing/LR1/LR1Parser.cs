@@ -1,6 +1,7 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.Components;
+using Aidan.TextAnalysis.Parsing.Core;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
 using Aidan.TextAnalysis.Tokenization;
 using System.Runtime.CompilerServices;
@@ -10,7 +11,7 @@ namespace Aidan.TextAnalysis.Parsing.LR1;
 /// <summary>
 /// Represents a LR(1) parser. It is capable of parsing text based on a given grammar.
 /// </summary>
-public class LR1Parser
+public class LR1Parser : IStringParser
 {
     private static readonly string[] DefaultIgnoreSet = new string[]
     {

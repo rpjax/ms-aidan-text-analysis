@@ -2,6 +2,7 @@
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing;
 using Aidan.TextAnalysis.Parsing.Components;
+using Aidan.TextAnalysis.Parsing.Core;
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tools;
 
@@ -109,7 +110,7 @@ public static class GDefParser
     /// </summary>
     /// <param name="text">The text of the GDF file to parse.</param>
     /// <returns>The parsed grammar object.</returns>
-    public static Grammar ParseGrammar(string text)
+    public static Grammar ParseToGrammar(string text)
     {
         var cst = Parse(text);
         var reducer = new CstReducer(cst, ReduceWhitelist);
@@ -117,4 +118,17 @@ public static class GDefParser
 
         return GDefTranslator.TranslateGrammar(reducedCst);
     }
+}
+
+public class GDefService
+{
+    public static LR1Parser CreateLR1Parser(GDefGrammar grammar)
+    {
+
+    }
+}
+
+public class GDefGrammar : Grammar
+{
+
 }

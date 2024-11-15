@@ -1,6 +1,7 @@
 ﻿using Aidan.Core.Patterns;
 using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.GDef.Tokenization;
+using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.Extensions;
 using Aidan.TextAnalysis.RegularExpressions;
 using Aidan.TextAnalysis.RegularExpressions.Ast;
@@ -16,6 +17,34 @@ public class Program
 {
     public static void Main(string[] args)
     {
+
+        var grammarFile = @"
+start 
+    : command
+    ;
+
+command
+    : '/' $id [ arguments ]
+    ;
+
+arguments
+    : argument [ ',' arguments ]
+    ;
+
+argument
+    : $id ':' value
+    ;
+
+value
+    : $id
+    | $string
+    | $int
+    | $float
+    ;
+";
+
+        var grammar = GDefParser.ParseToGrammar(grammarFile).ExpandMacros();
+        GDefService.CreateLR1Parser();
         /* debug test */
         var testLexemes = new Lexeme[]
         {
@@ -59,16 +88,18 @@ public class Program
             ignoredChars: ignoredChars,
             useDebug: true);
 
-        var tokenizer = calculator.ComputeTokenizer();
-        var input = ";;  $use charset utf8; foobar_id";
+        var grammarTokenizerBuilder = new GrammarTokenizerBuilder();
+        var grammarTokenizer = grammarTokenizerBuilder.Build();
+        //var tokenizer = calculator.ComputeTokenizer();
 
-        var tokens = tokenizer.TokenizeToArray(input);
+        var input = ";;  $use charset 'utf8 \\'foo\\' bar'; foobar_id";
+
+        var tokens = grammarTokenizer.TokenizeToArray(input);
 
         foreach (var token in tokens)
         {
             Console.WriteLine(token);
         }
-
     }
 
     private static string FormatTime(double seconds)

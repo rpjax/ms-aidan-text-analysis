@@ -36,8 +36,15 @@ public interface IGrammar
 }
 
 /// <summary>
-/// Represents a context-free grammar.
+/// Definition of a context-free grammar. (Chomsky hierarchy type 2) <br/>
 /// </summary>
+/// <remarks>
+/// The grammar is defined as a 4-tuple G = (N, T, P, S), where: <br/>
+/// - N is a set of non-terminal symbols. <br/>
+/// - T is a set of terminal symbols. <br/>
+/// - P is a set of production rules. <br/>
+/// - S is the start symbol. <br/>
+/// </remarks>
 public class Grammar : IGrammar
 {
     /// <summary>
