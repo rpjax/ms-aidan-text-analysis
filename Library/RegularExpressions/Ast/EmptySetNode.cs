@@ -5,7 +5,7 @@ namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 /// <summary>
 /// Represents an empty set node in a regex, which matches nothing (∅).
 /// </summary>
-public class EmptySetNode : RegexNode
+public class EmptySetNode : RegExpr
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="EmptySetNode"/> class.
@@ -16,7 +16,7 @@ public class EmptySetNode : RegexNode
         : base(
             type: RegexNodeType.EmptySet,
             containsEpsilon: false,
-            children: Array.Empty<RegexNode>(),
+            children: Array.Empty<RegExpr>(),
             metadata: metadata)
     {
 
@@ -29,15 +29,15 @@ public class EmptySetNode : RegexNode
     }
 
     /// <inheritdoc />
-    public override bool Equals(RegexNode? other)
+    public override bool Equals(RegExpr? other)
     {
         return other?.IsEmptySet() == true;
     }
 
     /// <inheritdoc />
-    public override IReadOnlyList<RegexNode> GetChildren()
+    public override IReadOnlyList<RegExpr> GetChildren()
     {
-        return Array.Empty<RegexNode>();
+        return Array.Empty<RegExpr>();
     }
 
 }

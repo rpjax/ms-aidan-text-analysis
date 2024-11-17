@@ -10,12 +10,12 @@ public class Simplification
     /// <summary>
     /// Gets the original regular expression node.
     /// </summary>
-    public RegexNode Regex { get; }
+    public RegExpr Regex { get; }
 
     /// <summary>
     /// Gets the simplified regular expression node.
     /// </summary>
-    public RegexNode SimplifiedRegex { get; }
+    public RegExpr SimplifiedRegex { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Simplification"/> class.
@@ -23,8 +23,8 @@ public class Simplification
     /// <param name="regex">The original regular expression node.</param>
     /// <param name="simplifiedRegex">The simplified regular expression node.</param>
     public Simplification(
-        RegexNode regex,
-        RegexNode simplifiedRegex)
+        RegExpr regex,
+        RegExpr simplifiedRegex)
     {
         Regex = regex;
         SimplifiedRegex = simplifiedRegex;

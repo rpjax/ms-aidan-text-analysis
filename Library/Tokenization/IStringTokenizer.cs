@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents a string tokenizer.
 /// </summary>
-public interface IStringLexer
+public interface IStringTokenizer
 {
     /// <summary>
     /// Tokenizes the input string.

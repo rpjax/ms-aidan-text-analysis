@@ -5,7 +5,7 @@ namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 /// <summary>
 /// Represents an epsilon node in a regex, which matches the empty string ε.
 /// </summary>
-public class EpsilonNode : RegexNode
+public class EpsilonNode : RegExpr
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="EpsilonNode"/> class.
@@ -16,7 +16,7 @@ public class EpsilonNode : RegexNode
         : base(
             type: RegexNodeType.Epsilon,
             containsEpsilon: true,
-            children: Array.Empty<RegexNode>(),
+            children: Array.Empty<RegExpr>(),
             metadata: metadata)
     {
 
@@ -29,15 +29,15 @@ public class EpsilonNode : RegexNode
     }
 
     /// <inheritdoc />
-    public override bool Equals(RegexNode? other)
+    public override bool Equals(RegExpr? other)
     {
         return other?.IsEpsilon() == true;
     }
 
     /// <inheritdoc />
-    public override IReadOnlyList<RegexNode> GetChildren()
+    public override IReadOnlyList<RegExpr> GetChildren()
     {
-        return new RegexNode[0];
+        return new RegExpr[0];
     }
 
 }

@@ -1,4 +1,5 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
@@ -17,16 +18,23 @@ public class TokenizerCalculator
     /// <summary>
     /// Initializes a new instance of the <see cref="TokenizerCalculator"/> class.
     /// </summary>
+    /// <param name="charset">The charset to be used in the tokenizer.</param>
     /// <param name="lexemes">The lexemes to be used in the tokenizer.</param>
     /// <param name="ignoredChars">The characters to be ignored during tokenization.</param>
     /// <param name="useDebug">Indicates whether to use the debugger.</param>
     public TokenizerCalculator(
+        Charset charset,
         IEnumerable<Lexeme> lexemes,
         IEnumerable<char> ignoredChars,
         bool useDebug = false)
     {
         Lexemes = lexemes.ToArray();
-        DfaCalculator = new DfaCalculator(Lexemes, ignoredChars);
+
+        DfaCalculator = new DfaCalculator(
+            charset: charset,
+            lexemes: Lexemes,
+            ignoredCharacters: ignoredChars);
+
         UseDebugger = useDebug;
     }
 
@@ -40,7 +48,7 @@ public class TokenizerCalculator
         var dfa = DfaCalculator.ComputeDfa();
         var states = dfa.States.ToList();
 
-        foreach (var state in dfa.States)
+        foreach (var state in states)
         {
             var currentStateIsAccepting = state.IsEpsilonState();
             var currentStateId = (uint)states.IndexOf(state);
@@ -78,12 +86,4 @@ public class TokenizerCalculator
         return new Tokenizer(ComputeTokenizerTable(), UseDebugger);
     }
 
-    /// <summary>
-    /// Gets the alphabet used by the DFA calculator.
-    /// </summary>
-    /// <returns>A read-only list of characters representing the alphabet.</returns>
-    public IReadOnlyList<char> GetAlphabet()
-    {
-        return DfaCalculator.Alphabet;
-    }
 }

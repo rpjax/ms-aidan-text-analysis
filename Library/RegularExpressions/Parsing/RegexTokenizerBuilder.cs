@@ -1,20 +1,40 @@
 ﻿using Aidan.Core.Patterns;
+using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Automata;
 using Aidan.TextAnalysis.Tokenization;
-using Aidan.TextAnalysis.Tokenization.StateMachine;
+using Aidan.TextAnalysis.Tokenization.Components;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
-namespace Aidan.TextAnalysis.GDef.Tokenization;
+namespace Aidan.TextAnalysis.RegularExpressions.Parsing;
 
 public class RegexTokenizerBuilder : IBuilder<Tokenizer>
 {
-    internal static class States
+    public static char[] SpecialChars { get; } = new char[]
     {
-        public static string InitialState { get; } = "initial_state";
-    }
+        '\\', // Escape character
+        '[', ']', // Character class
+        '(', ')', // Grouping
+        '|', // Alternation
+        '*', // Zero or more
+        '+', // One or more
+        '?', // Optional
+        '{', '}', // Quantifiers
+        '^', // Start of line
+        '$', // End of line
+        '.', // Any character
+        '-', // Range separator
+        '@', // Fragment reference
+    };
 
     public Tokenizer Build()
     {
         var builder = new TokenizerBuilder();
+
+        var calculator = new TokenizerCalculator(
+            charset: null,
+            lexemes: null,
+            ignoredChars: null,
+            useDebug: false);
 
         SkipWhitespace(builder);
         EscapeSequence(builder);
@@ -26,25 +46,7 @@ public class RegexTokenizerBuilder : IBuilder<Tokenizer>
 
     /* private methods */
 
-    private char[] GetOperatorChars()
-    {
-        return new char[]
-        {
-            '.', // Matches any single character (except newline)
-            '*', // Zero or more occurrences
-            '+', // One or more occurrences
-            '?', // Zero or one occurrence
-            '|', // Alternation (OR)
-            '(', // Group start
-            ')', // Group end
-            '[', // Character class start
-            ']', // Character class end
-            '{', // Quantifier start
-            '}', // Quantifier end
-            '^', // Start of line/string
-            '$', // End of line/string
-        };
-    }
+
 
     private void SkipWhitespace(TokenizerBuilder builder)
     {

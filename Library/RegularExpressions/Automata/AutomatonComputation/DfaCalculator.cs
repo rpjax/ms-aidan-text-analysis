@@ -1,5 +1,7 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
+﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Derivative;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Automata;
@@ -9,27 +11,32 @@ namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 /// </summary>
 public class DfaCalculator
 {
+    public Charset Charset { get; }
     public Lexeme[] Lexemes { get; }
-    public IReadOnlyList<char> Alphabet { get; }
     public IReadOnlyList<char> IgnoredCharacters { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DfaCalculator"/> class.
     /// </summary>
     /// <param name="lexemes">The lexemes to be used in the DFA.</param>
+    /// <param name="alphabet">The alphabet of the DFA.</param>
     /// <param name="ignoredCharacters">The characters to be ignored during DFA computation.</param>
     public DfaCalculator(
+        Charset charset,
         IEnumerable<Lexeme> lexemes,
         IEnumerable<char> ignoredCharacters)
     {
-        Lexemes = lexemes.ToArray();
-
-        Alphabet = lexemes
+        var lexemesAlphabet = lexemes
             .SelectMany(x => x.Pattern.ComputeAlphabet())
-            .Concat(ignoredCharacters)
             .Distinct()
             .ToArray();
 
+        if (ignoredCharacters.Any(ignored_c => lexemesAlphabet.Any(alphabet_c => ignored_c == alphabet_c)))
+        {
+            throw new InvalidOperationException("The alphabet contains characters that should be ignored.");
+        }
+
+        Lexemes = lexemes.ToArray();
         IgnoredCharacters = ignoredCharacters.ToArray();
     }
 
@@ -43,11 +50,11 @@ public class DfaCalculator
             .Select(x => new LexemeRegex(x.Name, x.Pattern))
             .ToArray();
 
-        var processedStates = new HashSet<AutomatonNode>();
-        var statesToProcess = new Queue<AutomatonNode>();
+        var processedStates = new HashSet<AutomatonState>();
+        var statesToProcess = new Queue<AutomatonState>();
 
         /* compute the initial state */
-        var initialState = new AutomatonNode(lexemes);
+        var initialState = new AutomatonState(lexemes);
 
         /* add the initial state to the queue */
         statesToProcess.Enqueue(initialState);
@@ -55,7 +62,7 @@ public class DfaCalculator
         while (statesToProcess.TryDequeue(out var state))
         {
             processedStates.Add(state);
-            state.AddChildren(ComputeChildren(state, processedStates));
+            state.AddTransitions(ComputeTransitions(state, processedStates));
 
             var nextStates = state.Transitions
                 .Select(x => x.NextState)
@@ -77,34 +84,34 @@ public class DfaCalculator
             .Select(x => new AutomatonTransition(x, initialState))
             .ToArray();
 
-        initialState.AddChildren(ignoredTransitions);
+        initialState.AddTransitions(ignoredTransitions);
 
-        return new RegexDfa(Alphabet, processedStates);
+        return new RegexDfa(processedStates);
     }
 
     /// <summary>
     /// Computes the transitions for a given state.
     /// </summary>
-    /// <param name="node">The current state node.</param>
+    /// <param name="state">The current state node.</param>
     /// <param name="processedStates">The set of already processed states.</param>
     /// <returns>An array of <see cref="AutomatonTransition"/> representing the transitions from the current state.</returns>
-    private AutomatonTransition[] ComputeChildren(
-        AutomatonNode node,
-        HashSet<AutomatonNode> processedStates)
+    private AutomatonTransition[] ComputeTransitions(
+        AutomatonState state,
+        HashSet<AutomatonState> processedStates)
     {
         /* if the state has only one lexeme and it is an epsilon, then no transitions are needed */
-        if (node.Regexes.Length == 1 && node.Regexes[0].Regex.IsEpsilon())
+        if (state.Regexes.Length == 1 && state.Regexes[0].Regex.IsEpsilon())
         {
             return Array.Empty<AutomatonTransition>();
         }
 
-        var lexemes = node.Regexes;
+        var lexemes = state.Regexes;
         var transitions = new List<AutomatonTransition>();
-
-        foreach (var c in Alphabet)
+        
+        foreach (var c in state.GetAlphabet())
         {
             var derivatives = lexemes
-                .Select(x => new LexemeRegex(x.Name, ComputeDerivative(x.Regex, c)))
+                .Select(x => x.Derive(c))
                 .ToArray();
 
             var validDerivatives = derivatives
@@ -116,7 +123,7 @@ public class DfaCalculator
                 continue;
             }
 
-            var nextState = new AutomatonNode(validDerivatives);
+            var nextState = new AutomatonState(validDerivatives);
 
             if (processedStates.TryGetValue(nextState, out var recursiveState))
             {
@@ -137,8 +144,10 @@ public class DfaCalculator
     /// </summary>
     /// <param name="regex">The regex to compute the derivative for.</param>
     /// <param name="c">The character to derive with respect to.</param>
-    /// <returns>A <see cref="RegexNode"/> representing the derivative of the regex.</returns>
-    private RegexNode ComputeDerivative(RegexNode regex, char c)
+    /// <returns>A <see cref="RegExpr"/> representing the derivative of the regex.</returns>
+    private RegExpr ComputeDerivative(
+        RegExpr regex, 
+        char c)
     {
         var calculator = new RegexDerivativeCalculator();
 

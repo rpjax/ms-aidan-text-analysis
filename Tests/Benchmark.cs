@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 
 namespace Aidan.TextAnalysis.Tests;
 
@@ -11,6 +12,11 @@ public class Benchmark
     public Benchmark(Action action)
     {
         Action = action;
+    }
+
+    private static string FormatTime(double seconds)
+    {
+        return seconds.ToString("F10", CultureInfo.InvariantCulture);
     }
 
     public double Run(int iterations)

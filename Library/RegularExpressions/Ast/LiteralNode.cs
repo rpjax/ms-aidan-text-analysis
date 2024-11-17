@@ -5,7 +5,7 @@ namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 /// <summary>
 /// Represents a literal node in a regex, matching a specific character.
 /// </summary>
-public class LiteralNode : RegexNode
+public class LiteralNode : RegExpr
 {
     /// <summary>
     /// Gets the literal character to match.
@@ -15,18 +15,18 @@ public class LiteralNode : RegexNode
     /// <summary>
     /// Initializes a new instance of the <see cref="LiteralNode"/> class.
     /// </summary>
-    /// <param name="literal">The literal character to match.</param>
+    /// <param name="character">The literal character to match.</param>
     /// <param name="metadata">The metadata associated with the node.</param>
     public LiteralNode(
-        char literal,
+        char character,
         Dictionary<string, object>? metadata = null)
         : base(
             type: RegexNodeType.Literal,
             containsEpsilon: false,
-            children: Array.Empty<RegexNode>(),
+            children: Array.Empty<RegExpr>(),
             metadata: metadata)
     {
-        Character = literal;
+        Character = character;
     }
 
     /// <inheritdoc />
@@ -36,16 +36,16 @@ public class LiteralNode : RegexNode
     }
 
     /// <inheritdoc />
-    public override bool Equals(RegexNode? other)
+    public override bool Equals(RegExpr? other)
     {
         return other is LiteralNode literal
             && literal.Character == Character;
     }
 
     /// <inheritdoc />
-    public override IReadOnlyList<RegexNode> GetChildren()
+    public override IReadOnlyList<RegExpr> GetChildren()
     {
-        return Array.Empty<RegexNode>();
+        return Array.Empty<RegExpr>();
     }
 
 }

@@ -1,17 +1,8 @@
 ﻿using Aidan.Core.Patterns;
+using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
-
-public enum CharsetType
-{
-    Ascii,
-    Unicode,
-    Utf8,
-    Utf16,
-}
 
 public class TokenizerBuilder : IBuilder<Tokenizer>
 {
@@ -70,26 +61,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
 
     public static char[] ComputeCharset(CharsetType charset)
     {
-        return charset switch
-        {
-            CharsetType.Ascii => Enumerable.Range(0, 128)
-                .Select(x => (char)x)
-                .ToArray(),
-
-            CharsetType.Unicode => Enumerable.Range(0, 0xFFFF + 1) // Generates BMP (Basic Multilingual Plane) characters only
-                .Select(x => (char)x)
-                .ToArray(),
-
-            CharsetType.Utf8 => Enumerable.Range(0, 0xFFFF + 1) // BMP characters, as UTF-8 is variable-length but this is limited by char's 16-bit size
-                .Select(x => (char)x)
-                .ToArray(),
-
-            CharsetType.Utf16 => Enumerable.Range(0, 0xFFFF + 1) // BMP characters in UTF-16 representation
-                .Select(x => (char)x)
-                .ToArray(),
-
-            _ => throw new ArgumentOutOfRangeException(nameof(charset))
-        };
+        return Language.Components.Charset.Compute(charset);
     }
 
     /* instace methods */

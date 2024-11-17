@@ -1,5 +1,12 @@
 ﻿namespace Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
+public enum OnNoTransitionBehavior
+{
+    None,
+    Recurse,
+    GoTo
+}
+
 /// <summary>
 /// Represents a state in the state machine.
 /// </summary>

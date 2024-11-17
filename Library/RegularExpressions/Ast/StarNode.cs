@@ -3,12 +3,12 @@
 /// <summary>
 /// Represents a star (Kleene star) node in a regex, matching zero or more repetitions of a pattern.
 /// </summary>
-public class StarNode : RegexNode
+public class StarNode : RegExpr
 {
     /// <summary>
     /// Gets the child node of the star operation.
     /// </summary>
-    public RegexNode Child { get; }
+    public RegExpr Child { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StarNode"/> class.
@@ -16,7 +16,7 @@ public class StarNode : RegexNode
     /// <param name="child">The child pattern to repeat zero or more times.</param>
     /// <param name="metadata">The metadata associated with the node.</param>
     public StarNode(
-        RegexNode child,
+        RegExpr child,
         Dictionary<string, object>? metadata = null)
         : base(
             type: RegexNodeType.Star,
@@ -34,16 +34,16 @@ public class StarNode : RegexNode
     }
 
     /// <inheritdoc />
-    public override bool Equals(RegexNode? other)
+    public override bool Equals(RegExpr? other)
     {
         return other is StarNode star
             && star.Child.Equals(Child);
     }
 
     /// <inheritdoc />
-    public override IReadOnlyList<RegexNode> GetChildren()
+    public override IReadOnlyList<RegExpr> GetChildren()
     {
-        return new List<RegexNode> { Child };
+        return new List<RegExpr> { Child };
     }
 
 }

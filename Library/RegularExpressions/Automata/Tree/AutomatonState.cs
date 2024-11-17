@@ -3,12 +3,12 @@
 /// <summary>
 /// Represents a node in an automaton used for regular expression analysis.
 /// </summary>
-public class AutomatonNode : IEquatable<AutomatonNode>
+public class AutomatonState : IEquatable<AutomatonState>
 {
     /// <summary>
     /// Gets the parent node of the current node.
     /// </summary>
-    public AutomatonNode? Parent { get; private set; }
+    public AutomatonState? Parent { get; private set; }
 
     /// <summary>
     /// Gets the regexes associated with the current node.
@@ -21,11 +21,11 @@ public class AutomatonNode : IEquatable<AutomatonNode>
     public List<AutomatonTransition> Transitions { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AutomatonNode"/> class.
+    /// Initializes a new instance of the <see cref="AutomatonState"/> class.
     /// </summary>
     /// <param name="regexes">The regexes associated with the node.</param>
     /// <param name="transitions">The transitions from the current node to other nodes.</param>
-    public AutomatonNode(
+    public AutomatonState(
         LexemeRegex[] regexes,
         IEnumerable<AutomatonTransition>? transitions = null)
     {
@@ -44,11 +44,11 @@ public class AutomatonNode : IEquatable<AutomatonNode>
     }
 
     /// <summary>
-    /// Determines whether the specified <see cref="AutomatonNode"/> is equal to the current <see cref="AutomatonNode"/>.
+    /// Determines whether the specified <see cref="AutomatonState"/> is equal to the current <see cref="AutomatonState"/>.
     /// </summary>
-    /// <param name="other">The <see cref="AutomatonNode"/> to compare with the current <see cref="AutomatonNode"/>.</param>
-    /// <returns><c>true</c> if the specified <see cref="AutomatonNode"/> is equal to the current <see cref="AutomatonNode"/>; otherwise, <c>false</c>.</returns>
-    public bool Equals(AutomatonNode? other)
+    /// <param name="other">The <see cref="AutomatonState"/> to compare with the current <see cref="AutomatonState"/>.</param>
+    /// <returns><c>true</c> if the specified <see cref="AutomatonState"/> is equal to the current <see cref="AutomatonState"/>; otherwise, <c>false</c>.</returns>
+    public bool Equals(AutomatonState? other)
     {
         if (other is null)
         {
@@ -74,7 +74,7 @@ public class AutomatonNode : IEquatable<AutomatonNode>
     /// <summary>
     /// Serves as the default hash function.
     /// </summary>
-    /// <returns>A hash code for the current <see cref="AutomatonNode"/>.</returns>
+    /// <returns>A hash code for the current <see cref="AutomatonState"/>.</returns>
     public override int GetHashCode()
     {
         unchecked
@@ -104,7 +104,7 @@ public class AutomatonNode : IEquatable<AutomatonNode>
     /// Adds multiple transitions from the current node to other nodes.
     /// </summary>
     /// <param name="transitions">The transitions to add.</param>
-    public void AddChildren(IEnumerable<AutomatonTransition> transitions)
+    public void AddTransitions(IEnumerable<AutomatonTransition> transitions)
     {
         foreach (var item in transitions)
         {
@@ -112,43 +112,4 @@ public class AutomatonNode : IEquatable<AutomatonNode>
         }
     }
 
-    /// <summary>
-    /// Determines whether the current node is a recursive state with respect to the specified node.
-    /// </summary>
-    /// <param name="node">The node to check for recursion.</param>
-    /// <returns><c>true</c> if the current node is a recursive state; otherwise, <c>false</c>.</returns>
-    public bool IsRecursiveState(AutomatonNode node)
-    {
-        if (Equals(node))
-        {
-            return true;
-        }
-
-        if (Parent is null)
-        {
-            return false;
-        }
-
-        return Parent.IsRecursiveState(node);
-    }
-
-    /// <summary>
-    /// Finds the recursive state with respect to the specified node.
-    /// </summary>
-    /// <param name="node">The node to check for recursion.</param>
-    /// <returns>The recursive state if found; otherwise, <c>null</c>.</returns>
-    public AutomatonNode? FindRecursiveState(AutomatonNode node)
-    {
-        if (Equals(node))
-        {
-            return this;
-        }
-
-        if (Parent is null)
-        {
-            return null;
-        }
-
-        return Parent.FindRecursiveState(node);
-    }
 }

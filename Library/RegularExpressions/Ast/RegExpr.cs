@@ -1,11 +1,13 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Parsing;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
 /// Represents an abstract base class for regex nodes in the abstract syntax tree of a regular expression.
 /// </summary>
-public abstract class RegexNode : IEquatable<RegexNode>
+public abstract class RegExpr : IEquatable<RegExpr>
 {
     /// <summary>
     /// Gets the type of the regex node.
@@ -25,18 +27,18 @@ public abstract class RegexNode : IEquatable<RegexNode>
     /// <summary>
     /// Gets the parent of the regex node.
     /// </summary>
-    public RegexNode? Parent { get; internal set; }
+    public RegExpr? Parent { get; internal set; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RegexNode"/> class.
+    /// Initializes a new instance of the <see cref="RegExpr"/> class.
     /// </summary>
     /// <param name="metadata">The metadata associated with the node.</param>
     /// <param name="children">The children of the regex node.</param>
     /// <param name="type"> 
-    protected RegexNode(
+    protected RegExpr(
         RegexNodeType type,
         bool containsEpsilon,
-        RegexNode[] children,
+        RegExpr[] children,
         Dictionary<string, object>? metadata)
     {
         Type = type;
@@ -54,23 +56,28 @@ public abstract class RegexNode : IEquatable<RegexNode>
      * Builder methods 
      */
 
+    public static RegExpr FromPattern(string pattern)
+    {
+        return RegExprParser.Parse(pattern);
+    }
+
     /// <summary>
     /// Creates a regex node representing a single character.
     /// </summary>
     /// <param name="c">The character to be represented by the regex node.</param>
-    /// <returns>A <see cref="RegexNode"/> representing the specified character.</returns>
-    public static RegexNode FromCharacter(char c) => new LiteralNode(c);
+    /// <returns>A <see cref="RegExpr"/> representing the specified character.</returns>
+    public static RegExpr FromCharacter(char c) => new LiteralNode(c);
 
     /// <summary>
     /// Creates a regex node representing a union of the specified regex nodes.
     /// </summary>
     /// <param name="characters"> A string of characters to be represented by the regex node.</param>
-    /// <returns>A <see cref="RegexNode"/> representing the union of the specified regex nodes.</returns>
-    public static RegexNode FromString(string characters)
+    /// <returns>A <see cref="RegExpr"/> representing the union of the specified regex nodes.</returns>
+    public static RegExpr FromString(string characters)
     {
         var nodes = characters
             .Select(c => new LiteralNode(c))
-            .Cast<RegexNode>()
+            .Cast<RegExpr>()
             .ToArray();
 
         return Concatenate(nodes);
@@ -80,9 +87,9 @@ public abstract class RegexNode : IEquatable<RegexNode>
     /// Concatenates the specified regex nodes into a single regex node.
     /// </summary>
     /// <param name="regexes">The regex nodes to concatenate.</param>
-    /// <returns>A <see cref="RegexNode"/> representing the concatenation of the specified regex nodes.</returns>
+    /// <returns>A <see cref="RegExpr"/> representing the concatenation of the specified regex nodes.</returns>
     /// <exception cref="ArgumentException">Thrown when no regex nodes are provided.</exception>
-    public static RegexNode Concatenate(params RegexNode[] regexes)
+    public static RegExpr Concatenate(params RegExpr[] regexes)
     {
         if (regexes.Length == 0)
         {
@@ -103,15 +110,14 @@ public abstract class RegexNode : IEquatable<RegexNode>
 
         return regex;
     }
-
     /// <summary>
     /// Creates a regex node representing a range of characters.
     /// </summary>
     /// <param name="start">The starting character of the range.</param>
     /// <param name="end">The ending character of the range.</param>
-    /// <returns>A <see cref="RegexNode"/> representing the range of characters.</returns>
+    /// <returns>A <see cref="RegExpr"/> representing the range of characters.</returns>
     /// <exception cref="ArgumentException">Thrown when the range does not include any characters.</exception>
-    public static RegexNode FromCharacterRange(
+    public static RegExpr FromCharacterRange(
         char start,
         char end)
     {
@@ -136,14 +142,13 @@ public abstract class RegexNode : IEquatable<RegexNode>
 
         var literals = chars
             .Select(c => new LiteralNode(c))
-            .Cast<RegexNode>()
+            .Cast<RegExpr>()
             .ToArray();
 
         return literals
             .First()
             .Union(literals.Skip(1).ToArray());
     }
-
 
     /*
      * Instance methods
@@ -156,22 +161,22 @@ public abstract class RegexNode : IEquatable<RegexNode>
     public abstract override string ToString();
 
     /// <summary>
-    /// Determines whether the specified <see cref="RegexNode"/> is equal to the current <see cref="RegexNode"/>.
+    /// Determines whether the specified <see cref="RegExpr"/> is equal to the current <see cref="RegExpr"/>.
     /// </summary>
-    /// <param name="other">The <see cref="RegexNode"/> to compare with the current <see cref="RegexNode"/>.</param>
-    /// <returns><c>true</c> if the specified <see cref="RegexNode"/> is equal to the current <see cref="RegexNode"/>; otherwise, <c>false</c>.</returns>
-    public abstract bool Equals(RegexNode? other);
+    /// <param name="other">The <see cref="RegExpr"/> to compare with the current <see cref="RegExpr"/>.</param>
+    /// <returns><c>true</c> if the specified <see cref="RegExpr"/> is equal to the current <see cref="RegExpr"/>; otherwise, <c>false</c>.</returns>
+    public abstract bool Equals(RegExpr? other);
 
     /// <summary>
     /// Gets the children of the regex node.
     /// </summary>
     /// <returns>A read-only list of child regex nodes.</returns>
-    public abstract IReadOnlyList<RegexNode> GetChildren();
+    public abstract IReadOnlyList<RegExpr> GetChildren();
 
     /// <summary>
     /// Serves as the default hash function.
     /// </summary>
-    /// <returns>A hash code for the current <see cref="RegexNode"/>.</returns>
+    /// <returns>A hash code for the current <see cref="RegExpr"/>.</returns>
     public override int GetHashCode()
     {
         object[] terms;
@@ -211,5 +216,30 @@ public abstract class RegexNode : IEquatable<RegexNode>
 
             return hash;
         }
+    }
+}
+
+public class AnythingNode 
+{
+    public Charset Charset { get; }
+
+    public AnythingNode(Charset charset)
+    {
+        Charset = charset;
+    }
+
+    //public override bool Equals(RegExpr? other)
+    //{
+    //    return other is AnythingNode;
+    //}
+
+    //public override IReadOnlyList<RegExpr> GetChildren()
+    //{
+    //    return Array.Empty<RegExpr>();
+    //}
+
+    public override string ToString()
+    {
+        return ".";
     }
 }

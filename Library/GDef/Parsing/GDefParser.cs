@@ -5,6 +5,8 @@ using Aidan.TextAnalysis.Parsing.Components;
 using Aidan.TextAnalysis.Parsing.Core;
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tools;
+using Aidan.TextAnalysis.RegularExpressions.Automata;
+using System.Text;
 
 namespace Aidan.TextAnalysis.GDef;
 
@@ -81,10 +83,16 @@ public static class GDefParser
     {
         if (ParserInstance is null)
         {
-            var grammar = new GDefGrammar();
+            var grammar = new GDefLanguageGrammar();
             var grammarLexer = GDefTokenizers.GrammarTokenizer;
 
-            ParserInstance = new LR1Parser(grammar, grammarLexer);
+            ParserInstance = new LR1Parser(
+                grammar: grammar,
+                tokenizer: grammarLexer,
+                ignoredTokenTypes: new string[]
+                {
+                    GDefLexemes.Comment
+                });
         }
 
         return ParserInstance;
@@ -118,17 +126,4 @@ public static class GDefParser
 
         return GDefTranslator.TranslateGrammar(reducedCst);
     }
-}
-
-public class GDefService
-{
-    public static LR1Parser CreateLR1Parser(GDefGrammar grammar)
-    {
-
-    }
-}
-
-public class GDefGrammar : Grammar
-{
-
 }

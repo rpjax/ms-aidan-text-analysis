@@ -15,7 +15,7 @@ public class Lexeme : IEquatable<Lexeme>
     /// <summary>
     /// Gets the pattern of the lexeme.
     /// </summary>
-    public RegexNode Pattern { get; }
+    public RegExpr Pattern { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Lexeme"/> class.
@@ -24,7 +24,7 @@ public class Lexeme : IEquatable<Lexeme>
     /// <param name="pattern">The pattern of the lexeme.</param>
     public Lexeme(
         string name,
-        RegexNode pattern)
+        RegExpr pattern)
     {
         Name = name;
         Pattern = pattern;

@@ -18,7 +18,31 @@ public static class GDefLexemes
     /* special characters */
     public static char[] SpecialChars { get; } = new char[]
     {
-        ':', ';', '$', '{', '}', '[', ']', '(', ')', '|', '='
+        ':', 
+        ';', 
+        '$', 
+        '{', '}', 
+        '[', ']', 
+        '(', ')', 
+        '|', 
+        '='
+    };
+
+    public static char[] RegexSpecialChars { get; } = new char[]
+    {
+        '\\', // Escape character
+        '[', ']', // Character class
+        '(', ')', // Grouping
+        '|', // Alternation
+        '*', // Zero or more
+        '+', // One or more
+        '?', // Optional
+        '{', '}', // Quantifiers
+        '^', // Start of line
+        '$', // End of line
+        '.', // Any character
+        '-', // Range separator
+        '@', // Fragment reference
     };
 
     public static Lexeme[] GetLexemes()
@@ -43,12 +67,12 @@ public static class GDefLexemes
     private static Lexeme GetIdentifierLexeme()
     {
         var letterRegex = new UnionNode(
-            RegexNode.FromCharacterRange('a', 'z'),
-            RegexNode.FromCharacterRange('A', 'Z')
+            RegExpr.FromCharacterRange('a', 'z'),
+            RegExpr.FromCharacterRange('A', 'Z')
         );
 
-        var digitRegex = RegexNode.FromCharacterRange('0', '9');
-        var underscoreRegex = RegexNode.FromCharacter('_');
+        var digitRegex = RegExpr.FromCharacterRange('0', '9');
+        var underscoreRegex = RegExpr.FromCharacter('_');
 
         // Start of identifier: a letter or underscore
         var startRegex = new UnionNode(letterRegex, underscoreRegex);
@@ -69,24 +93,24 @@ public static class GDefLexemes
 
     private static Lexeme GetLexemeLexeme()
     {
-        return new Lexeme(name: Lexeme, pattern: RegexNode.FromString("lexeme"));
+        return new Lexeme(name: Lexeme, pattern: RegExpr.FromString("lexeme"));
     }
 
     private static Lexeme GetUseLexeme()
     {
-        return new Lexeme(name: Use, pattern: RegexNode.FromString("use"));
+        return new Lexeme(name: Use, pattern: RegExpr.FromString("use"));
     }
 
     private static Lexeme GetCharsetLexeme()
     {
-        return new Lexeme(name: Charset, pattern: RegexNode.FromString("charset"));
+        return new Lexeme(name: Charset, pattern: RegExpr.FromString("charset"));
     }
 
     private static IEnumerable<Lexeme> GetSpecialCharsLexemes()
     {
         foreach (var c in SpecialChars)
         {
-            yield return new Lexeme(name: c.ToString(), pattern: RegexNode.FromCharacter(c));
+            yield return new Lexeme(name: c.ToString(), pattern: RegExpr.FromCharacter(c));
         }
     }
 }

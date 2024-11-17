@@ -7,12 +7,12 @@ namespace Aidan.TextAnalysis.GDef;
 /// <summary>
 /// Represents the grammar for the Grammar Definition Format (GDef).
 /// </summary>
-public class GDefGrammar : Grammar
+public class GDefLanguageGrammar : Grammar
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="GDefGrammar"/> class.
+    /// Initializes a new instance of the <see cref="GDefLanguageGrammar"/> class.
     /// </summary>
-    public GDefGrammar() : base(GetStart(), GetProductions())
+    public GDefLanguageGrammar() : base(GetStart(), GetProductions())
     {
     }
 

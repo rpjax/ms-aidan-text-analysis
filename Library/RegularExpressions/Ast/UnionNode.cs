@@ -3,17 +3,17 @@
 /// <summary>
 /// Represents a union node in a regex, matching either of two patterns.
 /// </summary>
-public class UnionNode : RegexNode
+public class UnionNode : RegExpr
 {
     /// <summary>
     /// Gets the left operand of the union.
     /// </summary>
-    public RegexNode Left { get; }
+    public RegExpr Left { get; }
 
     /// <summary>
     /// Gets the right operand of the union.
     /// </summary>
-    public RegexNode Right { get; }
+    public RegExpr Right { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnionNode"/> class.
@@ -22,8 +22,8 @@ public class UnionNode : RegexNode
     /// <param name="right">The right operand of the union.</param>
     /// <param name="metadata">The metadata associated with the node.</param>
     public UnionNode(
-        RegexNode left,
-        RegexNode right,
+        RegExpr left,
+        RegExpr right,
         Dictionary<string, object>? metadata = null)
         : base(
             type: RegexNodeType.Union,
@@ -42,7 +42,7 @@ public class UnionNode : RegexNode
     }
 
     /// <inheritdoc />
-    public override bool Equals(RegexNode? other)
+    public override bool Equals(RegExpr? other)
     {
         return other is UnionNode union
             && union.Left.Equals(Left)
@@ -50,9 +50,9 @@ public class UnionNode : RegexNode
     }
 
     /// <inheritdoc />
-    public override IReadOnlyList<RegexNode> GetChildren()
+    public override IReadOnlyList<RegExpr> GetChildren()
     {
-        return new RegexNode[] { Left, Right };
+        return new RegExpr[] { Left, Right };
     }
 
 }

@@ -10,7 +10,7 @@ public class Derivation
     /// <summary>
     /// Gets the regular expression node.
     /// </summary>
-    public RegexNode Regex { get; }
+    public RegExpr Regex { get; }
 
     /// <summary>
     /// Gets the character with respect to which the derivative is calculated.
@@ -20,7 +20,7 @@ public class Derivation
     /// <summary>
     /// Gets the derivative of the regular expression node.
     /// </summary>
-    public RegexNode Derivative { get; }
+    public RegExpr Derivative { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Derivation"/> class.
@@ -29,9 +29,9 @@ public class Derivation
     /// <param name="character">The character with respect to which the derivative is calculated.</param>
     /// <param name="derivative">The derivative of the regular expression node.</param>
     public Derivation(
-        RegexNode regex,
+        RegExpr regex,
         char character,
-        RegexNode derivative)
+        RegExpr derivative)
     {
         Regex = regex;
         Character = character;

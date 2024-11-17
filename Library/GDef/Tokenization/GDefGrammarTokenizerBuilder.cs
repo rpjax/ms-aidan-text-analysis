@@ -5,7 +5,7 @@ using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
 namespace Aidan.TextAnalysis.GDef.Tokenization;
 
-public class GrammarTokenizerBuilder : IBuilder<Tokenizer>
+public class GDefGrammarTokenizerBuilder : IBuilder<Tokenizer>
 {
     /*
         identifier
@@ -24,17 +24,17 @@ public class GrammarTokenizerBuilder : IBuilder<Tokenizer>
         var lexemes = GDefLexemes.GetLexemes();
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
 
-        var calculator = new TokenizerCalculator(lexemes, ignoredChars);
-        var table = calculator.ComputeTokenizerTable();
+        //var calculator = new TokenizerCalculator(lexemes, ignoredChars);
+        //var table = calculator.ComputeTokenizerTable();
+        var builder = new ManualTokenizerBuilder();
+        //var builder = new ManualTokenizerBuilder(
+        //    table: table, 
+        //    charset: calculator.GetAlphabet());
 
-        var builder = new ManualTokenizerBuilder(
-            table: table, 
-            charset: calculator.GetAlphabet());
+        //StringLexemes(builder);
+        ////CStyleComment(builder);
 
-        StringLexemes(builder);
-        //CStyleComment(builder);
-
-        builder.EnableDebugger();
+        //builder.EnableDebugger();
 
         return builder.Build();
     }
@@ -89,6 +89,37 @@ public class GrammarTokenizerBuilder : IBuilder<Tokenizer>
             .GoTo(GDefLexemes.String);
 
         builder.FromState(GDefLexemes.String)
+            .Accept();
+    }
+
+    private void RegexLexeme(ManualTokenizerBuilder builder)
+    {
+        var escapeChar = '\\';
+        var regexDelimeter = '/';
+        var regexSpecialChars = GDefLexemes.RegexSpecialChars;
+
+        /* regex start */
+        builder.FromInitialState()
+             .OnCharacter(regexDelimeter)
+             .GoTo("regex-start");
+
+        builder.FromState("regex-start")
+            .RecurseOnNoTransition();
+
+        /* escape character */
+        builder.FromState("regex-start")
+            .OnCharacter(escapeChar)
+            .GoTo("regex-escape");
+
+        builder.FromState("regex-escape")
+            .RecurseOnNoTransition();
+
+        /* regex end */
+        builder.FromState("regex-start")
+            .OnCharacter(regexDelimeter)
+            .GoTo("regex");
+
+        builder.FromState("regex")
             .Accept();
     }
 

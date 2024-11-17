@@ -27,7 +27,7 @@ public class CalculatorHistory
     /// <param name="regex">The regular expression node.</param>
     /// <param name="character">The character with respect to which the derivative is calculated.</param>
     /// <param name="derivative">The derivative of the regular expression node.</param>
-    public void AddDerivative(RegexNode regex, char character, RegexNode derivative)
+    public void AddDerivative(RegExpr regex, char character, RegExpr derivative)
     {
         Records.Add(new Derivation(regex, character, derivative));
     }
@@ -37,7 +37,7 @@ public class CalculatorHistory
     /// </summary>
     /// <param name="regex">The original regular expression node.</param>
     /// <param name="simplifiedRegex">The simplified regular expression node.</param>
-    public void AddSimplification(RegexNode regex, RegexNode simplifiedRegex)
+    public void AddSimplification(RegExpr regex, RegExpr simplifiedRegex)
     {
         Records.Add(new Simplification(regex, simplifiedRegex));
     }

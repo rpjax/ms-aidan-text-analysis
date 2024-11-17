@@ -19,7 +19,7 @@ public class LR1Parser : IStringParser
     };
 
     private IGrammar Grammar { get; }
-    private IStringLexer Lexer { get; }
+    private IStringTokenizer Tokenizer { get; }
     private ILR1ParserTable Table { get; }
     private string[] IgnoredTokenTypes { get; }
 
@@ -27,15 +27,15 @@ public class LR1Parser : IStringParser
     /// Creates a new instance of <see cref="LR1Parser"/>. It automatically transforms the grammar to LR(1) and creates a parsing table.
     /// </summary>
     /// <param name="grammar"> The grammar to parse. </param>
-    /// <param name="lexer"> The lexer to tokenize the input text. </param>
+    /// <param name="tokenizer"> The lexer to tokenize the input text. </param>
     /// <param name="ignoredTokenTypes"> The set of token types to ignore. </param>
     public LR1Parser(
         IGrammar grammar, 
-        IStringLexer lexer, 
+        IStringTokenizer tokenizer, 
         string[]? ignoredTokenTypes = null)
     {
         Grammar = grammar;
-        Lexer = lexer;
+        Tokenizer = tokenizer;
         Table = LR1ParserTable.Create(Grammar);
         IgnoredTokenTypes = ignoredTokenTypes ?? DefaultIgnoreSet;
     }
@@ -47,7 +47,7 @@ public class LR1Parser : IStringParser
     /// <returns></returns>
     public CstRootNode Parse(string text)
     {
-        var tokens = Lexer.Tokenize(text);
+        var tokens = Tokenizer.Tokenize(text);
             
         using var inputStream = new LR1InputStream(
             tokens: tokens,

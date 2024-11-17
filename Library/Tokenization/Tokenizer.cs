@@ -6,7 +6,7 @@ namespace Aidan.TextAnalysis.Tokenization;
 /// <summary>
 /// A state machine for tokenizing strings.
 /// </summary>
-public class Tokenizer : IStringLexer
+public class Tokenizer : IStringTokenizer
 {
     /// <summary>
     /// The end of input character.

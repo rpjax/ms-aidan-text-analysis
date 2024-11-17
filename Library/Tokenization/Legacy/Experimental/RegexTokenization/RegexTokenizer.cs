@@ -145,7 +145,7 @@ public interface ITokenizationContext
     void BreakLine();
 }
 
-public class RegexTokenizer : IStringLexer
+public class RegexTokenizer : IStringTokenizer
 {
     private TransitionTable TransitionTable { get; }
 
