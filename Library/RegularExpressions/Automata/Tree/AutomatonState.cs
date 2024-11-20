@@ -20,6 +20,8 @@ public class AutomatonState : IEquatable<AutomatonState>
     /// </summary>
     public List<AutomatonTransition> Transitions { get; }
 
+    internal IReadOnlyList<char>? AlphabetCache { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AutomatonState"/> class.
     /// </summary>

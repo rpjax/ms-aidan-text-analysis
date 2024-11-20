@@ -1,5 +1,6 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
+using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.TableComputation;
 
@@ -55,6 +56,7 @@ public class FirstSetCalculator
     /// <param name="sentence">The sentence to compute the FIRST set for.</param>
     /// <param name="callStack">The call stack to use for recursion detection (optional).</param>
     /// <returns>The computed FIRST set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FirstSet ComputeFirstSet(
         ISentence sentence,
         List<INonTerminal>? callStack = null)
@@ -146,6 +148,7 @@ public class FirstSetCalculator
     /// <param name="nonTerminal">The non-terminal symbol to compute the FIRST set for.</param>
     /// <param name="callStack">The call stack to use for recursion detection.</param>
     /// <returns>The computed FIRST set.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private FirstSet ComputeFirstSet(
         INonTerminal nonTerminal,
         List<INonTerminal> callStack)

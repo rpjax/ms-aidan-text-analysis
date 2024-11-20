@@ -8,7 +8,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
 {
     private Dictionary<uint, TokenizerState> States { get; }
     private Dictionary<uint, List<TokenizerTransition>> Transitions { get; }
-    private char[] Charset { get; set; }
+    private Charset Charset { get; set; }
     private bool UseDebugger { get; set; }
 
     public TokenizerBuilder(
@@ -17,7 +17,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
     {
         States = new();
         Transitions = new();
-        Charset = charset?.ToArray() ?? ComputeCharset(CharsetType.Ascii);
+        Charset = new Charset(charset ?? ComputeCharset(CharsetType.Ascii));
     }
 
     public TokenizerBuilder(
@@ -32,7 +32,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
 
         States = new();
         Transitions = new();
-        Charset = charset.ToArray();
+        Charset = new Charset(charset);
 
         foreach (var state in states)
         {
@@ -59,7 +59,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
 
     /* static methods */
 
-    public static char[] ComputeCharset(CharsetType charset)
+    public static Charset ComputeCharset(CharsetType charset)
     {
         return Language.Components.Charset.Compute(charset);
     }
@@ -68,7 +68,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
 
     /* getter methods */
 
-    public char[] GetCharset()
+    public Charset GetCharset()
     {
         return Charset;
     }
@@ -112,7 +112,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
             throw new ArgumentException("Charset must contain at least one character.");
         }
 
-        Charset = chars;
+        Charset = new Charset(chars);
         return this;
     }
 

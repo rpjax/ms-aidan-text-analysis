@@ -30,7 +30,7 @@ public class StarNode : RegExpr
     /// <inheritdoc />
     public override string ToString()
     {
-        return $"({Child})*";
+        return $"{Child}*";
     }
 
     /// <inheritdoc />

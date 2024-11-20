@@ -9,7 +9,7 @@ public class ManualTokenizerBuilder
     private List<TokenizerState> States { get; }
     private Dictionary<string, TokenizerState> NameStateMap { get; }
     private Dictionary<TokenizerState, List<TokenizerTransition>> Transitions { get; }
-    private char[] Charset { get; set; }
+    private Charset Charset { get; set; }
     private bool UseDebugger { get; set; }
 
     public ManualTokenizerBuilder(
@@ -19,7 +19,7 @@ public class ManualTokenizerBuilder
         States = new();
         NameStateMap = new();
         Transitions = new();
-        Charset = charset?.ToArray() ?? TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
+        Charset = new Charset(charset ?? Charset.Compute(CharsetType.Ascii));
         UseDebugger = useDebugger;
     }
 
@@ -31,7 +31,7 @@ public class ManualTokenizerBuilder
         States = new();
         NameStateMap = new();
         Transitions = new();
-        Charset = charset?.ToArray() ?? TokenizerBuilder.ComputeCharset(CharsetType.Ascii);
+        Charset = new Charset(charset ?? TokenizerBuilder.ComputeCharset(CharsetType.Ascii));
         UseDebugger = useDebugger;
 
         var entries = table.GetEntries();
@@ -63,7 +63,7 @@ public class ManualTokenizerBuilder
     /// Retrieves the character set used by the tokenizer.
     /// </summary>
     /// <returns>An array of characters representing the character set.</returns>
-    public char[] GetCharset()
+    public Charset GetCharset()
     {
         return Charset;
     }
@@ -129,7 +129,7 @@ public class ManualTokenizerBuilder
             throw new ArgumentException("Charset must contain at least one character.");
         }
 
-        Charset = chars;
+        Charset = new Charset(chars);
         return this;
     }
 
@@ -230,6 +230,11 @@ public class ManualTokenizerBuilder
     /// <returns>A new <see cref="ManualTableTransitionBuilder"/> instance.</returns>
     public ManualTableTransitionBuilder FromInitialState()
     {
+        if (States.Count == 0)
+        {
+            CreateState("initial_state", isAccepting: false);
+        }
+
         return new ManualTableTransitionBuilder(
             builder: this,
             currentState: GetInitialState());

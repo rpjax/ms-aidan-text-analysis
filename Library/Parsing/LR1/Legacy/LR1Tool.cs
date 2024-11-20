@@ -242,7 +242,7 @@ public class LR1Tool
 
                 foreach (var newItem in closure)
                 {
-                    if (items.Any(x => x == newItem))
+                    if (items.Any(x => x.Equals(newItem)))
                     {
                         continue;
                     }
@@ -268,7 +268,7 @@ public class LR1Tool
 
         var groups = items
             .Skip(kernel.Length)
-            .GroupBy(item => item.GetSignature(useLookaheads: false))
+            .GroupBy(item => item.ComputeSignature(useLookaheads: false))
             .ToArray();
 
         var uniqueItems = new List<LR1Item>();
@@ -401,7 +401,7 @@ public class LR1Tool
             var symbol = entry.Key;
 
             var kernelItems = entry
-                .Select(item => item.CreateNextItem())
+                .Select(item => item.AdvancePosition())
                 .ToArray();
 
             var kernel = new LR1Kernel(kernelItems);

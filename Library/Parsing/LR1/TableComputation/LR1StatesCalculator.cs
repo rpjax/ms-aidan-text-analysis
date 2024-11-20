@@ -161,6 +161,35 @@ public class LR1StatesCalculator
         /* remove the kernel items from the closure */
         items.RemoveRange(0, kernel.Length);
 
+        var groups = items
+            .GroupBy(item => item.ComputeHash(useLookaheads: false))
+            .Where(group => group.Count() > 1)
+            .ToArray()
+            ;
+
+        if (groups.Any())
+        {
+            foreach (var group in groups)
+            {
+                var firstItem = group.First();
+                var production = firstItem.Production;
+                var position = firstItem.Position;
+                var lookaheads = group
+                    .SelectMany(item => item.Lookaheads)
+                    .Distinct()
+                    .ToArray();
+
+                var simplifiedItem = new LR1Item(production, position, lookaheads);
+
+                foreach (var item in group)
+                {
+                    items.Remove(item);
+                }
+
+                items.Add(simplifiedItem);
+            }
+        }
+
         return new LR1Closure(items.ToArray());
     }
 
@@ -210,14 +239,16 @@ public class LR1StatesCalculator
     private ITerminal[] ComputeLookaheads(LR1Item item)
     {
         var beta = item.GetBeta();
-        var originalLookaheads = item.Lookaheads;
-        var firstSet = ComputeFirstSet(beta);
+        var inheritedLookaheads = item.Lookaheads;
+        var firstOfBeta = ComputeFirstSet(beta);
 
-        var lookaheads = new List<ITerminal>(firstSet.Terminals);
+        var lookaheads = new List<ITerminal>();
 
-        if (firstSet.ContainsEpsilon)
+        lookaheads.AddRange(firstOfBeta.Terminals);
+
+        if (firstOfBeta.ContainsEpsilon)
         {
-            lookaheads.AddRange(originalLookaheads);
+            lookaheads.AddRange(inheritedLookaheads);
         }
 
         /* remove duplicates in case the original lookaheads converge with the first set */
@@ -246,17 +277,17 @@ public class LR1StatesCalculator
         var gotoStates = new List<LR1State>();
 
         var groups = state.Items
-            .Where(x => x.Symbol is not null)
-            .GroupBy(i => i.Symbol!, new SymbolEqualityComparer())
+            .Where(item => item.Symbol is not null)
+            .GroupBy(item => item.Symbol!, new SymbolEqualityComparer())
             .ToArray();
 
         foreach (var group in groups)
         {
-            var nextSymbol = group.Key;
+            var consumedSymbol = group.Key;
             var items = group.ToArray();
 
             var shiftedItems = items
-                .Select(i => i.CreateNextItem())
+                .Select(item => item.AdvancePosition())
                 .ToArray();
 
             var kernel = new LR1Kernel(shiftedItems);

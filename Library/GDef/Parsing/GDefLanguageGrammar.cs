@@ -40,6 +40,7 @@ public class GDefLanguageGrammar : Grammar
              */
             new ProductionRule(
                 new NonTerminal("start"),
+
                 new NonTerminal("grammar")
             ),
 
@@ -51,7 +52,7 @@ public class GDefLanguageGrammar : Grammar
             new ProductionRule(
                 new NonTerminal("grammar"),
 
-                new OptionMacro(
+                new NullableMacro(
                     new NonTerminal("lexer_settings")
                 ),
                 new NonTerminal("production_list")
@@ -66,7 +67,7 @@ public class GDefLanguageGrammar : Grammar
                 new NonTerminal("lexer_settings"),
 
                 new NonTerminal("lexer_statement"),
-                new RepetitionMacro(
+                new ZeroOrMoreMacro(
                     new NonTerminal("lexer_statement")
                 )
             ),
@@ -100,7 +101,7 @@ public class GDefLanguageGrammar : Grammar
             new ProductionRule(
                 new NonTerminal("production_list"),
                 new NonTerminal("production"),
-                new RepetitionMacro(
+                new ZeroOrMoreMacro(
                     new NonTerminal("production")
                 )
             ),
@@ -126,10 +127,10 @@ public class GDefLanguageGrammar : Grammar
             new ProductionRule(
                 new NonTerminal("production_body"),
                 new NonTerminal("symbol"),
-                new RepetitionMacro(
+                new ZeroOrMoreMacro(
                     new NonTerminal("symbol")
                 ),
-                new OptionMacro(
+                new NullableMacro(
                     new NonTerminal("semantic_action")
                 )
             ),
@@ -173,7 +174,7 @@ public class GDefLanguageGrammar : Grammar
 
             /* 
              *   macro
-             *      : grouping | option | repetition | alternative
+             *      : grouping | nullable | zero_or_more | one_or_more | alternative
              *      ;
              */
             new ProductionRule(
@@ -181,9 +182,11 @@ public class GDefLanguageGrammar : Grammar
 
                 new NonTerminal("grouping"),
                 new PipeMacro(),
-                new NonTerminal("option"),
+                new NonTerminal("nullable"),
                 new PipeMacro(),
-                new NonTerminal("repetition"),
+                new NonTerminal("zero_or_more"),
+                new PipeMacro(),
+                new NonTerminal("one_or_more"),
                 new PipeMacro(),
                 new NonTerminal("alternative")
             ),
@@ -198,42 +201,46 @@ public class GDefLanguageGrammar : Grammar
 
                 new Terminal("("),
                 new NonTerminal("symbol"),
-                new RepetitionMacro(
+                new ZeroOrMoreMacro(
                     new NonTerminal("symbol")
                 ),
                 new Terminal(")")
             ),
 
             /* 
-             *   option
-             *      : '[' symbol { symbol } ']'
+             *   nullable
+             *      : symbol '?'
              *      ;
              */
             new ProductionRule(
-                new NonTerminal("option"),
+                new NonTerminal("nullable"),
 
-                new Terminal("["),
                 new NonTerminal("symbol"),
-                new RepetitionMacro(
-                    new NonTerminal("symbol")
-                ),
-                new Terminal("]")
+                new Terminal("?")
             ),
 
             /* 
-             *   repetition
-             *      : '{' symbol { symbol } '}'
+             *   zero_or_more
+             *      : symbol '*'
              *      ;
              */
             new ProductionRule(
-                new NonTerminal("repetition"),
+                new NonTerminal("zero_or_more"),
 
-                new Terminal("{"),
                 new NonTerminal("symbol"),
-                new RepetitionMacro(
-                    new NonTerminal("symbol")
-                ),
-                new Terminal("}")
+                new Terminal("*")
+            ),
+
+            /* 
+             *   one_or_more
+             *      : symbol '+'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("one_or_more"),
+
+                new NonTerminal("symbol"),
+                new Terminal("+")
             ),
 
             /* 
@@ -277,3 +284,9 @@ public class GDefLanguageGrammar : Grammar
         };
     }
 }
+
+/*
+ foo
+    : a b 
+    | c d (foo | bar)?
+ */

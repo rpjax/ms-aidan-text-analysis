@@ -44,8 +44,9 @@ public static class GDefParser
 
         // non-terminal constructs
         "grouping",
-        "option",
-        "repetition",
+        "nullable",
+        "zero_or_more",
+        "one_or_more",
         "alternative",
 
         // semantic stuff, not working right now
@@ -82,9 +83,10 @@ public static class GDefParser
     public static LR1Parser GetParser()
     {
         if (ParserInstance is null)
-        {
+        {   
             var grammar = new GDefLanguageGrammar();
-            var grammarLexer = GDefTokenizers.GrammarTokenizer;
+            var grammarLexer = new GDefTokenizerBuilder()
+                .Build();
 
             ParserInstance = new LR1Parser(
                 grammar: grammar,
@@ -103,10 +105,16 @@ public static class GDefParser
     /// </summary>
     /// <param name="text">The text of the GDF file to parse.</param>
     /// <returns>The root node of the CST.</returns>
-    public static CstRootNode Parse(string text)
+    public static CstRootNode Parse(string text, bool reduce = true)
     {
         var parser = GetParser();
         var cst = parser.Parse(text);
+
+        if (!reduce)
+        {
+            return cst;
+        }
+
         var reducer = new CstReducer(cst, ReduceWhitelist);
         var reducedCst = reducer.Execute();
 

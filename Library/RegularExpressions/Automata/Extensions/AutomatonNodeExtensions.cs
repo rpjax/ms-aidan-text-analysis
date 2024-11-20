@@ -77,14 +77,20 @@ public static class AutomatonNodeExtensions
     /// </summary>
     /// <param name="node">The <see cref="AutomatonState"/> to compute the alphabet for.</param>
     /// <returns>An array of characters representing the alphabet of the current node.</returns>
-    public static IReadOnlyList<char> GetAlphabet(this AutomatonState node)
+    public static IReadOnlyList<char> ComputeAlphabet(this AutomatonState node)
     {
-        var alphabet = node.Regexes
-            .SelectMany(x => x.GetAlphabet())
+        if (node.AlphabetCache is not null)
+        {
+            return node.AlphabetCache;
+        }
+
+        node.AlphabetCache = node.Regexes
+            .SelectMany(x => x.ComputeAlphabet())
             .Distinct()
+            .OrderBy(x => x)
             .ToArray();
 
-        return alphabet;
+        return node.AlphabetCache;
     }
 
 }

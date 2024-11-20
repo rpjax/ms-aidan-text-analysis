@@ -18,12 +18,10 @@ public class TokenizerCalculator
     /// <summary>
     /// Initializes a new instance of the <see cref="TokenizerCalculator"/> class.
     /// </summary>
-    /// <param name="charset">The charset to be used in the tokenizer.</param>
     /// <param name="lexemes">The lexemes to be used in the tokenizer.</param>
     /// <param name="ignoredChars">The characters to be ignored during tokenization.</param>
     /// <param name="useDebug">Indicates whether to use the debugger.</param>
     public TokenizerCalculator(
-        Charset charset,
         IEnumerable<Lexeme> lexemes,
         IEnumerable<char> ignoredChars,
         bool useDebug = false)
@@ -31,7 +29,6 @@ public class TokenizerCalculator
         Lexemes = lexemes.ToArray();
 
         DfaCalculator = new DfaCalculator(
-            charset: charset,
             lexemes: Lexemes,
             ignoredCharacters: ignoredChars);
 

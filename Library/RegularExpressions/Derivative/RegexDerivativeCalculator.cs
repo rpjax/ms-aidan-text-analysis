@@ -1,5 +1,6 @@
 ﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
 using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Derivative;
 
@@ -38,14 +39,14 @@ public class RegexDerivativeCalculator
     {
         History = new CalculatorHistory();
     }
-
-    /// <summary>
+  /// <summary>
     /// Calculates the derivative of the given regular expression node with respect to the specified character.
     /// </summary>
     /// <param name="node">The regular expression node.</param>
     /// <param name="c">The character with respect to which the derivative is calculated.</param>
     /// <returns>The derivative of the regular expression node.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node type is unknown.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RegExpr Derive(RegExpr node, char c)
     {
         RegExpr derivative;
@@ -76,6 +77,14 @@ public class RegexDerivativeCalculator
                 derivative = DeriveStarNode(node.AsStar(), c);
                 break;
 
+            case RegexNodeType.Anything:
+                derivative = DeriveAnythingNode(node.AsAnything(), c);
+                break;
+
+            case RegexNodeType.Class:
+                derivative = DeriveClassNode(node.AsClass(), c);
+                break;
+
             default:
                 throw new InvalidOperationException($"Unknown node type: {node.Type}");
         }
@@ -93,6 +102,7 @@ public class RegexDerivativeCalculator
     /// <param name="node">The regular expression node to simplify.</param>
     /// <returns>The simplified regular expression node.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node type is unknown.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RegExpr Simplify(RegExpr node)
     {
         RegExpr simplified;
@@ -123,6 +133,14 @@ public class RegexDerivativeCalculator
                 simplified = SimplifyStarNode(node.AsStar());
                 break;
 
+            case RegexNodeType.Anything:
+                simplified = SimplifyAnythingNode(node.AsAnything());
+                break;
+
+            case RegexNodeType.Class:
+                simplified = SimplifyClassNode(node.AsClass());
+                break;
+
             default:
                 throw new InvalidOperationException($"Unknown node type: {node.Type}");
         }
@@ -147,16 +165,19 @@ public class RegexDerivativeCalculator
 
     /* derivative calculation */
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr DeriveEpsilonNode(EpsilonNode node, char c)
     {
         return new EmptySetNode();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr DeriveEmptySetNode(EmptySetNode node, char c)
     {
         return new EmptySetNode();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr DeriveLiteralNode(LiteralNode node, char c)
     {
         return c == node.Character
@@ -165,6 +186,7 @@ public class RegexDerivativeCalculator
             ;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr DeriveUnionNode(UnionNode node, char c)
     {
         var leftDerivative = Derive(node.Left, c);
@@ -173,6 +195,7 @@ public class RegexDerivativeCalculator
         return new UnionNode(leftDerivative, rightDerivative);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr DeriveConcatenationNode(ConcatenationNode node, char c)
     {
         var left = node.Left;
@@ -180,18 +203,24 @@ public class RegexDerivativeCalculator
         var leftDerivative = Derive(left, c);
         var rightDerivative = Derive(right, c);
 
-        var concatenation = new ConcatenationNode(leftDerivative, right);
+        /* Derivative of `a.b` if `a` does not generate ε:
+         * Simply derive `a` and concatenate with `b`: `derivative(a).b`.
+         */
+        if (!left.ContainsEpsilon)
+        {
+            return new ConcatenationNode(leftDerivative, right);
+        }
 
-        if (left.ContainsEpsilon)
-        {
-            return new UnionNode(concatenation, rightDerivative);
-        }
-        else
-        {
-            return concatenation;
-        }
+        /* Derivative of `a.b` if `a` generates ε:
+         * Combine both possible branches: `derivative(a).b | derivative(b)`.
+         */
+        return new UnionNode(
+            new ConcatenationNode(leftDerivative, right), // `derivative(a).b`
+            rightDerivative                              // `derivative(b)`
+        );
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr DeriveStarNode(StarNode node, char c)
     {
         var child = node.Child;
@@ -205,23 +234,47 @@ public class RegexDerivativeCalculator
         return new ConcatenationNode(derivative, new StarNode(child));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private RegExpr DeriveAnythingNode(AnythingNode node, char c)
+    {
+        return node.Charset.Contains(c)
+            ? new EpsilonNode()
+            : new EmptySetNode()
+            ;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private RegExpr DeriveClassNode(ClassNode node, char c)
+    {
+        var charset = node.ComputeResultingCharset();
+
+        return charset.Contains(c)
+            ? new EpsilonNode()
+            : new EmptySetNode()
+            ;
+    }
+
     /* simplification */
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr SimplifyEpsilonNode(EpsilonNode node)
     {
         return node;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr SimplifyEmptySetNode(EmptySetNode node)
     {
         return node;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr SimplifyLiteralNode(LiteralNode node)
     {
         return node;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr SimplifyUnionNode(UnionNode node)
     {
         var left = node.Left;
@@ -269,6 +322,7 @@ public class RegexDerivativeCalculator
         return new UnionNode(simplifiedLeft, simplifiedRight);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr SimplifyConcatenationNode(ConcatenationNode node)
     {
         var left = node.Left;
@@ -295,6 +349,7 @@ public class RegexDerivativeCalculator
         return new ConcatenationNode(simplifiedLeft, simplifiedRight);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr SimplifyStarNode(StarNode node)
     {
         var simplifiedChild = Simplify(node.Child);
@@ -318,6 +373,18 @@ public class RegexDerivativeCalculator
         }
 
         return new StarNode(simplifiedChild);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private RegExpr SimplifyAnythingNode(AnythingNode node)
+    {
+        return node;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private RegExpr SimplifyClassNode(ClassNode node)
+    {
+        return node;
     }
 
 }

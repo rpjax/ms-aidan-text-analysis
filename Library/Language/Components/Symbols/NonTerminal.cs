@@ -1,3 +1,5 @@
+using Aidan.TextAnalysis.Helpers;
+
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
@@ -48,15 +50,6 @@ public class NonTerminal : INonTerminal
     }
 
     /// <summary>
-    /// Implicitly converts a string to a <see cref="NonTerminal"/> instance.
-    /// </summary>
-    /// <param name="name">The name of the non-terminal symbol.</param>
-    public static implicit operator NonTerminal(string name)
-    {
-        return new NonTerminal(name);
-    }
-
-    /// <summary>
     /// Returns a string that represents the current non-terminal symbol.
     /// </summary>
     /// <returns>A string that represents the current non-terminal symbol.</returns>
@@ -75,4 +68,14 @@ public class NonTerminal : INonTerminal
         return other is INonTerminal nonTerminal
             && nonTerminal.Name == Name;
     }
+
+    /// <summary>
+    /// Gets a value based hash for the terminal.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
+    {
+        return HashHelper.ComputeHash(Type, Name);
+    }
+
 }

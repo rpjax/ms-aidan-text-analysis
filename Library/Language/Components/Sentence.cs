@@ -1,3 +1,4 @@
+using Aidan.TextAnalysis.Helpers;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
@@ -156,6 +157,15 @@ public class Sentence : ISentence
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Gets a value based hash for the sentence.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
+    {
+        return HashHelper.ComputeHash(Symbols);
     }
 
     /// <summary>

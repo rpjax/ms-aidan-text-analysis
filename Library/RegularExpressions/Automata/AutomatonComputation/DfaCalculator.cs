@@ -11,7 +11,6 @@ namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 /// </summary>
 public class DfaCalculator
 {
-    public Charset Charset { get; }
     public Lexeme[] Lexemes { get; }
     public IReadOnlyList<char> IgnoredCharacters { get; }
 
@@ -19,23 +18,11 @@ public class DfaCalculator
     /// Initializes a new instance of the <see cref="DfaCalculator"/> class.
     /// </summary>
     /// <param name="lexemes">The lexemes to be used in the DFA.</param>
-    /// <param name="alphabet">The alphabet of the DFA.</param>
     /// <param name="ignoredCharacters">The characters to be ignored during DFA computation.</param>
     public DfaCalculator(
-        Charset charset,
         IEnumerable<Lexeme> lexemes,
         IEnumerable<char> ignoredCharacters)
     {
-        var lexemesAlphabet = lexemes
-            .SelectMany(x => x.Pattern.ComputeAlphabet())
-            .Distinct()
-            .ToArray();
-
-        if (ignoredCharacters.Any(ignored_c => lexemesAlphabet.Any(alphabet_c => ignored_c == alphabet_c)))
-        {
-            throw new InvalidOperationException("The alphabet contains characters that should be ignored.");
-        }
-
         Lexemes = lexemes.ToArray();
         IgnoredCharacters = ignoredCharacters.ToArray();
     }
@@ -46,15 +33,11 @@ public class DfaCalculator
     /// <returns>A <see cref="RegexDfa"/> representing the computed DFA.</returns>
     public RegexDfa ComputeDfa()
     {
-        var lexemes = Lexemes
-            .Select(x => new LexemeRegex(x.Name, x.Pattern))
-            .ToArray();
-
         var processedStates = new HashSet<AutomatonState>();
         var statesToProcess = new Queue<AutomatonState>();
 
         /* compute the initial state */
-        var initialState = new AutomatonState(lexemes);
+        var initialState = ComputeInitialState();
 
         /* add the initial state to the queue */
         statesToProcess.Enqueue(initialState);
@@ -89,6 +72,15 @@ public class DfaCalculator
         return new RegexDfa(processedStates);
     }
 
+    private AutomatonState ComputeInitialState()
+    {
+        var lexemes = Lexemes
+            .Select(x => new LexemeRegex(x.Name, x.Pattern))
+            .ToArray();
+
+        return new AutomatonState(lexemes);
+    }
+
     /// <summary>
     /// Computes the transitions for a given state.
     /// </summary>
@@ -108,10 +100,10 @@ public class DfaCalculator
         var lexemes = state.Regexes;
         var transitions = new List<AutomatonTransition>();
         
-        foreach (var c in state.GetAlphabet())
+        foreach (var c in state.ComputeAlphabet())
         {
             var derivatives = lexemes
-                .Select(x => x.Derive(c))
+                .Select(x => x.ComputeDerivative(c))
                 .ToArray();
 
             var validDerivatives = derivatives

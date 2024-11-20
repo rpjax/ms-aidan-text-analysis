@@ -1,4 +1,6 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
+﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
 
 namespace Aidan.TextAnalysis.GDef.Tokenization;
@@ -21,8 +23,9 @@ public static class GDefLexemes
         ':', 
         ';', 
         '$', 
-        '{', '}', 
-        '[', ']', 
+        '*', 
+        '+', 
+        '?', 
         '(', ')', 
         '|', 
         '='
@@ -45,6 +48,8 @@ public static class GDefLexemes
         '@', // Fragment reference
     };
 
+    public static Charset GlobalCharset { get; } = Language.Components.Charset.Compute(CharsetType.ExtendedAscii);
+
     public static Lexeme[] GetLexemes()
     {
         /* 
@@ -57,6 +62,8 @@ public static class GDefLexemes
             GetUseLexeme(),
             GetCharsetLexeme(),
             GetIdentifierLexeme(),
+            GetStringLexeme(),
+            //GetCommentLexeme()
         };
 
         lexemes.AddRange(GetSpecialCharsLexemes());
@@ -64,31 +71,99 @@ public static class GDefLexemes
         return lexemes.ToArray();
     }
 
-    private static Lexeme GetIdentifierLexeme()
+    private static Lexeme GetStringLexeme()
     {
-        var letterRegex = new UnionNode(
-            RegExpr.FromCharacterRange('a', 'z'),
-            RegExpr.FromCharacterRange('A', 'Z')
-        );
+        /* /'([^'] | \')*'/ */
 
-        var digitRegex = RegExpr.FromCharacterRange('0', '9');
-        var underscoreRegex = RegExpr.FromCharacter('_');
+        var singleQuote = '\'';
+        var doubleQuote = '\"';
+        var escapeBar = '\\';
+        var charset = Language.Components.Charset.Compute(CharsetType.ExtendedAscii);
 
-        // Start of identifier: a letter or underscore
-        var startRegex = new UnionNode(letterRegex, underscoreRegex);
-
-        // Rest of identifier: letters, digits, or underscores, repeated zero or more times
-        var restRegex = new StarNode(
-            new UnionNode(
-                new UnionNode(letterRegex, digitRegex),
-                underscoreRegex
+        var singleQuotePattern = new ConcatenationNode(
+            new LiteralNode(singleQuote),
+            new ConcatenationNode(
+                new StarNode(
+                    new UnionNode(
+                        new ConcatenationNode(
+                            new LiteralNode(escapeBar),
+                            new LiteralNode(singleQuote)
+                        ),
+                        new ClassNode(
+                            charset: charset,
+                            isNegated: true,
+                            children: new ClassChild[]
+                            {
+                                new ClassLiteral(singleQuote)
+                            }
+                        )                     
+                    )
+                ),
+                new LiteralNode(singleQuote)
             )
         );
 
-        // Full identifier regex: start with a letter or underscore, followed by any combination of letters, digits, or underscores
-        var identifierRegex = new ConcatenationNode(startRegex, restRegex);
+        var doubleQuotePattern = new ConcatenationNode(
+            new LiteralNode(doubleQuote),
+            new ConcatenationNode(
+                new StarNode(
+                    new UnionNode(
+                        new ConcatenationNode(
+                            new LiteralNode(escapeBar),
+                            new LiteralNode(doubleQuote)
+                        ),
+                        new ClassNode(
+                            charset: charset,
+                            isNegated: true,
+                            children: new ClassChild[]
+                            {
+                                new ClassLiteral(doubleQuote)
+                            }
+                        )                     
+                    )
+                ),
+                new LiteralNode(doubleQuote)
+            )
+        );
 
-        return new Lexeme(name: Identifier, pattern: identifierRegex);
+        var pattern = RegExpr.Union(singleQuotePattern, doubleQuotePattern);
+
+        return new Lexeme("string", pattern: pattern);
+    }
+
+    private static Lexeme GetIdentifierLexeme()
+    {     
+        // /[a-Z_][a-Z0-9_]*/ 
+
+        var charset = Language.Components.Charset.Compute(CharsetType.ExtendedAscii);
+
+        var pattern = new ConcatenationNode(
+            new ClassNode(
+                charset: charset,
+                isNegated: false,
+                children: new ClassChild[]
+                {
+                    new ClassRange('a', 'z'),
+                    new ClassRange('A', 'Z'),
+                    new ClassLiteral('_')
+                }
+            ),
+            new StarNode(
+                new ClassNode(
+                    charset: charset,
+                    isNegated: false,
+                    children: new ClassChild[]
+                    {
+                        new ClassRange('a', 'z'),
+                        new ClassRange('A', 'Z'),
+                        new ClassRange('0', '9'),
+                        new ClassLiteral('_')
+                    }
+                )
+            )
+        );
+
+        return new Lexeme(Identifier, pattern);
     }
 
     private static Lexeme GetLexemeLexeme()
@@ -113,4 +188,73 @@ public static class GDefLexemes
             yield return new Lexeme(name: c.ToString(), pattern: RegExpr.FromCharacter(c));
         }
     }
+
+    private static Lexeme GetCommentLexeme()
+    {
+        // `//[^\n]*\n`
+        var charset = Language.Components.Charset.Compute(CharsetType.ExtendedAscii);
+
+        var inlineCommentPattern = new ConcatenationNode(
+            new LiteralNode('/'),
+            new ConcatenationNode(
+                new LiteralNode('/'),
+                new ConcatenationNode(
+                    new StarNode(
+                        new ClassNode(
+                            charset: charset,
+                            isNegated: true,
+                            children: new ClassChild[]
+                            {
+                                new ClassLiteral('\n')
+                            }
+                        )
+                    ),
+                    new LiteralNode('\n')
+                )
+            )
+        );
+
+        // `/* ([^*]*|*/) */`
+        // end path
+        // `[^*]*|*/` ('/*' seen)
+        // `∅*|/` ('*' seen)
+        // `∅|/` 
+        // `/` 
+        // `ε` ('/' seen)
+        // continuation path
+        // `[^*]*|*/` ('/*' seen)
+        // `[^*]*|∅` ('x' seen)
+        // `[^*]*` 
+        // what i want path
+        // `[^*]*|*/` ('/*' seen)
+        // `[^*]*|*/` ('*' seen)
+        var blockCommentPattern = new ConcatenationNode(
+            new LiteralNode('/'),
+            new ConcatenationNode(
+                new LiteralNode('*'),
+                new UnionNode(
+                    new StarNode(
+                        new ClassNode(
+                            charset: charset,
+                            isNegated: true,
+                            children: new ClassChild[]
+                            {
+                                //new ClassCharacter('\n')
+                            }
+                        )
+                    ),
+                    new ConcatenationNode(
+                        new LiteralNode('*'),
+                        new LiteralNode('/')
+                    )
+                )
+            )
+        );
+
+        // `//.*\n|/*(.*)*/`
+        var pattern = RegExpr.Union(inlineCommentPattern, blockCommentPattern);
+
+        return new Lexeme(Comment, pattern);
+    }
+
 }

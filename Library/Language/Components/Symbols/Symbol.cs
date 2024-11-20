@@ -20,6 +20,12 @@ public interface ISymbol : IEquatable<ISymbol>
     /// </summary>
     /// <returns>A string that represents the current symbol.</returns>
     string ToString();
+
+    /// <summary>
+    /// Gets a value based hash for the symbol.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    int GetHashCode();
 }
 
 /// <summary>
@@ -43,6 +49,12 @@ public abstract class Symbol : ISymbol
     /// <param name="other">The symbol to compare with the current symbol.</param>
     /// <returns>true if the specified symbol is equal to the current symbol; otherwise, false.</returns>
     public abstract bool Equals(ISymbol? other);
+
+    /// <summary>
+    /// Gets a value based hash for the symbol.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public abstract override int GetHashCode();
 
     /// <summary>
     /// Returns a string that represents the current symbol.

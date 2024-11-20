@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Helpers;
+
+namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
 /// Represents a grouping macro which is a type of macro symbol.
@@ -23,7 +25,7 @@ public class GroupingMacro : IMacroSymbol
     /// <summary>
     /// Gets the symbols that are grouped by this macro.
     /// </summary>
-    public ISymbol[] GroupedSymbols { get; }
+    public ISymbol[] Symbols { get; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GroupingMacro"/> class with the specified symbols.
@@ -34,7 +36,16 @@ public class GroupingMacro : IMacroSymbol
         Type = SymbolType.Macro;
         Name = "Grouping Macro";
         MacroType = MacroType.Grouping;
-        GroupedSymbols = symbols;
+        Symbols = symbols;
+    }
+
+    /// <summary>
+    /// Returns a string that represents the current grouping macro.
+    /// </summary>
+    /// <returns>A string that represents the current grouping macro.</returns>
+    public override string ToString()
+    {
+        return $"({new Sentence(Symbols)})";
     }
 
     /// <summary>
@@ -45,7 +56,19 @@ public class GroupingMacro : IMacroSymbol
     public bool Equals(ISymbol? other)
     {
         return other is GroupingMacro macro
-            && GroupedSymbols.Equals(macro.GroupedSymbols);
+            && Symbols.Equals(macro.Symbols);
+    }
+
+    /// <summary>
+    /// Gets a value based hash for the group macro.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
+    {
+        object[] terms = new object[] { Type, Name, MacroType }
+            .Concat(Symbols)
+            .ToArray();
+        return HashHelper.ComputeHash(terms);
     }
 
     /// <summary>
@@ -55,15 +78,7 @@ public class GroupingMacro : IMacroSymbol
     /// <returns>An enumerable collection of sentences.</returns>
     public IEnumerable<ISentence> Expand(INonTerminal nonTerminal)
     {
-        yield return new Sentence(GroupedSymbols);
+        yield return new Sentence(Symbols);
     }
 
-    /// <summary>
-    /// Returns a string that represents the current grouping macro.
-    /// </summary>
-    /// <returns>A string that represents the current grouping macro.</returns>
-    public override string ToString()
-    {
-        return $"( {new Sentence(GroupedSymbols)} )";
-    }
 }

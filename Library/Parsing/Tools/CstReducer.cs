@@ -16,10 +16,10 @@ public class CstReducer
     /// </summary>
     /// <param name="root"></param>
     /// <param name="nonTerminalWhitelist"></param>
-    public CstReducer(CstRootNode root, string[] nonTerminalWhitelist)
+    public CstReducer(CstRootNode root, IEnumerable<string> nonTerminalWhitelist)
     {
         Root = root;
-        NonTerminalWhitelist = nonTerminalWhitelist;
+        NonTerminalWhitelist = nonTerminalWhitelist.ToArray();
     }
 
     /// <summary>

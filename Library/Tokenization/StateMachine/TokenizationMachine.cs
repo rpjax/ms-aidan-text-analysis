@@ -90,7 +90,6 @@ internal class TokenizationMachine
 
             if (nextState is not null)
             {
-                GoToState(nextState);
                 History.AddEntry(
                     sourceState: CurrentState,
                     targetState: nextState,
@@ -98,6 +97,7 @@ internal class TokenizationMachine
                     position: Position,
                     line: Line,
                     column: Column);
+                GoToState(nextState);
             }
             else
             {
@@ -270,10 +270,10 @@ internal class TokenizationMachine
     {
         if (UseDebugger)
         {
-            return new Exception($"No state found for character '{Character}' in state {CurrentState.Name}. At position {Position}. Line {Line}, column {Column}.\n\n{History}");
+            return new Exception($"Unexpected character '{Character}' in state {CurrentState.Name}. At position {Position}. Line {Line}, column {Column}.\n\n{History}");
         }
 
-        return new Exception($"No state found for character '{Character}' in state {CurrentState.Name}. At position {Position}. Line {Line}, column {Column}.");
+        return new Exception($"Unexpected character '{Character}'. At position {Position}. Line {Line}, column {Column}.");
     }
 
 }

@@ -10,8 +10,8 @@ namespace Aidan.TextAnalysis.Language.Components;
 /// Concrete implementations of macros are: 
 /// <list type="bullet">
 ///    <item> <see cref="GroupingMacro"/> </item>
-///    <item> <see cref="OptionMacro"/> </item>
-///    <item> <see cref="RepetitionMacro"/> </item>
+///    <item> <see cref="NullableMacro"/> </item>
+///    <item> <see cref="ZeroOrMoreMacro"/> </item>
 ///    <item> <see cref="PipeMacro"/> </item>
 /// </list>
 /// </remarks>

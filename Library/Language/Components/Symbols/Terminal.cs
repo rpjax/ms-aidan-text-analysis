@@ -1,3 +1,5 @@
+using Aidan.TextAnalysis.Helpers;
+
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
@@ -5,10 +7,7 @@ namespace Aidan.TextAnalysis.Language.Components;
 /// </summary>
 public interface ITerminal : ISymbol, IComparable<ITerminal>
 {
-    ///// <summary>
-    ///// Gets the value of the terminal symbol.
-    ///// </summary>
-    //ReadOnlyMemory<char> Value { get; }
+
 }
 
 /// <summary>
@@ -25,35 +24,6 @@ public class Terminal : ITerminal
     /// Gets the name of the symbol.
     /// </summary>
     public string Name { get; }
-
-    ///// <summary>
-    ///// Gets the value of the terminal symbol.
-    ///// </summary>
-    //public ReadOnlyMemory<char> Value { get; }
-
-    ///// <summary>
-    ///// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
-    ///// </summary>
-    ///// <param name="name">The name of the terminal symbol.</param>
-    ///// <param name="value">The value of the terminal symbol.</param>
-    //public Terminal(string name, ReadOnlyMemory<char> value)
-    //{
-    //    Type = SymbolType.Terminal;
-    //    Name = name;
-    //    Value = value;
-    //}
-
-    ///// <summary>
-    ///// Initializes a new instance of the <see cref="Terminal"/> class with the specified name and value.
-    ///// </summary>
-    ///// <param name="name">The name of the terminal symbol.</param>
-    ///// <param name="value">The value of the terminal symbol as a string.</param>
-    //public Terminal(string name, string value)
-    //{
-    //    Type = SymbolType.Terminal;
-    //    Name = name;
-    //    Value = value.AsMemory();
-    //}
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Terminal"/> class with the specified value.
@@ -81,9 +51,18 @@ public class Terminal : ITerminal
     /// <returns>true if the specified symbol is equal to the current terminal symbol; otherwise, false.</returns>
     public virtual bool Equals(ISymbol? other)
     {
-        return other is ITerminal terminal
-            && Type == terminal.Type
-            && Name == terminal.Name;
+        return other is not null
+            && Type == other.Type
+            && Name == other.Name;
+    }
+
+    /// <summary>
+    /// Gets a value based hash for the terminal.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
+    {
+        return HashHelper.ComputeHash(Type, Name);
     }
 
     /// <summary>
@@ -98,15 +77,4 @@ public class Terminal : ITerminal
 
         return string.Compare(thisName, otherName, StringComparison.Ordinal);
     }
-}
-
-public interface ILexeme
-{
-    string Name { get; }
-    ILexemeProduction Production { get; }
-}
-
-public interface ILexemeProduction
-{
-
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Aidan.TextAnalysis.Helpers;
+using System.Collections;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 
@@ -7,7 +8,7 @@ namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 /// </summary>
 public class LR1ItemCollection :
     IEnumerable<LR1Item>,
-    IEquatable<IEnumerable<LR1Item>>
+    IEquatable<LR1ItemCollection>
 {
     /// <summary>
     /// Gets the LR(1) items in the collection.
@@ -54,61 +55,23 @@ public class LR1ItemCollection :
     }
 
     /// <summary>
+    /// Determines whether the specified collection of LR(1) items is equal to the current collection.
+    /// </summary>
+    /// <param name="other">The collection to compare with the current collection.</param>
+    /// <returns>true if the specified collection is equal to the current collection; otherwise, false.</returns>
+    public bool Equals(LR1ItemCollection? other)
+    {
+        return other is not null
+            && other.GetHashCode() == GetHashCode();
+    }
+
+    /// <summary>
     /// Returns a hash code for the collection.
     /// </summary>
     /// <returns>A hash code for the collection.</returns>
     public override int GetHashCode()
     {
-        unchecked
-        {
-            int hash = 17;
-
-            foreach (var item in Items)
-            {
-                hash = hash * 23 + item.GetHashCode();
-            }
-
-            return hash;
-        }
+        return HashHelper.ComputeHash(Items);
     }
 
-    /// <summary>
-    /// Determines whether the specified collection of LR(1) items is equal to the current collection.
-    /// </summary>
-    /// <param name="other">The collection to compare with the current collection.</param>
-    /// <returns>true if the specified collection is equal to the current collection; otherwise, false.</returns>
-    public bool Equals(IEnumerable<LR1Item>? other)
-    {
-        var otherItems = other?.ToArray();
-
-        if (otherItems is null)
-        {
-            return false;
-        }
-
-        if (Items.Length != otherItems.Length)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < Items.Length; i++)
-        {
-            if (!Items[i].Equals(otherItems[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Determines whether the specified object is equal to the current collection.
-    /// </summary>
-    /// <param name="obj">The object to compare with the current collection.</param>
-    /// <returns>true if the specified object is equal to the current collection; otherwise, false.</returns>
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as IEnumerable<LR1Item>);
-    }
 }

@@ -292,15 +292,20 @@ public class CstLeafNode : CstNode
     }
 
     ///<inheritdoc/>
+    public override string ToString()
+    {
+        return Token.Value.ToString();
+    }
+
+    ///<inheritdoc/>
     public override CstNode Accept(CstNodeVisitor visitor)
     {
         return visitor.VisitTerminal(this);
     }
 
-    ///<inheritdoc/>
-    public override string ToString()
+    public ReadOnlyMemory<char> GetValue()
     {
-        return Token.Value.ToString();
+        return Token.Value;
     }
 
 }

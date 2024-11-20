@@ -1,4 +1,5 @@
-﻿using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
+﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
@@ -17,7 +18,7 @@ public class TableTransitionBuilderBase<TBuilder> where TBuilder : TableTransiti
     /// <summary>
     /// The charset of the DFA, representing all valid characters the DFA can process.
     /// </summary>
-    protected char[] Charset { get; }
+    protected Charset Charset { get; }
 
     /// <summary>
     /// The list of characters that currently trigger transitions for the specified state.
@@ -31,7 +32,7 @@ public class TableTransitionBuilderBase<TBuilder> where TBuilder : TableTransiti
     /// <param name="charset">The charset of the DFA.</param>
     public TableTransitionBuilderBase(
         TokenizerState currentState,
-        char[] charset)
+        Charset charset)
     {
         CurrentState = currentState;
         Charset = charset;
@@ -197,6 +198,15 @@ public class TableTransitionBuilderBase<TBuilder> where TBuilder : TableTransiti
     public TBuilder OnDigit()
     {
         return OnCharacterRange('0', '9');
+    }
+
+    /// <summary>
+    /// Adds the espace bar <c>'\'</c> as a trigger for transitions.
+    /// </summary>
+    /// <returns>The current builder instance for further configuration.</returns>
+    public TBuilder OnEscapeBar()
+    {
+        return OnCharacter('\\');
     }
 
     /// <summary>

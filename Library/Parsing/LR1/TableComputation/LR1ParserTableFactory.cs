@@ -1,8 +1,9 @@
 ﻿using Aidan.Core;
+using Aidan.Core.Exceptions;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
-using Aidan.TextAnalysis.Parsing.LR1.Tools;
+using System;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.TableComputation;
 
@@ -32,7 +33,9 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
     /// <param name="grammar">The grammar to use for creating the LR(1) parsing table.</param>
     public LR1ParserTableFactory(IGrammar grammar)
     {
-        grammar = grammar.ExpandMacros();
+        grammar = grammar
+            .ExpandMacros()
+            .AugmentStart();
 
         Grammar = grammar;
         Productions = Grammar.ProductionRules
@@ -143,16 +146,46 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
     /// <exception cref="Exception">Thrown when there is a conflict with the actions for the state.</exception>
     private Dictionary<ISymbol, LR1Action> ComputeActionsForState(LR1State state)
     {
-        var actions = new Dictionary<ISymbol, LR1Action>();
+        Dictionary<ISymbol, LR1Action> actions = new();
 
-        var shiftActions = ComputeShiftActions(state);
-        var reduceActions = ComputeReduceActions(state);
-        var gotoActions = ComputeGotoActions(state);
+        KeyValuePair<ISymbol, LR1Action>[] shiftActions = ComputeShiftActions(state);
+        KeyValuePair<ISymbol, LR1Action>[] reduceActions = ComputeReduceActions(state);
+        KeyValuePair<ISymbol, LR1Action>[] gotoActions = ComputeGotoActions(state);
 
-        var stateActions = shiftActions
+        KeyValuePair<ISymbol, LR1Action>[] stateActions = shiftActions
             .Concat(reduceActions)
             .Concat(gotoActions)
             .ToArray();
+
+        Dictionary<ISymbol, LR1Action[]> conflictingActions = stateActions
+            .GroupBy(x => x.Key)
+            .Select(x => new KeyValuePair<ISymbol, LR1Action[]>(x.Key, x.Select(y => y.Value).ToArray()))
+            .Where(kv => kv.Value.Length > 1)
+            .ToDictionary(x => x.Key, x => x.Value);
+
+        if (conflictingActions.Count > 0)
+        {
+            List<Error> errors = new();
+
+            foreach (var item in conflictingActions)
+            {
+                var actionTypes = item.Value
+                    .Select(x => x.Type)
+                    .ToArray();
+
+                var typesStr = string.Join("/", actionTypes);
+                var e = new Exception();
+
+                var error = Error.Create()
+                    .WithTitle($"A {typesStr} conflict was found on state {GetStateId(state)} for the symbol {item.Key}.")
+                    .WithDetail("State Items", state.ToString())
+                    .Build();
+
+                errors.Add(error);
+            }         
+
+            throw new ErrorException(errors);
+        }
 
         foreach (var action in stateActions)
         {
@@ -173,17 +206,17 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
     /// <param name="state">The state to compute the shift actions for.</param>
     /// <returns>A dictionary of shift actions for the state.</returns>
     /// <exception cref="Exception">Thrown when there is a conflict with the shift actions for the state.</exception>
-    private Dictionary<ISymbol, LR1Action> ComputeShiftActions(LR1State state)
+    private KeyValuePair<ISymbol, LR1Action>[] ComputeShiftActions(LR1State state)
     {
-        var actions = new Dictionary<ISymbol, LR1Action>();
+        var actions = new List<KeyValuePair<ISymbol, LR1Action>>();
 
         var shiftItems = state.Items
-            .Where(x => x.Symbol is not null && x.Symbol.IsTerminal() && !x.Symbol.IsEpsilon())
+            .Where(x => x.Symbol is not null && x.Symbol.IsTerminal())
             .GroupBy(x => x.Symbol)
             .Select(x => new
             {
                 Symbol = x.Key!,
-                GotoKernel = new LR1Kernel(x.Select(x => x.CreateNextItem()).ToArray())
+                GotoKernel = new LR1Kernel(x.Select(x => x.AdvancePosition()).ToArray())
             })
             .ToArray();
 
@@ -193,15 +226,14 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
             var gotoKernel = item.GotoKernel;
             var nextStateId = GetStateIdByKernel(gotoKernel);
 
-            if (actions.ContainsKey(symbol))
-            {
-                throw new Exception($"Conflict at state {state} with symbol {symbol}.");
-            }
+            var keyValuePair = new KeyValuePair<ISymbol, LR1Action>(
+                key: symbol, 
+                value: new LR1ShiftAction(nextStateId));
 
-            actions.Add(symbol, new LR1ShiftAction(nextStateId));
+            actions.Add(keyValuePair);
         }
 
-        return actions;
+        return actions.ToArray();
     }
 
     /// <summary>
@@ -210,9 +242,10 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
     /// <param name="state">The state to compute the reduce actions for.</param>
     /// <returns>A dictionary of reduce actions for the state.</returns>
     /// <exception cref="Exception">Thrown when there is a conflict with the reduce actions for the state.</exception>
-    private Dictionary<ISymbol, LR1Action> ComputeReduceActions(LR1State state)
+    private KeyValuePair<ISymbol, LR1Action>[] ComputeReduceActions(LR1State state)
     {
-        var actions = new Dictionary<ISymbol, LR1Action>();
+        var actions = new List<KeyValuePair<ISymbol, LR1Action>>();
+
         var stateId = GetStateId(state);
         /* 
          * The state 0 is always the initial state, and the first GOTO state to be computed is always the accepting state.
@@ -221,12 +254,17 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
         var isAcceptingState = stateId == 1;
 
         var reduceItems = state.Items
-            .Where(x => x.Symbol is null || x.Symbol.IsEpsilon())
-            .ToArray();
+           .Where(x => x.Symbol is null || x.Symbol.IsEpsilon())
+           //.Where(x => x.Symbol is null)
+           .ToArray();
 
         if (isAcceptingState)
         {
-            actions.Add(Eoi.Instance, new LR1AcceptAction());
+            var acceptAction = new KeyValuePair<ISymbol, LR1Action>(
+                key: Eoi.Instance, 
+                value: new LR1AcceptAction());
+
+            actions.Add(acceptAction);
         }
 
         foreach (var item in reduceItems)
@@ -240,11 +278,15 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
                     continue;
                 }
 
-                actions.Add(lookahead, new LR1ReduceAction(productionIndex));
+                var reduceAction = new KeyValuePair<ISymbol, LR1Action>(
+                    key: lookahead,
+                    value: new LR1ReduceAction(productionIndex));
+
+                actions.Add(reduceAction);
             }
         }
 
-        return actions;
+        return actions.ToArray();
     }
 
     /// <summary>
@@ -253,9 +295,9 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
     /// <param name="state">The state to compute the goto actions for.</param>
     /// <returns>A dictionary of goto actions for the state.</returns>
     /// <exception cref="Exception">Thrown when there is a conflict with the goto actions for the state.</exception>
-    private Dictionary<ISymbol, LR1Action> ComputeGotoActions(LR1State state)
+    private KeyValuePair<ISymbol, LR1Action>[] ComputeGotoActions(LR1State state)
     {
-        var actions = new Dictionary<ISymbol, LR1Action>();
+        var actions = new List<KeyValuePair<ISymbol, LR1Action>>();
 
         var gotoItems = state.Items
             .Where(x => x.Symbol is not null && x.Symbol.IsNonTerminal())
@@ -263,7 +305,7 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
             .Select(x => new
             {
                 Symbol = x.Key!,
-                GotoKernel = new LR1Kernel(x.Select(x => x.CreateNextItem()).ToArray())
+                GotoKernel = new LR1Kernel(x.Select(x => x.AdvancePosition()).ToArray())
             })
             .ToArray();
 
@@ -273,15 +315,14 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
             var gotoKernel = item.GotoKernel;
             var nextStateId = GetStateIdByKernel(gotoKernel);
 
-            if (actions.ContainsKey(symbol))
-            {
-                throw new Exception($"Conflict at state {state} with symbol {symbol}.");
-            }
+            var gotoAction = new KeyValuePair<ISymbol, LR1Action>(
+                key: symbol,
+                value: new LR1GotoAction(nextStateId));
 
-            actions.Add(symbol, new LR1GotoAction(nextStateId));
+            actions.Add(gotoAction);
         }
 
-        return actions;
+        return actions.ToArray();
     }
 
 }

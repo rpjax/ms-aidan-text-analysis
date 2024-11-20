@@ -1,3 +1,5 @@
+using Aidan.TextAnalysis.Helpers;
+
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
@@ -31,6 +33,15 @@ public class PipeMacro : IMacroSymbol
     }
 
     /// <summary>
+    /// Returns a string that represents the current pipe macro.
+    /// </summary>
+    /// <returns>A string that represents the current pipe macro.</returns>
+    public override string ToString()
+    {
+        return "|";
+    }
+
+    /// <summary>
     /// Determines whether the specified symbol is equal to the current pipe macro.
     /// </summary>
     /// <param name="other">The symbol to compare with the current pipe macro.</param>
@@ -39,6 +50,15 @@ public class PipeMacro : IMacroSymbol
     {
         return other is IMacroSymbol macro
             && macro.MacroType == MacroType.Pipe;
+    }
+
+    /// <summary>
+    /// Gets a value based hash for the pipe macro.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
+    {
+        return HashHelper.ComputeHash(Type, Name, MacroType);
     }
 
     /// <summary>
@@ -52,12 +72,4 @@ public class PipeMacro : IMacroSymbol
         throw new InvalidOperationException();
     }
 
-    /// <summary>
-    /// Returns a string that represents the current pipe macro.
-    /// </summary>
-    /// <returns>A string that represents the current pipe macro.</returns>
-    public override string ToString()
-    {
-        return "|";
-    }
 }

@@ -1,3 +1,4 @@
+﻿using Aidan.TextAnalysis.Helpers;
 using Aidan.TextAnalysis.Language.Extensions;
 
 namespace Aidan.TextAnalysis.Language.Components;
@@ -5,7 +6,7 @@ namespace Aidan.TextAnalysis.Language.Components;
 /// <summary>
 /// Represents a repetition macro. It is analoguous to EBNF's "{ }" operator.
 /// </summary>
-public class RepetitionMacro : IMacroSymbol
+public class OneOrMoreMacro : IMacroSymbol
 {
     /// <summary>
     /// Gets the type of the symbol.
@@ -25,31 +26,20 @@ public class RepetitionMacro : IMacroSymbol
     /// <summary>
     /// Gets the sentence that is repeated by this macro.
     /// </summary>
-    public ISentence RepeatedSentence { get; }
+    public ISentence Symbols { get; }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RepetitionMacro"/> class with the specified symbols.
+    /// Initializes a new instance of the <see cref="ZeroOrMoreMacro"/> class with the specified symbols.
     /// </summary>
     /// <param name="symbols">The symbols to be included in the repeated sentence.</param>
-    public RepetitionMacro(params ISymbol[] symbols)
+    public OneOrMoreMacro(params ISymbol[] symbols)
     {
         var sentence = new Sentence(symbols);
 
         Type = SymbolType.Macro;
-        Name = "Repetition Macro";
-        MacroType = MacroType.Repetition;
-        RepeatedSentence = sentence;
-    }
-
-    /// <summary>
-    /// Expands the repetition macro into a sequence of sentences.
-    /// </summary>
-    /// <param name="nonTerminal">The non-terminal symbol to expand.</param>
-    /// <returns>An enumerable collection of sentences.</returns>
-    public IEnumerable<ISentence> Expand(INonTerminal nonTerminal)
-    {
-        yield return RepeatedSentence.Add(nonTerminal);
-        yield return new Sentence(new Epsilon());
+        Name = "One or More Macro";
+        MacroType = MacroType.OneOrMore;
+        Symbols = sentence;
     }
 
     /// <summary>
@@ -59,7 +49,7 @@ public class RepetitionMacro : IMacroSymbol
     public override string ToString()
     {
         // sentential form
-        return $"{{ {RepeatedSentence} }}";
+        return $"{Symbols}+";
     }
 
     /// <summary>
@@ -69,8 +59,28 @@ public class RepetitionMacro : IMacroSymbol
     /// <returns>true if the specified symbol is equal to the current repetition macro; otherwise, false.</returns>
     public bool Equals(ISymbol? other)
     {
-        return other is RepetitionMacro macro
+        return other is OneOrMoreMacro macro
             && macro.MacroType == MacroType
-            && macro.RepeatedSentence.SequenceEqual(RepeatedSentence);
+            && macro.Symbols.SequenceEqual(Symbols);
     }
+
+    /// <summary>
+    /// Gets a value based hash for the zero or more macro.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
+    {
+        return HashHelper.ComputeHash(Type, Name, MacroType, Symbols);
+    }
+
+    /// <summary>
+    /// Expands the repetition macro into a sequence of sentences.
+    /// </summary>
+    /// <param name="nonTerminal">The non-terminal symbol to expand.</param>
+    /// <returns>An enumerable collection of sentences.</returns>
+    public IEnumerable<ISentence> Expand(INonTerminal nonTerminal)
+    {
+        yield return Symbols.Add(new ZeroOrMoreMacro(Symbols.ToArray()));
+    }
+
 }

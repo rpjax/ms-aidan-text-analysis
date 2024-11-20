@@ -62,6 +62,7 @@ public class LR1ParserTable : ILR1ParserTable
     /// </summary>
     /// <param name="symbol">The symbol to compute the hash for.</param>
     /// <returns>The computed hash.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ComputeSymbolHash(ISymbol symbol)
     {
         return (uint)symbol.Name.GetHashCode();
@@ -73,6 +74,7 @@ public class LR1ParserTable : ILR1ParserTable
     /// <param name="state">The state to use.</param>
     /// <param name="symbol">The symbol to use.</param>
     /// <returns>The computed transition key.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ulong ComputeTransitionKey(uint state, ISymbol symbol)
     {
         return ((ulong)state) << 32 | ComputeSymbolHash(symbol);
@@ -83,6 +85,7 @@ public class LR1ParserTable : ILR1ParserTable
     /// </summary>
     /// <param name="entries">The entries to use.</param>
     /// <returns>The computed symbol hash table.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Dictionary<string, uint> ComputeSymbolHashTable(
         Dictionary<uint, LR1ParserTransition[]> entries)
     {
@@ -103,6 +106,7 @@ public class LR1ParserTable : ILR1ParserTable
     /// </summary>
     /// <param name="stateTransitionsDictionary">The state transitions dictionary to use.</param>
     /// <returns>The computed parser table entries.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Dictionary<ulong, LR1Action> ComputeEntries(
         Dictionary<uint, LR1ParserTransition[]> stateTransitionsDictionary)
     {

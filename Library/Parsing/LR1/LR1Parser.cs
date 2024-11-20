@@ -1,4 +1,6 @@
-﻿using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.Core.Exceptions;
+using Aidan.Core;
+using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.Components;
 using Aidan.TextAnalysis.Parsing.Core;
@@ -98,7 +100,16 @@ public class LR1Parser : IStringParser
 
         if (action is null)
         {
-            throw new Exception();
+            // Build a detailed error using the Error class
+            var error = Error.Create()
+                .WithTitle("Syntax Error")
+                .WithDescription($"No action found in parsing table for state {currentState} and lookahead symbol '{lookahead}'.")
+                .WithDetail("Current State", currentState.ToString())
+                .WithDetail("Lookahead Symbol", lookahead.ToString())
+                .Build();
+
+            // Throw an ErrorException with the constructed error
+            throw new ErrorException(new[] { error });
         }
 
         return action;

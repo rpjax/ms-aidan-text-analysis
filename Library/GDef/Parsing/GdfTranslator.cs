@@ -227,11 +227,14 @@ public class GDefTranslator
             case MacroType.Grouping:
                 return TranslateGroupingMacro(macroNode);
 
-            case MacroType.Option:
-                return TranslateOptionMacro(macroNode);
+            case MacroType.Nullable:
+                return TranslateNullableMacro(macroNode);
 
-            case MacroType.Repetition:
-                return TranslateRepetitionMacro(macroNode);
+            case MacroType.ZeroOrMore:
+                return TranslateZeroOrMoreMacro(macroNode);
+
+            case MacroType.OneOrMore:
+                return TranslateOneOrMoreMacro(macroNode);
 
             case MacroType.Alternative:
                 return TranslateAlternativeMacro(macroNode);
@@ -268,29 +271,36 @@ public class GDefTranslator
     }
 
     /// <summary>
-    /// Translates a CST internal node representing an option macro to a collection of ISymbol objects.
+    /// Translates a CST internal node representing an nullable macro to a collection of ISymbol objects.
     /// </summary>
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid option macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateOptionMacro(CstInternalNode node)
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid nullable macro node.</exception>
+    public static IEnumerable<ISymbol> TranslateNullableMacro(CstInternalNode node)
     {
-        if (node.Name != "option")
+        if (node.Name != "nullable")
         {
             throw new InvalidOperationException();
         }
 
-        if (node.Children.Length < 3)
+        if (node.Children.Length != 2)
         {
             throw new InvalidOperationException();
         }
 
-        var children = node.Children
-            .Skip(1)
-            .Take(node.Children.Length - 2)
-            .ToArray();
+        if (node.Children[1] is not CstLeafNode operatorNode)
+        {
+            throw new InvalidOperationException();
+        }
 
-        yield return new OptionMacro(TranslateSentence(children).ToArray());
+        if (operatorNode.Name != "?")
+        {
+            throw new InvalidOperationException();
+        }
+
+        var child = node.Children[0];
+
+        yield return new NullableMacro(TranslateSymbol(child).ToArray());
     }
 
     /// <summary>
@@ -299,24 +309,64 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid repetition macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateRepetitionMacro(CstInternalNode node)
+    public static IEnumerable<ISymbol> TranslateZeroOrMoreMacro(CstInternalNode node)
     {
-        if (node.Name != "repetition")
+        if (node.Name != "zero_or_more")
         {
             throw new InvalidOperationException();
         }
 
-        if (node.Children.Length < 3)
+        if (node.Children.Length != 2)
         {
             throw new InvalidOperationException();
         }
 
-        var children = node.Children
-            .Skip(1)
-            .Take(node.Children.Length - 2)
-            .ToArray();
+        if (node.Children[1] is not CstLeafNode operatorNode)
+        {
+            throw new InvalidOperationException();
+        }
 
-        yield return new RepetitionMacro(TranslateSentence(children).ToArray());
+        if(operatorNode.Name != "*")
+        {
+            throw new InvalidOperationException();
+        }
+
+        var child = node.Children[0];
+
+        yield return new ZeroOrMoreMacro(TranslateSymbol(child).ToArray());
+    }
+
+    /// <summary>
+    /// Translates a CST internal node representing a repetition macro to a collection of ISymbol objects.
+    /// </summary>
+    /// <param name="node">The CST internal node.</param>
+    /// <returns>A collection of ISymbol objects.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the node is not a valid repetition macro node.</exception>
+    public static IEnumerable<ISymbol> TranslateOneOrMoreMacro(CstInternalNode node)
+    {
+        if (node.Name != "one_or_more")
+        {
+            throw new InvalidOperationException();
+        }
+
+        if (node.Children.Length != 2)
+        {
+            throw new InvalidOperationException();
+        }
+
+        if (node.Children[1] is not CstLeafNode operatorNode)
+        {
+            throw new InvalidOperationException();
+        }
+
+        if (operatorNode.Name != "+")
+        {
+            throw new InvalidOperationException();
+        }
+
+        var child = node.Children[0];
+
+        yield return new OneOrMoreMacro(TranslateSymbol(child).ToArray());
     }
 
     /// <summary>
@@ -372,11 +422,14 @@ public class GDefTranslator
             case "grouping":
                 return MacroType.Grouping;
 
-            case "option":
-                return MacroType.Option;
+            case "nullable":
+                return MacroType.Nullable;
 
-            case "repetition":
-                return MacroType.Repetition;
+            case "zero_or_more":
+                return MacroType.ZeroOrMore;
+
+            case "one_or_more":
+                return MacroType.OneOrMore;
 
             case "alternative":
                 return MacroType.Alternative;

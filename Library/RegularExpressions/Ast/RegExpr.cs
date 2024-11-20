@@ -29,6 +29,8 @@ public abstract class RegExpr : IEquatable<RegExpr>
     /// </summary>
     public RegExpr? Parent { get; internal set; }
 
+    private int? HashCache { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="RegExpr"/> class.
     /// </summary>
@@ -56,9 +58,15 @@ public abstract class RegExpr : IEquatable<RegExpr>
      * Builder methods 
      */
 
-    public static RegExpr FromPattern(string pattern)
+    /// <summary>
+    /// Parses a regular expression pattern and returns its abstract syntax tree representation.
+    /// </summary>
+    /// <param name="pattern">The string representation of the regular expression to parse.</param>
+    /// <param name="charser">An optional charset to use during parsing, which can influence how character sets are interpreted.</param>
+    /// <returns>A <see cref="RegExpr"/> instance representing the parsed regular expression.</returns>
+    public static RegExpr FromPattern(string pattern, Charset? charset = null)
     {
-        return RegExprParser.Parse(pattern);
+        return RegExprParser.Parse(pattern, charset ?? Charset.Compute(CharsetType.ExtendedAscii));
     }
 
     /// <summary>
@@ -80,7 +88,7 @@ public abstract class RegExpr : IEquatable<RegExpr>
             .Cast<RegExpr>()
             .ToArray();
 
-        return Concatenate(nodes);
+        return Concatenation(nodes);
     }
 
     /// <summary>
@@ -89,7 +97,7 @@ public abstract class RegExpr : IEquatable<RegExpr>
     /// <param name="regexes">The regex nodes to concatenate.</param>
     /// <returns>A <see cref="RegExpr"/> representing the concatenation of the specified regex nodes.</returns>
     /// <exception cref="ArgumentException">Thrown when no regex nodes are provided.</exception>
-    public static RegExpr Concatenate(params RegExpr[] regexes)
+    public static RegExpr Concatenation(params RegExpr[] regexes)
     {
         if (regexes.Length == 0)
         {
@@ -110,6 +118,27 @@ public abstract class RegExpr : IEquatable<RegExpr>
 
         return regex;
     }
+    public static RegExpr Union(params RegExpr[] regexes)
+    {
+        if (regexes.Length == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(regexes));
+        }
+        if (regexes.Length == 1)
+        {
+            return regexes[0];
+        }
+
+        RegExpr regex = regexes[0];
+
+        foreach (var other in regexes.Skip(1))
+        {
+            regex = new UnionNode(regex, other);
+        }
+
+        return regex;
+    }
+
     /// <summary>
     /// Creates a regex node representing a range of characters.
     /// </summary>
@@ -179,6 +208,11 @@ public abstract class RegExpr : IEquatable<RegExpr>
     /// <returns>A hash code for the current <see cref="RegExpr"/>.</returns>
     public override int GetHashCode()
     {
+        if (HashCache is not null)
+        {
+            return HashCache.Value;
+        }
+
         object[] terms;
 
         switch (Type)
@@ -201,6 +235,14 @@ public abstract class RegExpr : IEquatable<RegExpr>
                 terms = new object[] { Type }.Concat(GetChildren()).ToArray();
                 break;
 
+            case RegexNodeType.Anything:
+                terms = new object[] { Type, this.AsAnything().Charset };
+                break;
+
+            case RegexNodeType.Class:
+                terms = new object[] { Type, this.AsClass().ComputeResultingCharset() };
+                break;
+
             default:
                 throw new InvalidOperationException("Unknown node type");
         }
@@ -214,32 +256,8 @@ public abstract class RegExpr : IEquatable<RegExpr>
                 hash = hash * 23 + term.GetHashCode();
             }
 
+            HashCache = hash;
             return hash;
         }
-    }
-}
-
-public class AnythingNode 
-{
-    public Charset Charset { get; }
-
-    public AnythingNode(Charset charset)
-    {
-        Charset = charset;
-    }
-
-    //public override bool Equals(RegExpr? other)
-    //{
-    //    return other is AnythingNode;
-    //}
-
-    //public override IReadOnlyList<RegExpr> GetChildren()
-    //{
-    //    return Array.Empty<RegExpr>();
-    //}
-
-    public override string ToString()
-    {
-        return ".";
     }
 }

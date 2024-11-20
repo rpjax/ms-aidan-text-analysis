@@ -1,4 +1,5 @@
 ﻿using Aidan.TextAnalysis.RegularExpressions.Automata;
+using Aidan.TextAnalysis.RegularExpressions.Derivative;
 using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
@@ -148,13 +149,45 @@ public static class RegexNodeExtensions
         return (StarNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to StarNode");
     }
 
+    /// <summary>
+    /// Converts the specified node to a <see cref="AnythingNode"/>.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <returns>The <see cref="AnythingNode"/>.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="AnythingNode"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static AnythingNode AsAnything(this RegExpr node)
+    {
+        return (AnythingNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to AnythingNode");
+    }
+
+    /// <summary>
+    /// Converts the specified node to a <see cref="ClassNode"/>.
+    /// </summary>
+    /// <param name="node">The regex node.</param>
+    /// <returns>The <see cref="ClassNode"/>.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the node cannot be cast to <see cref="ClassNode"/>.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ClassNode AsClass(this RegExpr node)
+    {
+        return (ClassNode)node ?? throw new InvalidCastException($"Invalid cast from {node?.Type} to ClassNode");
+    }
+
     /* utility methods */
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static RegExpr ComputeDerivative(this RegExpr node, char character)
+    {
+        return new RegexDerivativeCalculator()
+            .Derive(node, character);
+    }
 
     /// <summary>
     /// Sets the parent of the specified regex node.
     /// </summary>
     /// <param name="node">The regex node whose parent is to be set.</param>
     /// <param name="parent">The parent regex node.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetParent(
         this RegExpr node,
         RegExpr parent)
@@ -168,6 +201,7 @@ public static class RegexNodeExtensions
     /// <param name="self">The current regex node.</param>
     /// <param name="others">The other regex nodes to union with the current node.</param>
     /// <returns>A new <see cref="RegExpr"/> representing the union of the current node and the specified nodes.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RegExpr Union(
         this RegExpr self,
         params RegExpr[] others)
@@ -189,11 +223,12 @@ public static class RegexNodeExtensions
     /// <param name="extraChars">A set of extra characters to include in the alphabet. 
     /// <br/>Useful for adding whitespace, EOF, control characters, etc.</param>
     /// <returns>An array of characters representing the alphabet of the regex.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static char[] ComputeAlphabet(
         this RegExpr regex,
         params char[]? extraChars)
     {
-        var alphabet = new HashSet<char>(extraChars ?? Array.Empty<char>());
+        var alphabet = new List<char>(extraChars ?? Array.Empty<char>());
         var stack = new Stack<RegExpr>();
 
         stack.Push(regex);
@@ -207,6 +242,14 @@ public static class RegexNodeExtensions
             {
                 alphabet.Add(literalNode.Character);
             }
+            if (node is AnythingNode anythingNode)
+            {
+                alphabet.AddRange(anythingNode.Charset);
+            }
+            if (node is ClassNode classNode)
+            {
+                alphabet.AddRange(classNode.ComputeResultingCharset());
+            }
 
             foreach (var child in children)
             {
@@ -214,9 +257,10 @@ public static class RegexNodeExtensions
             }
         }
 
-        /* it's reversed to make it easier to read, there's no practical effect */
         return alphabet
-            .Reverse()
+            .Distinct()
+            /* it's ordered to make it easier to read, there's no practical effect */
+            .OrderBy(x => x)
             .ToArray();
     }
 
@@ -224,7 +268,9 @@ public static class RegexNodeExtensions
     /// Gets the epsilon branches of the specified regex node.
     /// </summary>
     /// <param name="node">The regex node.</param>
+
     /// <returns>An array of regex nodes representing the epsilon branches.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static RegExpr[] GetEpsilonBranches(
         this RegExpr node)
     {

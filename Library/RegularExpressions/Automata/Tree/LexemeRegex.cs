@@ -20,35 +20,16 @@ public class LexemeRegex : IEquatable<LexemeRegex>
     public RegExpr Regex { get; }
 
     /// <summary>
-    /// Gets the alphabet of the lexeme regex.
-    /// </summary>
-    public IReadOnlyList<char> Alphabet { get; }
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="LexemeRegex"/> class.
     /// </summary>
     /// <param name="name">The name of the lexeme regex.</param>
     /// <param name="regex">The regex node of the lexeme regex.</param>
-    /// <param name="alphabet">The alphabet of the lexeme regex.</param>
     public LexemeRegex(
         string name, 
-        RegExpr regex, 
-        IReadOnlyList<char>? alphabet = null)
+        RegExpr regex)
     {
-        var regexAlphabet = regex.ComputeAlphabet();
-
         Name = name;
         Regex = regex;
-        Alphabet = alphabet ?? regexAlphabet;
-
-        /* check if the alphabet contains all characters from the regex */
-        foreach (var c in regexAlphabet)
-        {
-            if (!Alphabet.Contains(c))
-            {
-                throw new InvalidOperationException("The alphabet does not contain all characters from the regex.");
-            }
-        }
     }
 
     /// <summary>
@@ -93,9 +74,9 @@ public class LexemeRegex : IEquatable<LexemeRegex>
             && Regex.Equals(other.Regex);
     }
 
-    public IReadOnlyList<char> GetAlphabet()
+    public IReadOnlyList<char> ComputeAlphabet()
     {
-        return Alphabet;
+        return Regex.ComputeAlphabet();
     }
 
     /// <summary>
@@ -103,7 +84,7 @@ public class LexemeRegex : IEquatable<LexemeRegex>
     /// </summary>
     /// <param name="c">The character to derive with respect to.</param>
     /// <returns>A new <see cref="LexemeRegex"/> representing the derivative of the lexeme regex.</returns>
-    public LexemeRegex Derive(char c)
+    public LexemeRegex ComputeDerivative(char c)
     {
         var calculator = new RegexDerivativeCalculator();
 
@@ -112,8 +93,7 @@ public class LexemeRegex : IEquatable<LexemeRegex>
 
         return new LexemeRegex(
             name: Name,
-            regex: derivative,
-            alphabet: Alphabet);
+            regex: derivative);
     }
 
 }

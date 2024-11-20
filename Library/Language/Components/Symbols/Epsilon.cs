@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Helpers;
+
+namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
 /// Represents an epsilon(ε) symbol in a context-free grammar.
@@ -30,6 +32,15 @@ public class Epsilon : ISymbol
     }
 
     /// <summary>
+    /// Returns a string that represents the current symbol.
+    /// </summary>
+    /// <returns>A string that represents the current symbol.</returns>
+    public override string ToString()
+    {
+        return GreekLetters.Epsilon.ToString();
+    }
+
+    /// <summary>
     /// Determines whether the specified symbol is equal to the current symbol.
     /// </summary>
     /// <param name="other">The symbol to compare with the current symbol.</param>
@@ -40,11 +51,12 @@ public class Epsilon : ISymbol
     }
 
     /// <summary>
-    /// Returns a string that represents the current symbol.
+    /// Gets a value based hash for the epsilon.
     /// </summary>
-    /// <returns>A string that represents the current symbol.</returns>
-    public override string ToString()
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
     {
-        return GreekLetters.Epsilon.ToString();
+        return HashHelper.ComputeHash(Type);
     }
+
 }

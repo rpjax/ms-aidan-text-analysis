@@ -35,4 +35,31 @@ public static class HashHelper
 
         return hash;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int ComputeHash(params object[] terms)
+    {
+        if (terms.Length == 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(terms));
+        }
+
+        int[] termHashes = terms
+            .Select(term => term.GetHashCode())
+            .OrderBy(hash => hash)
+            .ToArray();
+
+        unchecked
+        {
+            int hash = 17;
+
+            foreach (var termHash in termHashes)
+            {
+                hash = hash * 23 + termHash;
+            }
+
+            return hash;
+        }
+    }
+
 }

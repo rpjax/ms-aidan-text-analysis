@@ -1,3 +1,5 @@
+using Aidan.TextAnalysis.Helpers;
+
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
@@ -23,9 +25,18 @@ public sealed class Eoi : Terminal
     /// <summary>
     /// Initializes a new instance of the <see cref="Eoi"/> class.
     /// </summary>
-    public Eoi() : base(EoiString)
+    public Eoi() : base(name: EoiString)
     {
         Type = SymbolType.Eoi;
+    }
+
+    /// <summary>
+    /// Returns a string that represents the current EOI symbol.
+    /// </summary>
+    /// <returns>A string that represents the current EOI symbol.</returns>
+    public override string ToString()
+    {
+        return "$";
     }
 
     /// <summary>
@@ -39,11 +50,12 @@ public sealed class Eoi : Terminal
     }
 
     /// <summary>
-    /// Returns a string that represents the current EOI symbol.
+    /// Gets a value based hash for the EOI.
     /// </summary>
-    /// <returns>A string that represents the current EOI symbol.</returns>
-    public override string ToString()
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
     {
-        return "$";
+        return HashHelper.ComputeHash(Type);
     }
+
 }

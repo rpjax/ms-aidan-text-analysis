@@ -1,4 +1,6 @@
-﻿using Aidan.TextAnalysis.Language.Extensions;
+﻿using Aidan.TextAnalysis.Helpers;
+using Aidan.TextAnalysis.Language.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 using System.Collections;
 
 namespace Aidan.TextAnalysis.Language.Components;
@@ -28,6 +30,12 @@ public interface IProductionRule : IEquatable<IProductionRule>
     /// Gets the body of the production rule.
     /// </summary>
     ISentence Body { get; }
+
+    /// <summary>
+    /// Gets a value based hash for the production.
+    /// </summary>
+    /// <returns></returns>
+    int GetHashCode();
 }
 
 /// <summary>
@@ -121,6 +129,15 @@ public class ProductionRule : IProductionRule
         var body = string.Join(" ", Body.Select(x => x.ToString()));
 
         return $"{head} -> {body}.";
+    }
+
+    /// <summary>
+    /// Gets a value based hash for the production.
+    /// </summary>
+    /// <returns></returns>
+    public override int GetHashCode()
+    {
+        return HashHelper.ComputeHash(Head, Body);
     }
 
     /// <summary>

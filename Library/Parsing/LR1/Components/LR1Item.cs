@@ -1,15 +1,14 @@
-﻿using Aidan.TextAnalysis.Language;
+﻿using Aidan.TextAnalysis.Helpers;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
-using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 
 /// <summary>
 /// Represents an LR(1) item.
 /// </summary>
-public class LR1Item :
-    IEquatable<LR1Item>
+public class LR1Item : IEquatable<LR1Item>
 {
     /// <summary>
     /// Gets the production rule of the LR(1) item.
@@ -26,6 +25,9 @@ public class LR1Item :
     /// </summary>
     public ITerminal[] Lookaheads { get; }
 
+    private int? HashCache { get; set; }
+    private int? NoLookaheadHashCache { get; set; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LR1Item"/> class.
     /// </summary>
@@ -36,29 +38,9 @@ public class LR1Item :
     {
         Production = production;
         Position = position;
-        Lookaheads = lookaheads;
-    }
-
-    /// <summary>
-    /// Determines whether two <see cref="LR1Item"/> instances are equal.
-    /// </summary>
-    /// <param name="left">The left instance.</param>
-    /// <param name="right">The right instance.</param>
-    /// <returns><c>true</c> if the instances are equal; otherwise, <c>false</c>.</returns>
-    public static bool operator ==(LR1Item left, LR1Item right)
-    {
-        return left.GetSignature(useLookaheads: true) == right.GetSignature(useLookaheads: true);
-    }
-
-    /// <summary>
-    /// Determines whether two <see cref="LR1Item"/> instances are not equal.
-    /// </summary>
-    /// <param name="left">The left instance.</param>
-    /// <param name="right">The right instance.</param>
-    /// <returns><c>true</c> if the instances are not equal; otherwise, <c>false</c>.</returns>
-    public static bool operator !=(LR1Item left, LR1Item right)
-    {
-        return left.GetSignature(useLookaheads: true) != right.GetSignature(useLookaheads: true);
+        Lookaheads = lookaheads
+            .OrderBy(x => x)
+            .ToArray();
     }
 
     /// <summary>
@@ -71,70 +53,37 @@ public class LR1Item :
     /// <summary>
     /// Gets the signature of the LR(1) item.
     /// </summary>
-    public string Signature => GetSignature(useLookaheads: true);
+    public string Signature => ComputeSignature(useLookaheads: true);
 
     /// <summary>
     /// Determines whether the specified <see cref="LR1Item"/> is equal to the current <see cref="LR1Item"/>.
     /// </summary>
     /// <param name="other">The <see cref="LR1Item"/> to compare with the current <see cref="LR1Item"/>.</param>
     /// <returns><c>true</c> if the specified <see cref="LR1Item"/> is equal to the current <see cref="LR1Item"/>; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Equals(LR1Item? other)
     {
         return other is not null
-            && other == this;
-    }
-
-    /// <summary>
-    /// Determines whether the specified <see cref="LR1Item"/> instances are equal.
-    /// </summary>
-    /// <param name="left">The left instance.</param>
-    /// <param name="right">The right instance.</param>
-    /// <returns><c>true</c> if the instances are equal; otherwise, <c>false</c>.</returns>
-    public bool Equals(LR1Item? left, LR1Item? right)
-    {
-        return (left is not null && right is not null)
-            && left == right;
-    }
-
-    /// <summary>
-    /// Determines whether the specified object is equal to the current <see cref="LR1Item"/>.
-    /// </summary>
-    /// <param name="obj">The object to compare with the current <see cref="LR1Item"/>.</param>
-    /// <returns><c>true</c> if the specified object is equal to the current <see cref="LR1Item"/>; otherwise, <c>false</c>.</returns>
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as LR1Item);
-    }
-
-    /// <summary>
-    /// Returns the hash code for the specified <see cref="LR1Item"/>.
-    /// </summary>
-    /// <param name="obj">The <see cref="LR1Item"/>.</param>
-    /// <returns>The hash code for the specified <see cref="LR1Item"/>.</returns>
-    public int GetHashCode([DisallowNull] LR1Item obj)
-    {
-        unchecked
-        {
-            var hash = 17;
-            hash = hash * 23 + Production.GetHashCode();
-            hash = hash * 23 + Position.GetHashCode();
-
-            foreach (var lookahead in Lookaheads)
-            {
-                hash = hash * 23 + lookahead.GetHashCode();
-            }
-
-            return hash;
-        }
+            && other.GetHashCode() == GetHashCode();
     }
 
     /// <summary>
     /// Returns the hash code for the current <see cref="LR1Item"/>.
     /// </summary>
     /// <returns>The hash code for the current <see cref="LR1Item"/>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode()
     {
-        return GetHashCode(this);
+        if (HashCache is not null)
+        {
+            return HashCache.Value;
+        }
+
+        object[] terms = new object[] { Production, Position }
+            .Concat(Lookaheads)
+            .ToArray();
+        HashCache = HashHelper.ComputeHash(terms);
+        return HashCache.Value;
     }
 
     /// <summary>
@@ -143,7 +92,38 @@ public class LR1Item :
     /// <returns>A string that represents the current <see cref="LR1Item"/>.</returns>
     public override string ToString()
     {
-        return GetSignature(useLookaheads: true);
+        var sentenceStrBuilder = new List<string>();
+
+        for (int i = 0; i < Production.Body.Length; i++)
+        {
+            if (i == Position)
+            {
+                sentenceStrBuilder.Add("•");
+            }
+
+            sentenceStrBuilder.Add(Production.Body[i].ToString());
+        }
+
+        if (Position == Production.Body.Length)
+        {
+            sentenceStrBuilder.Add("•");
+        }
+
+        var sentenceStr = string.Join(" ", sentenceStrBuilder);
+        var @base = $"{Production.Head} -> {sentenceStr}";
+
+        var orderedLookaheads = Lookaheads.Length < 2
+            ? Lookaheads
+            : Lookaheads
+                .ToArray();
+
+        var lookaheadStrs = orderedLookaheads
+            .Select(x => x.ToString())
+            .ToArray();
+
+        var lookaheads = string.Join(", ", lookaheadStrs);
+
+        return $"[({@base}), {{{lookaheads}}}]";
     }
 
     /// <summary>
@@ -151,7 +131,8 @@ public class LR1Item :
     /// </summary>
     /// <param name="useLookaheads">A value indicating whether to use lookaheads in the signature.</param>
     /// <returns>The signature of the LR(1) item.</returns>
-    public string GetSignature(bool useLookaheads = true)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public string ComputeSignature(bool useLookaheads = true)
     {
         var sentenceStrBuilder = new List<string>();
 
@@ -194,9 +175,32 @@ public class LR1Item :
     }
 
     /// <summary>
+    /// Gets the signature of the LR(1) item.
+    /// </summary>
+    /// <param name="useLookaheads">A value indicating whether to use lookaheads in the signature.</param>
+    /// <returns>The signature of the LR(1) item.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ComputeHash(bool useLookaheads = true)
+    {
+        if (useLookaheads)
+        {
+            return GetHashCode();
+        }
+
+        if (NoLookaheadHashCache is not null)
+        {
+            return NoLookaheadHashCache.Value;
+        }
+
+        NoLookaheadHashCache = HashHelper.ComputeHash(Production, Position);
+        return NoLookaheadHashCache.Value;
+    }
+
+    /// <summary>
     /// Gets the alpha part of the production rule.
     /// </summary>
     /// <returns>The alpha part of the production rule.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ISentence GetAlpha()
     {
         if (Position == 0)
@@ -211,6 +215,7 @@ public class LR1Item :
     /// Gets the β part of the production rule.
     /// </summary>
     /// <returns> A new sentence containing the β part of the production rule. </returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ISentence GetBeta()
     {
         var start = Position + 1;
@@ -228,7 +233,8 @@ public class LR1Item :
     /// </summary>
     /// <returns>The next LR(1) item.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the position is already at the end of the production body.</exception>
-    public LR1Item CreateNextItem()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public LR1Item AdvancePosition()
     {
         if (Position >= Production.Body.Length)
         {
@@ -243,6 +249,7 @@ public class LR1Item :
     /// </summary>
     /// <param name="lookaheads">The lookaheads to check.</param>
     /// <returns><c>true</c> if the item contains the specified lookaheads; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsLookaheads(ITerminal[] lookaheads)
     {
         foreach (var lookahead in lookaheads)
@@ -261,6 +268,7 @@ public class LR1Item :
     /// </summary>
     /// <param name="item">The item to check.</param>
     /// <returns><c>true</c> if the item contains the specified item; otherwise, <c>false</c>.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsItem(LR1Item item)
     {
         return Production == item.Production

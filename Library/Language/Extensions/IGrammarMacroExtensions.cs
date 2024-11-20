@@ -55,6 +55,30 @@ public static class IGrammarMacroExtensions
         return new Grammar(start, productions);
     }
 
+    public static IGrammar AugmentStart(this IGrammar grammar)
+    {
+        const string augmentStartName = "<augmented_start>";
+
+        var startSymbol = grammar.StartSymbol;
+
+        if (startSymbol.Name == augmentStartName)
+        {
+            return grammar;
+        }
+
+        var augmentedStartSymbol = new NonTerminal(augmentStartName);
+        var augmentedStartProduction = new ProductionRule(
+            head: augmentedStartSymbol,
+            body: new Sentence(startSymbol));
+
+        var productions = grammar.ProductionRules
+            .ToList();
+
+        productions.Add(augmentedStartProduction);
+
+        return new Grammar(augmentedStartSymbol, productions);
+    }
+
     private static IGrammar ExpandPipeMacros(this IGrammar grammar)
     {
         var start = grammar.StartSymbol;

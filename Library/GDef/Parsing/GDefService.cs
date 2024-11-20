@@ -8,8 +8,8 @@ namespace Aidan.TextAnalysis.GDef;
 
 public class GdefGrammar : IGrammar
 {
-    public IReadOnlyList<char> Charset { get; }
-    public IReadOnlyList<char> IgnoredChars { get; }
+    public Charset Alphabet { get; }
+    public Charset IgnoredChars { get; }
     public IReadOnlyList<Lexeme> Lexemes { get; }
     public IReadOnlyList<string> IgnoredLexemes { get; }
     public IReadOnlyList<INonTerminal> NonTerminals { get; private set; }
@@ -18,15 +18,15 @@ public class GdefGrammar : IGrammar
     public INonTerminal StartSymbol { get; private set; }
 
     public GdefGrammar(
-        IEnumerable<char> charset,
+        IEnumerable<char> alphabet,
         IEnumerable<char> ignoredChars,
         IEnumerable<Lexeme> lexemes,
         IReadOnlyList<string> ignoredLexemes,
         IEnumerable<IProductionRule> productions,
         INonTerminal start)
     {
-        Charset = charset.ToArray();
-        IgnoredChars = ignoredChars.ToArray();
+        Alphabet = new Charset(alphabet);
+        IgnoredChars = new Charset(ignoredChars);
         Lexemes = lexemes.ToArray();
         IgnoredLexemes = ignoredLexemes;
 
@@ -87,5 +87,6 @@ public class GDefService
             tokenizer: tokenizer, 
             ignoredTokenTypes: ignoredTokens);
     }
+
 }
 
