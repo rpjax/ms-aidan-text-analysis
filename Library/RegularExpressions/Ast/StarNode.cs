@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Ast;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree;
 
 /// <summary>
 /// Represents a star (Kleene star) node in a regex, matching zero or more repetitions of a pattern.

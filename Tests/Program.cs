@@ -1,86 +1,66 @@
-﻿using Aidan.Core.Patterns;
-using Aidan.TextAnalysis.GDef;
-using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.Language.Components.TreeRefactor;
-using Aidan.TextAnalysis.Parsing.Extensions;
-using Aidan.TextAnalysis.Parsing.LR1.Components;
 using Aidan.TextAnalysis.Parsing.LR1.Debug.Grammars;
-using Aidan.TextAnalysis.RegularExpressions;
-using Aidan.TextAnalysis.RegularExpressions.Ast;
-using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
-using Aidan.TextAnalysis.RegularExpressions.Automata;
-using Aidan.TextAnalysis.RegularExpressions.Parsing;
-using Aidan.TextAnalysis.Tokenization;
-using Aidan.TextAnalysis.Tokenization.StateMachine;
-using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
-using System.Globalization;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
+using System.Diagnostics;
 
 namespace Aidan.TextAnalysis.Tests;
 
 public static class Program
 {
+    static string rawJsonGrammar = @"
+/* lexer */
+
+lexeme int = '[0-9]+';
+lexeme float = '[0-9]+\.[0-9]+';
+lexeme hex = '0x[0-9a-fA-F]+';
+lexeme id = '[a-zA-Z_][a-zA-Z0-9_]*';
+
+[charset: 'utf8', ignore: true]
+lexeme string = '""([^""\n]*)""';
+
+/* parser */
+
+start
+	: json 'bar'
+	;
+";
+
     public static void Main(string[] args)
     {
-       // var regex = RegExpr.FromPattern("'[^']*'");
-        var regex = RegExpr.FromPattern("[a-zA-Z_][a-zA-Z0-9_]*");
-        GDefService gDefService = new GDefService();
+        var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
+        var jsonGrammar = GDefService.CreateLR1Parser(rawJsonGrammar, ignoredChars);
 
-        var nt_json = new NonTerminalNode("json");
-        var nt_object = new NonTerminalNode("object");
-        var nt_array = new NonTerminalNode("array");
-        var nt_member = new NonTerminalNode("member");
-        var nt_element = new NonTerminalNode("element");
-        var nt_value = new NonTerminalNode("value");
+        return;
 
-        nt_json.AddChildren(new Language.Components.TreeRefactor.UnionNode(nt_object, nt_array));
+        // Warm-up runs
+        const int warmUpRuns = 5000;
+        for (int i = 0; i < warmUpRuns; i++)
+        {
+            _ = GDefParser.Parse(rawJsonGrammar);
+        }
 
-        nt_object.AddChildren(
-            new TerminalNode("{"),
-            new NullableNode(nt_member),
-            new ZeroOrMoreNode(
-                new GroupingNode(
-                    new TerminalNode(","),
-                    nt_member
-                )
-            ),
-            new TerminalNode("}")
-        );
+        Console.WriteLine("Warpup Done");
 
-        nt_array.AddChildren(
-            new TerminalNode("["),
-            new NullableNode(nt_value),
-            new ZeroOrMoreNode(
-                new GroupingNode(
-                    new TerminalNode(","),
-                    nt_value
-                )
-            ),
-            new TerminalNode("]")
-        );
+        // Actual benchmark runs
+        const int iterations = 10000;
+        var stopwatch = Stopwatch.StartNew();
 
-        nt_member.AddChildren(
-            new TerminalNode("string"),
-            new TerminalNode(":"),
-            nt_value
-        );
+        for (int i = 0; i < iterations; i++)
+        {
+            _ = GDefParser.Parse(rawJsonGrammar);
+        }
 
-        nt_value.AddChildren(
-            new Language.Components.TreeRefactor.UnionNode(
-                new TerminalNode("number"),
-                new TerminalNode("string"),
-                new TerminalNode("true"),
-                new TerminalNode("false"),
-                new TerminalNode("null")
-            )
-        );
+        stopwatch.Stop();
 
-        var item = new LRItem(nt_array, 0, new TerminalNode[] { new TerminalNode("["), new TerminalNode("{") });
+        var elapsedTicks = stopwatch.ElapsedTicks;
+        var microseconds = elapsedTicks / (Stopwatch.Frequency / (1000L * 1000L));
+        var averageMicroseconds = microseconds / iterations;
 
-        Console.WriteLine(nt_json);
-        Console.WriteLine();
-        /*
-         * 
-         */
+        // Format and print
+        Console.WriteLine($"Total Time: {microseconds} µs");
+        Console.WriteLine($"Average Time Per Iteration: {averageMicroseconds} µs");
+
     }
 
 }

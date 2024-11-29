@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Parsing.Components;
+﻿namespace Aidan.TextAnalysis.Parsing.Tree;
 
 public interface ICstReducer
 {

@@ -15,7 +15,7 @@ public struct TokenMetadata : ITokenMetadata
     /// </summary>
     /// <param name="position"></param>
     public TokenMetadata(TokenPosition position)
-    {
+    {       
         Position = position;
     }
 

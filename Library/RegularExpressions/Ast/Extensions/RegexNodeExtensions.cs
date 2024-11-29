@@ -2,7 +2,7 @@
 using Aidan.TextAnalysis.RegularExpressions.Derivative;
 using System.Runtime.CompilerServices;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+namespace Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
 
 /// <summary>
 /// Provides extension methods for <see cref="RegExpr"/>.

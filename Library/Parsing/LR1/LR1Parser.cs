@@ -7,6 +7,7 @@ using Aidan.TextAnalysis.Parsing.Core;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
 using Aidan.TextAnalysis.Tokenization;
 using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Parsing.Tree;
 
 namespace Aidan.TextAnalysis.Parsing.LR1;
 
@@ -109,7 +110,7 @@ public class LR1Parser : IStringParser
                 .Build();
 
             // Throw an ErrorException with the constructed error
-            throw new ErrorException(new[] { error });
+            throw new ErrorException(error);
         }
 
         return action;

@@ -1,5 +1,7 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
 using Aidan.TextAnalysis.Tokenization.Components;
+using Aidan.TextAnalysis.Tokenization.Experimental;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
@@ -254,6 +256,38 @@ public class ManualTokenizerBuilder
             builder: this,
             currentState: GetState(name));
     }
+
+    //public ManualTokenizerBuilder AddDfa(ITokenizerTable table)
+    //{
+    //    var entries = table.GetEntries();
+    //    var initialState = table.GetInitialState();
+
+    //    foreach (var entry in entries)
+    //    {
+    //        var state = entry.Key;
+    //        var transitions = entry.Value;
+
+    //        if (state == initialState)
+    //        {
+    //            NameStateMap.Add(state.Name, state);
+    //        }
+
+    //        States.Add(state);
+    //        Transitions.Add(state, new List<TokenizerTransition>());
+
+    //        foreach (var transition in transitions)
+    //        {
+    //            Transitions[state].Add(transition);
+    //        }
+    //    }
+
+    //    return this;
+    //}
+
+    //public ManualTokenizerBuilder AddLexeme(string name, string pattern)
+    //{
+    //    var regex = RegExpr.FromPattern(pattern);
+    //}
 
     /* Builder Methods */
 

@@ -1,6 +1,6 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Ast;
-using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Derivative;
 

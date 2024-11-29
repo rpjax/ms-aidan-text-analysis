@@ -1,7 +1,7 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
 using System.Text;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Ast;
+namespace Aidan.TextAnalysis.RegularExpressions.Tree;
 
 public enum ClassChildType
 {

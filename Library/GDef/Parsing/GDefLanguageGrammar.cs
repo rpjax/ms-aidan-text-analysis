@@ -1,6 +1,5 @@
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Tokenization;
 
 namespace Aidan.TextAnalysis.GDef;
 
@@ -46,7 +45,7 @@ public class GDefLanguageGrammar : Grammar
 
             /* 
              *   grammar
-             *      : [ lexer_settings ] production_list
+             *      : lexer_settings? production_list
              *      ;
              */
             new ProductionRule(
@@ -60,36 +59,119 @@ public class GDefLanguageGrammar : Grammar
 
             /* 
              *   lexer_settings
-             *      : lexer_statement { lexer_statement }
+             *      : lexer_statement+
              *      ;
              */
             new ProductionRule(
                 new NonTerminal("lexer_settings"),
 
-                new NonTerminal("lexer_statement"),
-                new ZeroOrMoreMacro(
+                new OneOrMoreMacro(
                     new NonTerminal("lexer_statement")
                 )
             ),
 
             /* 
              *   lexer_statement
-             *      : use charset $id ';'
-             *      | lexeme $id = $string ';'
+             *      : lexeme_declaration
+             *      | fragment_declaration
+             *      | ignored_chars_declaration
              *      ;
-             */
+             */ 
+
             new ProductionRule(
                 new NonTerminal("lexer_statement"),
 
-                new Terminal(GDefLexemes.Use),
-                new Terminal(GDefLexemes.Charset),
-                new Terminal(GDefLexemes.Identifier),
-                new Terminal(";"),
-                new PipeMacro(), // pipe
-                new Terminal(GDefLexemes.Lexeme),
-                new Terminal(GDefLexemes.Identifier),
+                new NonTerminal("lexeme_declaration"),
+                new PipeMacro(),
+                new NonTerminal("fragment_declaration"),
+                new PipeMacro(),
+                new NonTerminal("ignored_chars_declaration")
+            ),
+
+            /*
+             *   lexeme_declaration
+             *      : lexeme_annotation_list? 'lexeme' $id '=' $string ';'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("lexeme_declaration"),
+
+                new NullableMacro(
+                    new NonTerminal("lexeme_annotation_list")
+                ),
+                new Terminal(GDefTokenizerBuilder.LexemeKeyword),
+                new Terminal(GDefTokenizerBuilder.Identifier),
                 new Terminal("="),
-                new Terminal(GDefLexemes.String),
+                new Terminal(GDefTokenizerBuilder.String),
+                new Terminal(";")
+            ),
+
+            /* 
+             *   lexeme_annotation_list
+             *      : '[' lexeme_annotation (',' lexeme_annotation)* ']'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("lexeme_annotation_list"),
+
+                new Terminal("["),
+                new NonTerminal("lexeme_annotation"),
+                new ZeroOrMoreMacro(
+                    new Terminal(","),
+                    new NonTerminal("lexeme_annotation")
+                ),
+                new Terminal("]")
+            ),
+
+            /* 
+             *   lexeme_annotation
+             *      : 'charset' ':' $string
+             *      | 'ignore' ':' ('true' | 'false')
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("lexeme_annotation"),
+
+                new Terminal(GDefTokenizerBuilder.CharsetKeyword),
+                new Terminal(":"),
+                new Terminal(GDefTokenizerBuilder.String),
+
+                new PipeMacro(),
+
+                new Terminal(GDefTokenizerBuilder.IgnoreKeyword),
+                new Terminal(":"),
+                new AlternativeMacro(
+                    new Sentence(new Terminal(GDefTokenizerBuilder.TrueKeyword)),
+                    new Sentence(new Terminal(GDefTokenizerBuilder.FalseKeyword))
+                )
+            ),
+
+            /*
+             *   fragment_declaration
+             *      :  'fragment' $id '=' $string ';'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("fragment_declaration"),
+
+                new Terminal(GDefTokenizerBuilder.FragmentKeyword),
+                new Terminal(GDefTokenizerBuilder.Identifier),
+                new Terminal("="),
+                new Terminal(GDefTokenizerBuilder.String),
+                new Terminal(";")
+            ),
+
+            /*
+             *   ignored_chars_declaration
+             *      :  'ignored-chars' '=' $string ';'
+             *      ;
+             */
+            new ProductionRule(
+                new NonTerminal("ignored_chars_declaration"),
+
+                new Terminal(GDefTokenizerBuilder.IgnoredCharsKeyword),
+                new Terminal("="),
+                new Terminal(GDefTokenizerBuilder.String),
                 new Terminal(";")
             ),
 
@@ -113,7 +195,7 @@ public class GDefLanguageGrammar : Grammar
              */
             new ProductionRule(
                 new NonTerminal("production"),
-                new Terminal(GDefLexemes.Identifier),
+                new Terminal(GDefTokenizerBuilder.Identifier),
                 new Terminal(":"),
                 new NonTerminal("production_body"),
                 new Terminal(";")
@@ -157,7 +239,7 @@ public class GDefLanguageGrammar : Grammar
             new ProductionRule(
                 new NonTerminal("terminal"),
 
-                new Terminal(GDefLexemes.String),
+                new Terminal(GDefTokenizerBuilder.String),
                 new PipeMacro(),
                 new NonTerminal("lexeme_reference")
             ),
@@ -169,7 +251,7 @@ public class GDefLanguageGrammar : Grammar
              */
             new ProductionRule(
                 new NonTerminal("non_terminal"),
-                new Terminal(GDefLexemes.Identifier)
+                new Terminal(GDefTokenizerBuilder.Identifier)
             ),
 
             /* 
@@ -262,7 +344,7 @@ public class GDefLanguageGrammar : Grammar
                 new NonTerminal("lexeme_reference"),
 
                 new Terminal("$"),
-                new Terminal(GDefLexemes.Identifier)
+                new Terminal(GDefTokenizerBuilder.Identifier)
             ),
 
             /*

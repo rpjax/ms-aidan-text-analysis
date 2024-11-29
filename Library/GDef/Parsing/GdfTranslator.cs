@@ -1,6 +1,11 @@
-﻿using Aidan.TextAnalysis.GDef.Tokenization;
+﻿using Aidan.Core;
+using Aidan.Core.Exceptions;
+using Aidan.TextAnalysis.GDef.Components;
+using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Parsing.Components;
+using Aidan.TextAnalysis.Parsing.Extensions;
+using Aidan.TextAnalysis.Parsing.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
 
 namespace Aidan.TextAnalysis.GDef;
 
@@ -9,6 +14,8 @@ namespace Aidan.TextAnalysis.GDef;
 /// </summary>
 public class GDefTranslator
 {
+    public static Charset DefaultCharset { get; } = Charset.Compute(CharsetType.ExtendedAscii);
+
     /// <summary>
     /// Enum representing the type of symbol.
     /// </summary>
@@ -24,18 +31,208 @@ public class GDefTranslator
     /// </summary>
     /// <param name="root">The root node of the CST.</param>
     /// <returns>A Grammar object.</returns>
-    public static Grammar TranslateGrammar(CstRootNode root)
+    public static GdefGrammar TranslateGrammar(CstRootNode root)
     {
+        var lexemes = TranslateLexemes(root);
+        var ignoredChars = TranslateIgnoredChars(root);
         var productions = root.Children
             .Where(x => x.Type == CstNodeType.Internal)
+            .Where(x => x.Name == "production")
             .Select(x => (CstInternalNode)x)
             .Select(TranslateProductionRule)
             .ToArray();
-        ;
 
         var start = productions.First().Head;
 
-        return new Grammar(start, productions);
+        return new GdefGrammar(
+            lexemes: lexemes,
+            ignoredChars: ignoredChars,
+            productions: productions,
+            start: start);
+    }
+
+    private static CstInternalNode? GetLexerSettings(CstRootNode node)
+    {
+        return node.Children
+            .FirstOrDefault(x => x.Name == "lexer_settings") as CstInternalNode;
+    }
+
+    private static GDefLexeme[] TranslateLexemes(CstRootNode node)
+    {
+        var lexerSettings = GetLexerSettings(node);
+
+        if (lexerSettings is null)
+        {
+            return Array.Empty<GDefLexeme>();
+        }
+
+        var lexemeLiterals = node.Children
+            .Skip(1)
+            .SelectMany(x => x.GetAllTerminals())
+            .Select(x => new { Value = x.GetValue().ToString() })
+            .Select(x => x.Value.Substring(1, x.Value.Length - 2))
+            .Select(x => new GDefLexeme(
+                isIgnored: false,
+                charset: DefaultCharset,
+                name: x,
+                pattern: RegExpr.FromString(x)))
+            .ToArray();
+
+        var lexemeDeclarations = lexerSettings.Children
+            .Where(x => x.Name == "lexeme_declaration")
+            .Cast<CstInternalNode>()
+            .Select(x => TranslateLexemeDeclaration(x))
+            .ToArray();
+
+        var lexemes = lexemeLiterals
+            .Concat(lexemeDeclarations)
+            .ToArray();
+
+        var nameGroups = lexemes
+            .GroupBy(x => x.Name)
+            .Where(x => x.Count() > 1)
+            .ToArray();
+
+        if (nameGroups.Any())
+        {
+            var builder = Error.Create()
+                .WithTitle("Duplicate lexemes.");
+
+            foreach (var nameGroup in nameGroups)
+            {
+                builder.WithDetail(nameGroup.Key, $"{nameGroup.Count()} occurrences.");
+            }
+
+            throw new ErrorException(builder.Build());
+        }
+
+        return lexemes;
+    }
+
+    private static GDefLexeme TranslateLexemeDeclaration(CstInternalNode node)
+    {
+        var annotationList = node.Children
+            .Where(x => x.Name == "lexeme_annotation_list")
+            .FirstOrDefault();
+
+        CstNode[] children = node.Children;
+        CstLeafNode nameNode;
+        CstLeafNode patternNode;
+        LexemeAnnotation? annotation;
+
+        if (annotationList is null)
+        {
+            annotation = null;
+            nameNode = children[1].AsLeaf();
+            patternNode = children[3].AsLeaf();
+        }
+        else
+        {
+            annotation = TranslateLexemesAnnotation(children[0].AsInternal());
+            nameNode = children[2].AsLeaf();
+            patternNode = children[4].AsLeaf();
+        }
+
+        string pattern = patternNode.Token.Value.ToString();
+        /* trim the string quotes*/
+        string normalizedPattern = patternNode.GetValue()
+            .ToString()
+            .Substring(1, pattern.Length - 2);
+
+        return new GDefLexeme(
+            isIgnored: annotation?.IsIgnored ?? false,
+            charset: annotation?.Charset ?? DefaultCharset,
+            name: nameNode.GetValue().ToString(),
+            pattern: RegExpr.FromPattern(normalizedPattern));
+    }
+
+    private static LexemeAnnotation TranslateLexemesAnnotation(CstInternalNode node)
+    {
+        var annotationNodes = node.Children
+            .Where(x => x.Name == "lexeme_annotation")
+            .Cast<CstInternalNode>()
+            .ToArray();
+
+        Charset charset = DefaultCharset;
+        bool isIgnored = false;
+
+        foreach (var annotationNode in annotationNodes)
+        {
+            var key = annotationNode.Children[0].AsLeaf().GetValue().ToString();
+            var value = annotationNode.Children[2].AsLeaf().GetValue().ToString();
+
+            switch (key)
+            {
+                case "charset":
+                    var normalizedValue = value.Substring(1, value.Length - 2);
+                    switch (normalizedValue)
+                    {
+                        case "ascii":
+                            charset = Charset.Compute(CharsetType.Ascii);
+                            break;
+
+                        case "extended ascii":
+                            charset = Charset.Compute(CharsetType.ExtendedAscii);
+                            break;
+
+                        case "utf8":
+                            charset = Charset.Compute(CharsetType.Utf8);
+                            break;
+
+                        default:
+                            throw new Exception();
+                    }
+                    break;
+
+                case "ignore":
+                    switch (value)
+                    {
+                        case "true":
+                            isIgnored = true;
+                            break;
+
+                        case "false":
+                            isIgnored = false;
+                            break;
+
+                        default:
+                            throw new Exception();
+                    }
+                    break;
+
+                default:
+                    throw new Exception();
+            }
+        }
+
+        return new LexemeAnnotation(charset, isIgnored);
+    }
+
+    private static char[] TranslateIgnoredChars(CstRootNode node)
+    {
+        var lexerSettings = GetLexerSettings(node);
+
+        if (lexerSettings is null)
+        {
+            return Array.Empty<char>();
+        }
+
+        var ignoredCharsDeclaration = lexerSettings.Children
+            .FirstOrDefault(x => x.Name == "ignored_chars_declaration");
+
+        if (ignoredCharsDeclaration is null)
+        {
+            return Array.Empty<char>();
+        }
+
+        var stringLeaf = ignoredCharsDeclaration.AsInternal().Children.ElementAt(2).AsLeaf();
+        var tokenValue = stringLeaf.GetValue().ToArray();
+        var chars = tokenValue
+            .Skip(1)
+            .Take(tokenValue.Length - 2)
+            .ToArray();
+
+        return chars;
     }
 
     /// <summary>
@@ -45,11 +242,11 @@ public class GDefTranslator
     /// <returns>A ProductionRule object.</returns>
     /// <exception cref="Exception">Thrown when the node name is not "production".</exception>
     /// <exception cref="InvalidOperationException">Thrown when the node has an invalid structure.</exception>
-    public static ProductionRule TranslateProductionRule(CstInternalNode node)
+    private static ProductionRule TranslateProductionRule(CstInternalNode node)
     {
         if (node.Name != "production")
         {
-            throw new Exception();
+            throw new InvalidOperationException();
         }
         if (node.Children.Length < 4)
         {
@@ -63,7 +260,7 @@ public class GDefTranslator
             throw new InvalidOperationException();
         }
 
-        if (leaf.Token.Type != GDefLexemes.Identifier)
+        if (leaf.Token.Type != GDefTokenizerBuilder.Identifier)
         {
             throw new InvalidOperationException();
         }
@@ -85,10 +282,10 @@ public class GDefTranslator
     /// </summary>
     /// <param name="nodes">The array of CST nodes.</param>
     /// <returns>A Sentence object.</returns>
-    public static Sentence TranslateSentence(CstNode[] nodes)
+    private static Sentence TranslateSentence(CstNode[] nodes)
     {
         var symbols = nodes
-            .Where(x => x is CstInternalNode node ? !node.IsEpsilon : true)
+            .Where(x => x is CstInternalNode node)
             .SelectMany(x => TranslateSymbol(x))
             .ToArray();
 
@@ -101,7 +298,7 @@ public class GDefTranslator
     /// <param name="node">The CST node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid internal node.</exception>
-    public static IEnumerable<ISymbol> TranslateSymbol(CstNode node)
+    private static IEnumerable<ISymbol> TranslateSymbol(CstNode node)
     {
         if (node is not CstInternalNode internalNode)
         {
@@ -130,7 +327,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid terminal node.</exception>
-    public static IEnumerable<ISymbol> TranslateTerminal(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateTerminal(CstInternalNode node)
     {
         if (node.Name != "terminal")
         {
@@ -174,7 +371,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid non-terminal node.</exception>
-    public static IEnumerable<ISymbol> TranslateNonTerminal(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateNonTerminal(CstInternalNode node)
     {
         if (node.Name != "non_terminal")
         {
@@ -191,7 +388,7 @@ public class GDefTranslator
             throw new InvalidOperationException();
         }
 
-        if (leaf.Token.Type != GDefLexemes.Identifier)
+        if (leaf.Token.Type != GDefTokenizerBuilder.Identifier)
         {
             throw new InvalidOperationException();
         }
@@ -205,7 +402,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateMacro(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateMacro(CstInternalNode node)
     {
         if (node.Name != "macro")
         {
@@ -250,7 +447,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid grouping macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateGroupingMacro(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateGroupingMacro(CstInternalNode node)
     {
         if (node.Name != "grouping")
         {
@@ -276,7 +473,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid nullable macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateNullableMacro(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateNullableMacro(CstInternalNode node)
     {
         if (node.Name != "nullable")
         {
@@ -309,7 +506,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid repetition macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateZeroOrMoreMacro(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateZeroOrMoreMacro(CstInternalNode node)
     {
         if (node.Name != "zero_or_more")
         {
@@ -326,7 +523,7 @@ public class GDefTranslator
             throw new InvalidOperationException();
         }
 
-        if(operatorNode.Name != "*")
+        if (operatorNode.Name != "*")
         {
             throw new InvalidOperationException();
         }
@@ -342,7 +539,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid repetition macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateOneOrMoreMacro(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateOneOrMoreMacro(CstInternalNode node)
     {
         if (node.Name != "one_or_more")
         {
@@ -375,7 +572,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>A collection of ISymbol objects.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node is not a valid alternative macro node.</exception>
-    public static IEnumerable<ISymbol> TranslateAlternativeMacro(CstInternalNode node)
+    private static IEnumerable<ISymbol> TranslateAlternativeMacro(CstInternalNode node)
     {
         if (node.Name != "alternative")
         {
@@ -415,7 +612,7 @@ public class GDefTranslator
     /// <param name="node">The CST internal node.</param>
     /// <returns>The macro type.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the node name is not recognized.</exception>
-    public static MacroType GetMacroType(CstInternalNode node)
+    private static MacroType GetMacroType(CstInternalNode node)
     {
         switch (node.Name)
         {

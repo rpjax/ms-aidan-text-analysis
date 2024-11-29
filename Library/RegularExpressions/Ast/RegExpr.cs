@@ -1,8 +1,8 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Parsing;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Ast;
+namespace Aidan.TextAnalysis.RegularExpressions.Tree;
 
 /// <summary>
 /// Represents an abstract base class for regex nodes in the abstract syntax tree of a regular expression.

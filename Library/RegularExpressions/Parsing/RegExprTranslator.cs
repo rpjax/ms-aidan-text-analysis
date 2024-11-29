@@ -1,7 +1,9 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.Components;
 using Aidan.TextAnalysis.Parsing.Extensions;
-using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.Parsing.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
+using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Parsing;
 
@@ -9,6 +11,7 @@ public class RegExprTranslator
 {
     private Charset Charset { get; }
     private Dictionary<string, RegExpr> Fragments { get; }
+    private Dictionary<char, char> EscapedCharsMap { get; }
 
     public RegExprTranslator(
         Charset charset, 
@@ -16,8 +19,22 @@ public class RegExprTranslator
     {
         Charset = charset;
         Fragments = fragments ?? new();
+        EscapedCharsMap = new Dictionary<char, char>()
+        {
+            { 'n', '\n' },  // Nova linha
+            { 'r', '\r' },  // Retorno de carro
+            { 't', '\t' },  // Tabulação
+            { '\\', '\\' }, // Barra invertida
+            { '"', '"' },   // Aspas duplas
+            { '\'', '\'' }, // Aspas simples
+            { 'b', '\b' },  // Backspace
+            { 'f', '\f' },  // Alimentação de formulário
+            { 'v', '\v' },  // Tabulação vertical
+            { '0', '\0' }   // Nulo
+        };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RegExpr Translate(CstRootNode root)
     {
         /* debug */
@@ -41,6 +58,7 @@ public class RegExprTranslator
         return TranslateUnion(union);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateRegex(CstInternalNode node)
     {
         if (node.Name != "regex")
@@ -61,6 +79,7 @@ public class RegExprTranslator
         return TranslateUnion(union);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateUnion(CstInternalNode node)
     {
         if (node.Name != "union")
@@ -88,6 +107,7 @@ public class RegExprTranslator
         return RegExpr.Union(concatenations);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateConcatenation(CstInternalNode node)
     {
         if (node.Name != "concatenation")
@@ -114,6 +134,7 @@ public class RegExprTranslator
         return RegExpr.Concatenation(quantifiers);      
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateQuantifier(CstInternalNode node)
     {
         if (node.Name != "quantifier")
@@ -163,6 +184,7 @@ public class RegExprTranslator
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslatePrimary(CstInternalNode node)
     {
         if (node.Name != "primary")
@@ -202,6 +224,7 @@ public class RegExprTranslator
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateGroup(CstInternalNode node)
     {
         if (node.Name != "group")
@@ -219,6 +242,7 @@ public class RegExprTranslator
         return TranslateRegex(regex);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateClass(CstInternalNode node)
     {
         if (node.Name != "class")
@@ -268,6 +292,7 @@ public class RegExprTranslator
         );
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ClassChild TranslateClassChild(CstInternalNode node)
     {
         switch (node.Name)
@@ -283,6 +308,7 @@ public class RegExprTranslator
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ClassChild TranslateClassLiteral(CstInternalNode node)
     {
         if (node.Name != "class_literal")
@@ -300,18 +326,32 @@ public class RegExprTranslator
             throw new InvalidOperationException();
         }
 
-        var value = leaf.GetValue().ToArray();
+        char[] chars = leaf.GetValue().ToArray();
+        char character;
 
-        if (value.Length != 1)
+        if (chars.Length == 1)
         {
-            throw new InvalidOperationException();
+            character = chars[0];
         }
+        else
+        {
+            if (leaf.Name != "escaped_char")
+            {
+                throw new InvalidOperationException();
+            }
 
-        var character = value[0];
+            if (!EscapedCharsMap.TryGetValue(chars[1], out var result))
+            {
+                throw new InvalidOperationException();
+            }
+
+            character = result;
+        }
 
         return new ClassLiteral(character);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ClassChild TranslateClassRange(CstInternalNode node)
     {
         if (node.Name != "class_range")
@@ -352,6 +392,7 @@ public class RegExprTranslator
         return new ClassRange(startChar, endChar);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateAny(CstInternalNode node)
     {
         if (node.Name != "any")
@@ -362,6 +403,7 @@ public class RegExprTranslator
         return new AnythingNode(Charset);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateFragment(CstInternalNode node)
     {
         if (node.Name != "fragment")
@@ -387,6 +429,7 @@ public class RegExprTranslator
         return fragment;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateChar(CstLeafNode node)
     {
         if (node.Name != "char")
@@ -406,6 +449,7 @@ public class RegExprTranslator
         return new LiteralNode(character);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private RegExpr TranslateEscapedChar(CstLeafNode node)
     {
         if (node.Name != "escaped_char")
@@ -415,12 +459,17 @@ public class RegExprTranslator
 
         var value = node.GetValue().ToArray();
 
-        if (value.Length != 1)
+        if (value.Length != 2)
         {
             throw new InvalidOperationException();
         }
 
-        var character = value[0];
+        var character = value[1];
+
+        if (EscapedCharsMap.TryGetValue(character, out var result))
+        {
+            character = result;
+        }
 
         return new LiteralNode(character);
     }

@@ -7,37 +7,45 @@ namespace Aidan.TextAnalysis.RegularExpressions.Parsing;
 
 public class RegexTokenizerBuilder : IBuilder<Tokenizer>
 {
-    public static char[] SpecialChars { get; } = new char[]
-    {
-        //'\\', // Escape character
-        '[', ']', // Character class
-        '(', ')', // Grouping
-        '|', // Alternation
-        '*', // Zero or more
-        '+', // One or more
-        '?', // Optional
-        '{', '}', // Quantifiers
-        '^', // Class negation
-        //'$', // End of line
-        '.', // Any character
-        '-', // Range separator
-        '@', // Fragment reference
-    };
-
-    public static char[] IgnoredChars { get; } = new char[] { ' ', '\t', '\n', '\r', '\0' };
-
+    private char[] SpecialChars { get; }
+    private char[] IgnoredChars { get; }
+    private char[] EscapableChars { get; }
     private Charset Charset { get; }
-    
-    public RegexTokenizerBuilder(Charset charset)
+
+    public RegexTokenizerBuilder()
     {
-        Charset = charset;
+        SpecialChars = new char[]
+        {
+            //'\\', // Escape character
+            '[', ']', // Character class
+            '(', ')', // Grouping
+            '|', // Alternation
+            '*', // Zero or more
+            '+', // One or more
+            '?', // Optional
+            '{', '}', // Quantifiers
+            '^', // Class negation
+            //'$', // End of line
+            '.', // Any character
+            '-', // Range separator
+            '@', // Fragment reference        
+        };
+        EscapableChars = new char[]
+        {
+            '\\',
+            'n',
+            't',
+            '0',
+        };
+        IgnoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
+        Charset = Charset.Compute(CharsetType.ExtendedAscii);
     }
 
     public Tokenizer Build()
     {
         var builder = new ManualTokenizerBuilder();
 
-        AddSkipWhitespace(builder);
+        AddSkipIgnoredChars(builder);
         AddEscapeSequence(builder);
         AddSpecialChars(builder);
         AddLiteralChars(builder);
@@ -47,7 +55,7 @@ public class RegexTokenizerBuilder : IBuilder<Tokenizer>
 
     /* private methods */
 
-    private void AddSkipWhitespace(ManualTokenizerBuilder builder)
+    private void AddSkipIgnoredChars(ManualTokenizerBuilder builder)
     {
         builder.FromInitialState()
             .OnManyCharacters(IgnoredChars)
@@ -58,7 +66,8 @@ public class RegexTokenizerBuilder : IBuilder<Tokenizer>
     private void AddEscapeSequence(ManualTokenizerBuilder builder)
     {
         var escapedChars = SpecialChars
-            .Concat(new char[] { '\\' })
+            .Concat(EscapableChars)
+            .Distinct()
             .ToArray();
 
         builder.FromInitialState()

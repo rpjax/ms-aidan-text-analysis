@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Parsing.Components;
+﻿using Aidan.TextAnalysis.Parsing.Components;
+
+namespace Aidan.TextAnalysis.Parsing.Tree;
 
 /// <summary>
 /// Represents the metadata associated with a node in the concrete syntax tree (CST).

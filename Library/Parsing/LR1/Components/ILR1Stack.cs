@@ -1,4 +1,5 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
+using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 
@@ -57,6 +58,7 @@ public class LR1ParserStack : ILR1Stack
     /// Gets the current state from the stack.
     /// </summary>
     /// <returns>The current state.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint GetCurrentState()
     {
         return StateStack.Peek();
@@ -66,6 +68,7 @@ public class LR1ParserStack : ILR1Stack
     /// Pushes a state onto the stack.
     /// </summary>
     /// <param name="state">The state to push.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushState(uint state)
     {
         StateStack.Push(state);
@@ -75,6 +78,7 @@ public class LR1ParserStack : ILR1Stack
     /// Pushes a symbol onto the stack.
     /// </summary>
     /// <param name="symbol">The symbol to push.</param>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushSymbol(ISymbol symbol)
     {
         SymbolStack.Push(symbol);
@@ -83,6 +87,7 @@ public class LR1ParserStack : ILR1Stack
     /// <summary>
     /// Pops a state from the stack.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PopState()
     {
         StateStack.Pop();
@@ -91,6 +96,7 @@ public class LR1ParserStack : ILR1Stack
     /// <summary>
     /// Pops a symbol from the stack.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PopSymbol()
     {
         SymbolStack.Pop();

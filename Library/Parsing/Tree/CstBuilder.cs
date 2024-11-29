@@ -1,10 +1,12 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
+using Aidan.TextAnalysis.Parsing.Components;
 using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.Tokenization.Components;
 using System.Collections;
 using System.Runtime.CompilerServices;
 
-namespace Aidan.TextAnalysis.Parsing.Components;
+namespace Aidan.TextAnalysis.Parsing.Tree;
 
 internal class TokenCollection : IEnumerable<IToken>
 {
@@ -70,7 +72,10 @@ public class CstBuilder
     {
         var tokenCollection = new TokenCollection(token);
         var leafMetadata = GetLeafMetadata(token);
-        var leaf = new CstLeafNode(token: token, metadata: leafMetadata);
+        var leaf = new CstLeafNode(
+            name: token.Type,
+            metadata: leafMetadata,
+            token: token);
 
         TokenAccumulator.Add(tokenCollection);
         NodeAccumulator.Add(leaf);
@@ -89,18 +94,10 @@ public class CstBuilder
         var tokens = ReduceTokens(length);
         var metadata = GetInternalMetadata(tokens);
 
-        if (!IncludeEpsilons)
-        {
-            children = children
-                 .Where(x => x is CstInternalNode node ? !node.IsEpsilon : true)
-                 .ToArray();
-        }
-
         var node = new CstInternalNode(
             name: production.Head.Name,
             children: children,
-            metadata: metadata,
-            isEpsilon: production.IsEpsilonProduction()
+            metadata: metadata
         );
 
         NodeAccumulator.Add(node);
@@ -116,6 +113,10 @@ public class CstBuilder
         if (!production.IsEpsilonProduction())
         {
             throw new InvalidOperationException("Production rule is not an epsilon production.");
+        }
+        if (!IncludeEpsilons)
+        {
+            //return;
         }
 
         TokenAccumulator.Add(new TokenCollection(Array.Empty<IToken>()));
@@ -135,8 +136,7 @@ public class CstBuilder
         NodeAccumulator.Add(new CstInternalNode(
             name: production.Head.Name,
             children: Array.Empty<CstNode>(),
-            metadata: GetEpsilonInternalMetadata(),
-            isEpsilon: true
+            metadata: GetEpsilonInternalMetadata()
         ));
     }
 
@@ -152,13 +152,6 @@ public class CstBuilder
         var children = PopNodes(length);
         var tokens = ReduceTokens(length);
         var metadata = GetInternalMetadata(tokens);
-
-        if (!IncludeEpsilons)
-        {
-            children = children
-                 .Where(x => x is CstInternalNode node ? !node.IsEpsilon : true)
-                 .ToArray();
-        }
 
         var node = new CstRootNode(
             name: production.Head.Name,
@@ -310,4 +303,3 @@ public class CstBuilder
     }
 
 }
-

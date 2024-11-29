@@ -1,12 +1,8 @@
-﻿using Aidan.TextAnalysis.GDef.Tokenization;
-using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Parsing;
-using Aidan.TextAnalysis.Parsing.Components;
-using Aidan.TextAnalysis.Parsing.Core;
+﻿using Aidan.TextAnalysis.GDef.Components;
+using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tools;
-using Aidan.TextAnalysis.RegularExpressions.Automata;
-using System.Text;
+using Aidan.TextAnalysis.Parsing.Tree;
 
 namespace Aidan.TextAnalysis.GDef;
 
@@ -28,9 +24,18 @@ public static class GDefParser
     /// </summary>
     private static string[] ReduceWhitelist { get; } = new string[]
     {
+        // lex
+        "lexer_settings",
+        //"lexer_statement",
+        "lexeme_declaration",
+        "fragment_declaration",
+        "ignored_chars_declaration",
+        "lexeme_annotation_list",
+        "lexeme_annotation",
+
         // high order constructs
         "production",
-
+        
         /*
          * symbols
          */
@@ -68,43 +73,26 @@ public static class GDefParser
     /// </summary>
     public static void Init()
     {
-        if (ParserInstance is not null)
-        {
-            return;
-        }
-
         GetParser();
     }
 
     /// <summary>
-    /// Gets the instance of the LR1 parser, initializing it if necessary.
+    /// Parses the given text and returns a reduced or non-reduced 
+    /// concrete syntax tree (CST) based on the specified option.
     /// </summary>
-    /// <returns>The instance of the LR1 parser.</returns>
-    public static LR1Parser GetParser()
-    {
-        if (ParserInstance is null)
-        {   
-            var grammar = new GDefLanguageGrammar();
-            var grammarLexer = new GDefTokenizerBuilder()
-                .Build();
-
-            ParserInstance = new LR1Parser(
-                grammar: grammar,
-                tokenizer: grammarLexer,
-                ignoredTokenTypes: new string[]
-                {
-                    GDefLexemes.Comment
-                });
-        }
-
-        return ParserInstance;
-    }
-
-    /// <summary>
-    /// Parses a GDF file and returns a concrete syntax tree (CST).
-    /// </summary>
-    /// <param name="text">The text of the GDF file to parse.</param>
-    /// <returns>The root node of the CST.</returns>
+    /// <param name="text">The input text to parse.</param>
+    /// <param name="reduce">
+    /// A boolean value indicating whether the resulting CST should be reduced.
+    /// Defaults to <c>true</c>.
+    /// </param>
+    /// <returns>
+    /// A <see cref="CstRootNode"/> representing the parsed concrete syntax tree.
+    /// If <paramref name="reduce"/> is <c>true</c>, the CST is reduced based on
+    /// a predefined whitelist.
+    /// </returns>
+    /// <exception cref="ParseException">
+    /// Thrown if the input text cannot be successfully parsed.
+    /// </exception>
     public static CstRootNode Parse(string text, bool reduce = true)
     {
         var parser = GetParser();
@@ -126,12 +114,35 @@ public static class GDefParser
     /// </summary>
     /// <param name="text">The text of the GDF file to parse.</param>
     /// <returns>The parsed grammar object.</returns>
-    public static Grammar ParseToGrammar(string text)
+    public static GdefGrammar ParseToGrammar(string text)
     {
         var cst = Parse(text);
         var reducer = new CstReducer(cst, ReduceWhitelist);
         var reducedCst = reducer.Execute();
-
         return GDefTranslator.TranslateGrammar(reducedCst);
+    }
+
+    /// <summary>
+    /// Gets the instance of the LR1 parser, initializing it if necessary.
+    /// </summary>
+    /// <returns>The instance of the LR1 parser.</returns>
+    private static LR1Parser GetParser()
+    {
+        if (ParserInstance is null)
+        {
+            var grammar = new GDefLanguageGrammar();
+            var tokenizer = new GDefTokenizerBuilder().Build();
+            var ignoredTokenTypes = new string[]
+            {
+                GDefTokenizerBuilder.Comment
+            };
+
+            ParserInstance = new LR1Parser(
+                grammar: grammar,
+                tokenizer: tokenizer,
+                ignoredTokenTypes: ignoredTokenTypes);
+        }
+
+        return ParserInstance;
     }
 }

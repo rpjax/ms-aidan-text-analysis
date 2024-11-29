@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
 
 public static class ConcatenationNodeExtensions
 {

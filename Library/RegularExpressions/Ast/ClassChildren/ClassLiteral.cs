@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Ast;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree;
 
 public class ClassLiteral : ClassChild
 {

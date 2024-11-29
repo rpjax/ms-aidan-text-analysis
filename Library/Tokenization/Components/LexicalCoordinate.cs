@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Parsing.Components;
+﻿namespace Aidan.TextAnalysis.Tokenization.Components;
 
 /// <summary>
 /// Represents a lexical coordinate in a text document. <br/>

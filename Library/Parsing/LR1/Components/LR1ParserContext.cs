@@ -1,4 +1,4 @@
-﻿using Aidan.TextAnalysis.Parsing.Components;
+﻿using Aidan.TextAnalysis.Parsing.Tree;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 

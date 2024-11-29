@@ -2,7 +2,7 @@
 using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Extensions;
-using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 using Aidan.TextAnalysis.Tokenization;
@@ -147,7 +147,7 @@ char_range
         );
 
         /* GDef test */
-        var lexemes = GDefLexemes.GetLexemes();
+        var lexemes = GDefTokenizerBuilder.GetLexemes();
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
 
         ///* tokenizer test */

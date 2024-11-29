@@ -1,17 +1,13 @@
 ﻿using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.LR1;
-using Aidan.TextAnalysis.Parsing.LR1.Debug.Grammars;
 using Aidan.TextAnalysis.Parsing.Tools;
-using Aidan.TextAnalysis.RegularExpressions.Ast;
-using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Parsing;
 
 public static class RegExprParser
 {
-    private static Tokenizer? Tokenizer { get; set; }
-    private static Grammar? Grammar { get; set; }
     private static LR1Parser? Parser { get; set; }
     private static string[] ReduceWhitelist { get; } = new string[]
     {
@@ -40,32 +36,14 @@ public static class RegExprParser
         return traslator.Translate(reducedCst);
     }
 
-    private static Tokenizer GetTokenizer()
-    {
-        if (Tokenizer is null)
-        {
-            Tokenizer = new RegexTokenizerBuilder(Charset.Compute(CharsetType.ExtendedAscii))
-                .Build();
-        }
-
-        return Tokenizer;
-    }
-
-    private static Grammar GetGrammar()
-    {
-        if (Grammar is null)
-        {
-            Grammar = GDefParser.ParseToGrammar(RegexGrammar.RawFile);
-        }
-
-        return Grammar;
-    }
-
     private static LR1Parser GetParser()
     {
         if (Parser is null)
         {
-            Parser = new LR1Parser(GetGrammar(), GetTokenizer());
+            var grammar = GDefParser.ParseToGrammar(RegexGrammar.RawFile);
+            var tokenizer = new RegexTokenizerBuilder().Build();
+
+            Parser = new LR1Parser(grammar, tokenizer);
         }
 
         return Parser;
