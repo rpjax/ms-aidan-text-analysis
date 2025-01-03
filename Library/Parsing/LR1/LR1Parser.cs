@@ -8,6 +8,7 @@ using Aidan.TextAnalysis.Parsing.LR1.Components;
 using Aidan.TextAnalysis.Tokenization;
 using System.Runtime.CompilerServices;
 using Aidan.TextAnalysis.Parsing.Tree;
+using Aidan.Core.Errors;
 
 namespace Aidan.TextAnalysis.Parsing.LR1;
 

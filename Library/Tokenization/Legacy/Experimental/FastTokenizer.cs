@@ -1,4 +1,5 @@
 ﻿using Aidan.Core;
+using Aidan.Core.Errors;
 using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.Experimental;

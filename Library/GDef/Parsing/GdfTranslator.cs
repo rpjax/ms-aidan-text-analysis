@@ -1,4 +1,5 @@
 ﻿using Aidan.Core;
+using Aidan.Core.Errors;
 using Aidan.Core.Exceptions;
 using Aidan.TextAnalysis.GDef.Components;
 using Aidan.TextAnalysis.GDef.Tokenization;
