@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Parsing.Components;
+﻿using Aidan.TextAnalysis.Tokenization.Components;
+
+namespace Aidan.TextAnalysis.Parsing.Components;
 
 /// <summary>
 /// Represents the position of a syntatical element in the source code.

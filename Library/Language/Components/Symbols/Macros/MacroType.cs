@@ -85,20 +85,25 @@ public enum MacroType
     /// <summary>
     /// Represents an option macro.
     /// </summary>
-    Option,
+    Nullable,
 
     /// <summary>
-    /// Represents a repetition macro.
+    /// Represents a zero or more macro.
     /// </summary>
-    Repetition,
+    ZeroOrMore,
+
+    /// <summary>
+    /// Represents a one or more macro.
+    /// </summary>
+    OneOrMore,
 
     /// <summary>
     /// Represents a pipe macro. 
     /// </summary>
-    Alternative,
+    Pipe,
 
     /// <summary>
     /// Represents an expanded alternative macro.
     /// </summary>
-    ExpandedAlternative
+    Alternative
 }

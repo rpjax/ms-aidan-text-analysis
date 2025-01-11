@@ -15,7 +15,7 @@ public struct TokenMetadata : ITokenMetadata
     /// </summary>
     /// <param name="position"></param>
     public TokenMetadata(TokenPosition position)
-    {
+    {       
         Position = position;
     }
 
@@ -27,4 +27,11 @@ public struct TokenMetadata : ITokenMetadata
     {
         return $"line: {Position.Line}, column: {Position.Column} ({Position.Start} - {Position.End})";
     }
+
+    /// <summary>
+    /// Gets an empty <see cref="TokenMetadata"/> instance.
+    /// </summary>
+    public static TokenMetadata Empty => new TokenMetadata(
+        position: TokenPosition.Empty);
+
 }

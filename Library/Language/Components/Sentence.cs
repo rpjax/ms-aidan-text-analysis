@@ -1,38 +1,96 @@
+using Aidan.TextAnalysis.Helpers;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
-/// Represents an immutable sequence of <see cref="Symbol"/> that form a sentence.
+/// Represents an immutable sequence of <see cref="ISymbol"/> that form a sentence.
 /// </summary>
-public struct Sentence : 
-    IEnumerable<Symbol>, 
-    IEquatable<Sentence>, 
-    IEqualityComparer<Sentence>
+public interface ISentence :
+    IEnumerable<ISymbol>,
+    IEquatable<ISentence>
 {
-    private Symbol[] Symbols { get; }
+    /// <summary>
+    /// Gets the length of the sentence.
+    /// </summary>
+    int Length { get; }
 
+    /// <summary>
+    /// Gets the <see cref="ISymbol"/> at the specified index.
+    /// </summary>
+    /// <param name="index">The zero-based index of the symbol to get.</param>
+    /// <returns>The <see cref="ISymbol"/> at the specified index.</returns>
+    ISymbol this[int index] { get; }
+
+    /// <summary>
+    /// Returns a string that represents the current sentence.
+    /// </summary>
+    /// <returns>A string that represents the current sentence.</returns>
+    string ToString();
+}
+
+/// <summary>
+/// Represents an immutable sequence of <see cref="ISymbol"/> that form a sentence.
+/// </summary>
+public class Sentence : ISentence
+{
+    /// <summary>
+    /// Gets the length of the sentence.
+    /// </summary>
+    public int Length => Symbols.Length;
+
+    /// <summary>
+    /// Gets the symbols that form the sentence.
+    /// </summary>
+    private ISymbol[] Symbols { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Sentence"/> class that is empty.
+    /// </summary>
     public Sentence()
     {
-        Symbols = Array.Empty<Symbol>();
+        Symbols = Array.Empty<ISymbol>();
     }
 
-    public Sentence(params Symbol[] symbols)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Sentence"/> class with the specified symbols.
+    /// </summary>
+    /// <param name="symbols">The symbols that form the sentence.</param>
+    public Sentence(params ISymbol[] symbols)
     {
         Symbols = ExpandPipeMacros(symbols);
     }
 
-    public Sentence(Symbol symbol, params Symbol[] symbols)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Sentence"/> class with the specified symbols.
+    /// </summary>
+    /// <param name="symbols">The symbols that form the sentence.</param>
+    public Sentence(IEnumerable<ISymbol> symbols)
     {
-        symbols = Array.Empty<Symbol>()
+        Symbols = ExpandPipeMacros(symbols.ToArray());
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Sentence"/> class with the specified symbol and additional symbols.
+    /// </summary>
+    /// <param name="symbol">The first symbol of the sentence.</param>
+    /// <param name="symbols">The additional symbols that form the sentence.</param>
+    public Sentence(ISymbol symbol, params ISymbol[] symbols)
+    {
+        symbols = Array.Empty<ISymbol>()
             .Append(symbol)
             .Concat(symbols)
             .ToArray();
         Symbols = ExpandPipeMacros(symbols);
     }
 
-    public Sentence(IEnumerable<Symbol> firstSegment, IEnumerable<Symbol> secondSegment)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Sentence"/> class with the specified segments of symbols.
+    /// </summary>
+    /// <param name="firstSegment">The first segment of symbols.</param>
+    /// <param name="secondSegment">The second segment of symbols.</param>
+    public Sentence(IEnumerable<ISymbol> firstSegment, IEnumerable<ISymbol> secondSegment)
     {
         var symbols = Array.Empty<Symbol>()
             .Concat(firstSegment)
@@ -41,53 +99,90 @@ public struct Sentence :
         Symbols = ExpandPipeMacros(symbols);
     }
 
-    public int Length => Symbols.Length;
-
-    public Symbol this[int index]
+    /// <summary>
+    /// Gets the <see cref="ISymbol"/> at the specified index.
+    /// </summary>
+    /// <param name="index">The zero-based index of the symbol to get.</param>
+    /// <returns>The <see cref="ISymbol"/> at the specified index.</returns>
+    public ISymbol this[int index]
     {
         get => Symbols[index];
     }
 
-    public static bool operator ==(Sentence left, Sentence right)
+    /// <summary>
+    /// Returns a string that represents the current sentence.
+    /// </summary>
+    /// <returns>A string that represents the current sentence.</returns>
+    public override string ToString()
     {
-        return left.Equals(right);
+        return string.Join(" ", this.Select(x => x.ToString()));
     }
 
-    public static bool operator !=(Sentence left, Sentence right)
+    /// <summary>
+    /// Returns an enumerator that iterates through the symbols in the sentence.
+    /// </summary>
+    /// <returns>An enumerator that can be used to iterate through the symbols in the sentence.</returns>
+    public IEnumerator<ISymbol> GetEnumerator()
     {
-        return !left.Equals(right);
+        return Symbols.AsEnumerable().GetEnumerator();
     }
 
-    public static implicit operator Symbol[](Sentence sentence)
+    /// <summary>
+    /// Returns an enumerator that iterates through the symbols in the sentence.
+    /// </summary>
+    /// <returns>An enumerator that can be used to iterate through the symbols in the sentence.</returns>
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        return sentence.Symbols.ToArray();
+        return Symbols.GetEnumerator();
     }
 
-    public static implicit operator List<Symbol>(Sentence sentence)
+    /// <summary>
+    /// Determines whether the specified <see cref="ISentence"/> is equal to the current sentence.
+    /// </summary>
+    /// <param name="other">The sentence to compare with the current sentence.</param>
+    /// <returns><c>true</c> if the specified sentence is equal to the current sentence; otherwise, <c>false</c>.</returns>
+    public bool Equals(ISentence? other)
     {
-        return sentence;
+        if (Length != other?.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < Length; i++)
+        {
+            if (!this[i].Equals(other[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    public static implicit operator Sentence(Symbol[] productions)
+    /// <summary>
+    /// Gets a value based hash for the sentence.
+    /// </summary>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public override int GetHashCode()
     {
-        return new Sentence(productions);
+        return HashHelper.ComputeHash(Symbols);
     }
 
-    public static implicit operator Sentence(List<Symbol> productions)
+    /// <summary>
+    /// Expands pipe macros in the specified symbols.
+    /// </summary>
+    /// <param name="symbols">The symbols to expand.</param>
+    /// <returns>The expanded symbols.</returns>
+    private static ISymbol[] ExpandPipeMacros(ISymbol[] symbols)
     {
-        return new Sentence(productions.ToArray());
-    }
-
-    private static Symbol[] ExpandPipeMacros(Symbol[] symbols)
-    {
-        if (symbols.All(x => x is not AlternativeMacro))
+        if (symbols.All(x => x is not PipeMacro))
         {
             return symbols;
         }
 
         var pipeIndexes = symbols
             .Select((x, i) => (x, i))
-            .Where(x => x.x is AlternativeMacro)
+            .Where(x => x.x is PipeMacro)
             .Select(x => x.i)
             .ToList();
 
@@ -107,118 +202,17 @@ public struct Sentence :
             start = end + 1;
         }
 
-        var alternationMacro = new ExpandedAlternativeMacro(alternatives.ToArray());
+        var alternativeMacro = new AlternativeMacro(alternatives.ToArray());
 
-        return new Symbol[] { alternationMacro };
+        return new ISymbol[] { alternativeMacro };
     }
 
-    public IEnumerator<Symbol> GetEnumerator()
-    {
-        return Symbols.AsEnumerable().GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return Symbols.GetEnumerator();
-    }
-
-    public override string ToString()
-    {
-        return ToNotation(NotationType.Sentential);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is Sentence sentence
-            && sentence.SequenceEqual(this);
-    }
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            int hash = (int)2166136261;
-
-            foreach (var symbol in this)
-            {
-                hash = (hash * 16777619) ^ symbol.GetHashCode();
-            }
-
-            return hash;
-        }
-    }
-
-    public bool Equals(Sentence other)
-    {
-        if(Length != other.Length)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < Length; i++)
-        {
-            if (!this[i].Equals(other[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public bool Equals(Sentence x, Sentence y)
-    {
-        return x.Symbols.SequenceEqual(y.Symbols);
-    }
-
-    public int GetHashCode([DisallowNull] Sentence obj)
-    {
-        return obj.GetHashCode();
-    }
-
+    /// <summary>
+    /// Creates a copy of the current sentence.
+    /// </summary>
+    /// <returns>A new <see cref="Sentence"/> that is a copy of the current sentence.</returns>
     public Sentence Copy()
     {
         return new Sentence(Symbols.ToArray());
     }
-
-    public string ToNotation(NotationType notation)
-    {
-        switch (notation)
-        {
-            case NotationType.Sentential:
-                return ToSententialNotation();
-
-            case NotationType.Bnf:
-                return ToBnfNotation();
-
-            case NotationType.Ebnf:
-                return ToEbnfNotation();
-
-            case NotationType.EbnfKleene:
-                return ToEbnfKleeneNotation();
-        }
-
-        throw new InvalidOperationException("Invalid notation type.");
-    }
-
-    private string ToSententialNotation()
-    {
-        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Sentential)));
-    }
-
-    private string ToBnfNotation()
-    {
-        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Bnf)));
-    }
-
-    private string ToEbnfNotation()
-    {
-        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.Ebnf)));
-    }
-
-    private string ToEbnfKleeneNotation()
-    {
-        return string.Join(" ", this.Select(x => x.ToNotation(NotationType.EbnfKleene)));
-    }
-
 }

@@ -1,94 +1,64 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
-/// Represents a production symbol in a context-free grammar.
+/// Represents a symbol in the language.
 /// </summary>
 public interface ISymbol : IEquatable<ISymbol>
 {
     /// <summary>
-    /// Gets a value indicating whether the production symbol is a terminal symbol.
+    /// Gets the type of the symbol.
     /// </summary>
-    bool IsTerminal { get; }
+    SymbolType Type { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the production symbol is a non-terminal symbol.
+    /// Gets the name of the symbol.
     /// </summary>
-    bool IsNonTerminal { get; }
+    string Name { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the production symbol is an epsilon symbol.
+    /// Returns a string that represents the current symbol.
     /// </summary>
-    bool IsEpsilon { get; }
+    /// <returns>A string that represents the current symbol.</returns>
+    string ToString();
 
     /// <summary>
-    /// Gets a value indicating whether this production symbol is a macro.
+    /// Gets a value based hash for the symbol.
     /// </summary>
-    bool IsMacro { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether the production symbol is an end-of-input symbol.
-    /// </summary>
-    bool IsEoi { get; }
-
-    /// <summary>
-    /// Returns a string representation of the production symbol in the specified notation.
-    /// </summary>
-    /// <param name="notation"></param>
-    /// <returns></returns>
-    string ToNotation(NotationType notation);
+    /// <returns>A signed 32 bit integer hash.</returns>
+    int GetHashCode();
 }
 
 /// <summary>
-/// Abstract base class for production symbols in a context-free grammar.
+/// Represents an abstract base class for symbols.
 /// </summary>
-public abstract class Symbol : ISymbol, IEquatable<Symbol>
+public abstract class Symbol : ISymbol
 {
     /// <summary>
-    /// Gets a value indicating whether the production symbol is a terminal symbol.
+    /// Gets the type of the symbol.
     /// </summary>
-    public abstract bool IsTerminal { get; }
+    public abstract SymbolType Type { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the production symbol is a non-terminal symbol.
+    /// Gets the name of the symbol.
     /// </summary>
-    public abstract bool IsNonTerminal { get; }
+    public abstract string Name { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the production symbol is an epsilon symbol.
+    /// Determines whether the specified symbol is equal to the current symbol.
     /// </summary>
-    public abstract bool IsEpsilon { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether this production symbol is a macro.
-    /// </summary>
-    public abstract bool IsMacro { get; }
-
-    /// <summary>
-    /// Gets a value indicating whether the production symbol is an end-of-input symbol.
-    /// </summary>
-    public abstract bool IsEoi { get; }
-
-    public static bool operator ==(Symbol left, Symbol right)
-    {
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Symbol left, Symbol right)
-    {
-        return !left.Equals(right);
-    }
-
-    public abstract override int GetHashCode();
-    public abstract override bool Equals(object? obj);
-    public abstract bool Equals(Symbol? other);
+    /// <param name="other">The symbol to compare with the current symbol.</param>
+    /// <returns>true if the specified symbol is equal to the current symbol; otherwise, false.</returns>
     public abstract bool Equals(ISymbol? other);
 
     /// <summary>
-    /// Returns a string representation of the production symbol.
+    /// Gets a value based hash for the symbol.
     /// </summary>
-    /// <returns>A string representation of the production symbol.</returns>
+    /// <returns>A signed 32 bit integer hash.</returns>
+    public abstract override int GetHashCode();
+
+    /// <summary>
+    /// Returns a string that represents the current symbol.
+    /// </summary>
+    /// <returns>A string that represents the current symbol.</returns>
     public abstract override string ToString();
-    public abstract string ToNotation(NotationType notation);
 }

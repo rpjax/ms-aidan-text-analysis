@@ -2,45 +2,20 @@
 
 namespace Aidan.TextAnalysis.Language.Extensions;
 
-public static class SymbolExtensions 
-{
-    public static Terminal AsTerminal(this Symbol symbol)
-    {
-        if (symbol is not Terminal terminal)
-        {
-            throw new InvalidCastException("The production symbol is not a terminal symbol.");
-        }
-
-        return terminal;
-    }
-
-    public static NonTerminal AsNonTerminal(this Symbol symbol)
-    {
-        if (symbol is not NonTerminal nonTerminal)
-        {
-            throw new InvalidCastException("The production symbol is not a non-terminal symbol.");
-        }
-
-        return nonTerminal;
-    }
-
-    public static MacroSymbol AsMacro(this Symbol symbol)
-    {
-        if (symbol is not MacroSymbol productionMacro)
-        {
-            throw new InvalidCastException("The production symbol is not a macro.");
-        }
-
-        return productionMacro;
-    }
-
-}
-
+/// <summary>
+/// Provides extension methods for the <see cref="ISymbol"/> interface.
+/// </summary>
 public static class ISymbolExtensions
 {
-    public static Terminal AsTerminal(this ISymbol symbol)
+    /// <summary>
+    /// Converts the symbol to a terminal symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol to convert.</param>
+    /// <returns>The terminal symbol.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the symbol is not a terminal symbol.</exception>
+    public static ITerminal AsTerminal(this ISymbol symbol)
     {
-        if (symbol is not Terminal terminal)
+        if (symbol is not ITerminal terminal)
         {
             throw new InvalidCastException("The production symbol is not a terminal symbol.");
         }
@@ -48,9 +23,15 @@ public static class ISymbolExtensions
         return terminal;
     }
 
-    public static NonTerminal AsNonTerminal(this ISymbol symbol)
+    /// <summary>
+    /// Converts the symbol to a non-terminal symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol to convert.</param>
+    /// <returns>The non-terminal symbol.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the symbol is not a non-terminal symbol.</exception>
+    public static INonTerminal AsNonTerminal(this ISymbol symbol)
     {
-        if (symbol is not NonTerminal nonTerminal)
+        if (symbol is not INonTerminal nonTerminal)
         {
             throw new InvalidCastException("The production symbol is not a non-terminal symbol.");
         }
@@ -58,9 +39,15 @@ public static class ISymbolExtensions
         return nonTerminal;
     }
 
-    public static MacroSymbol AsMacro(this ISymbol symbol)
+    /// <summary>
+    /// Converts the symbol to a macro symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol to convert.</param>
+    /// <returns>The macro symbol.</returns>
+    /// <exception cref="InvalidCastException">Thrown when the symbol is not a macro symbol.</exception>
+    public static IMacroSymbol AsMacro(this ISymbol symbol)
     {
-        if (symbol is not MacroSymbol productionMacro)
+        if (symbol is not IMacroSymbol productionMacro)
         {
             throw new InvalidCastException("The production symbol is not a macro.");
         }
@@ -68,4 +55,47 @@ public static class ISymbolExtensions
         return productionMacro;
     }
 
+    /// <summary>
+    /// Gets a value indicating whether the production symbol is a terminal symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol to check.</param>
+    /// <returns><c>true</c> if the symbol is a terminal symbol; otherwise, <c>false</c>.</returns>
+    public static bool IsTerminal(this ISymbol symbol) => symbol.Type == SymbolType.Terminal;
+
+    /// <summary>
+    /// Gets a value indicating whether the production symbol is a non-terminal symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol to check.</param>
+    /// <returns><c>true</c> if the symbol is a non-terminal symbol; otherwise, <c>false</c>.</returns>
+    public static bool IsNonTerminal(this ISymbol symbol) => symbol.Type == SymbolType.NonTerminal;
+
+    /// <summary>
+    /// Gets a value indicating whether the production symbol is an epsilon symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol to check.</param>
+    /// <returns><c>true</c> if the symbol is an epsilon symbol; otherwise, <c>false</c>.</returns>
+    public static bool IsEpsilon(this ISymbol symbol) => symbol.Type == SymbolType.Epsilon;
+
+    /// <summary>
+    /// Gets a value indicating whether this production symbol is a macro.
+    /// </summary>
+    /// <param name="symbol">The symbol to check.</param>
+    /// <returns><c>true</c> if the symbol is a macro; otherwise, <c>false</c>.</returns>
+    public static bool IsMacro(this ISymbol symbol) => symbol.Type == SymbolType.Macro;
+
+    /// <summary>
+    /// Gets a value indicating whether the production symbol is a pipe macro.
+    /// </summary>
+    /// <param name="symbol">The symbol to check.</param>
+    /// <returns><c>true</c> if the symbol is a pipe macro; otherwise, <c>false</c>.</returns>
+    public static bool IsPipeMacro(this ISymbol symbol) => true
+        && symbol is IMacroSymbol macro
+        && macro.MacroType == MacroType.Pipe;
+
+    /// <summary>
+    /// Gets a value indicating whether the production symbol is an end-of-input symbol.
+    /// </summary>
+    /// <param name="symbol">The symbol to check.</param>
+    /// <returns><c>true</c> if the symbol is an end-of-input symbol; otherwise, <c>false</c>.</returns>
+    public static bool IsEoi(this ISymbol symbol) => symbol.Type == SymbolType.Eoi;
 }

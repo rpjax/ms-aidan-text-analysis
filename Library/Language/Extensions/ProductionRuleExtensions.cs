@@ -1,51 +1,32 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Parsing.LL1.Components;
-using Aidan.TextAnalysis.Parsing.LL1.Tools;
 
 namespace Aidan.TextAnalysis.Language.Extensions;
 
-public static class ProductionRuleExtensions
+/// <summary>
+/// Provides extension methods for the <see cref="IProductionRule"/> interface.
+/// </summary>
+public static class IProductionRuleExtensions
 {
-    public static bool IsEpsilonProduction(this ProductionRule production)
+    /// <summary>
+    /// Determines whether the specified production rule is an epsilon production.
+    /// </summary>
+    /// <param name="production">The production rule to check.</param>
+    /// <returns>true if the production rule is an epsilon production; otherwise, false.</returns>
+    public static bool IsEpsilonProduction(this IProductionRule production)
     {
         return production.Body.Length == 1
-            && production.Body[0] == Epsilon.Instance;
+            && production.Body[0].IsEpsilon();
     }
 
-    public static Symbol? GetLefmostSymbol(this ProductionRule production)
-    {
-        return production.Body
-            .FirstOrDefault();
-    }
-
-    public static Symbol? GetRightmostSymbol(this ProductionRule production)
-    {
-        return production.Body
-            .LastOrDefault();
-    }
-
-    public static NonTerminal? GetLeftmostNonTerminal(this ProductionRule production)
-    {
-        return production.Body
-            .OfType<NonTerminal>()
-            .FirstOrDefault();
-    }
-
-    public static NonTerminal? GetRightmostNonTerminal(this ProductionRule production)
-    {
-        return production.Body
-            .OfType<NonTerminal>()
-            .LastOrDefault();
-    }
-
-    public static Terminal? GetTerminalPrefix(this ProductionRule production)
-    {
-        return production.Body
-            .OfType<Terminal>()
-            .FirstOrDefault();
-    }
-
-    public static int IndexOfSymbol(this ProductionRule production, Symbol symbol)
+    /// <summary>
+    /// Gets the index of the specified symbol in the production rule's body.
+    /// </summary>
+    /// <param name="production">The production rule to search.</param>
+    /// <param name="symbol">The symbol to find.</param>
+    /// <returns>The zero-based index of the symbol if found; otherwise, -1.</returns>
+    public static int IndexOfSymbol(
+        this IProductionRule production,
+        ISymbol symbol)
     {
         var index = -1;
 
@@ -62,32 +43,51 @@ public static class ProductionRuleExtensions
         return index;
     }
 
-    public static bool IsLeftRecursive(this ProductionRule production)
+    /// <summary>
+    /// Expands macros in the production rule using the specified source production rules.
+    /// </summary>
+    /// <param name="production">The production rule to expand.</param>
+    /// <param name="source">The source production rules to use for expansion.</param>
+    /// <returns>An enumerable of expanded production rules.</returns>
+    public static IEnumerable<IProductionRule> ExpandMacros(
+         this IProductionRule production,
+         IEnumerable<IProductionRule> source)
     {
-        return GetLefmostSymbol(production) is NonTerminal nonTerminal
-            && nonTerminal == production.Head;
-    }
+        var transformedSentence = new List<ISymbol>();
+        var generatedProductions = new List<IProductionRule>();
 
-    public static bool IsRightRecursive(this ProductionRule production)
-    {
-        return GetRightmostSymbol(production) is NonTerminal nonTerminal
-            && nonTerminal == production.Head;
-    }
+        foreach (var symbol in production.Body)
+        {
+            if (symbol is not IMacroSymbol macro)
+            {
+                transformedSentence.Add(symbol);
+                continue;
+            }
 
-    public static bool IsUnitProduction(this ProductionRule production)
-    {
-        return production.Body.Length == 1
-            && production.Body[0].IsNonTerminal;
-    }
+            var _source = source.ToList();
+            _source.AddRange(generatedProductions);
+            var set = new ProductionCollection(_source);
 
-    public static LL1FirstSet ComputeFirstSet(this ProductionRule production, ProductionSet set)
-    {
-        return LL1FirstSetTool.ComputeFirstSet(set, production);
-    }
+            var nonTerminal = set.CreateNonTerminalPrime(production.Head);
+            var sentences = macro.Expand(nonTerminal);
+            var productions = sentences
+                .Select(x => new ProductionRule(
+                    head: nonTerminal,
+                    body: x.ToArray()
+                ))
+                .ToArray();
 
-    public static LL1FollowSet ComputeFollowSet(this ProductionRule production, ProductionSet set)
-    {
-        return LL1FollowSetTool.ComputeFollowSet(set, production.Head);
+            transformedSentence.Add(nonTerminal);
+            generatedProductions.AddRange(productions);
+        }
+
+        var transformedProduction = new ProductionRule(
+            head: production.Head,
+            body: transformedSentence
+        );
+
+        return new[] { transformedProduction }
+            .Concat(generatedProductions);
     }
 
 }

@@ -1,5 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Parsing.Components;
+﻿using Aidan.TextAnalysis.Parsing.Tree;
 
 namespace Aidan.TextAnalysis.Parsing.Tools;
 
@@ -16,10 +15,10 @@ public class CstReducer
     /// </summary>
     /// <param name="root"></param>
     /// <param name="nonTerminalWhitelist"></param>
-    public CstReducer(CstRootNode root, string[] nonTerminalWhitelist)
+    public CstReducer(CstRootNode root, IEnumerable<string> nonTerminalWhitelist)
     {
         Root = root;
-        NonTerminalWhitelist = nonTerminalWhitelist;
+        NonTerminalWhitelist = nonTerminalWhitelist.ToArray();
     }
 
     /// <summary>

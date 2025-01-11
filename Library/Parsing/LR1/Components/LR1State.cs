@@ -1,5 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Language.Extensions;
+﻿using Aidan.TextAnalysis.Helpers;
 using System.Collections;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
@@ -7,9 +6,7 @@ namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 /// <summary>
 /// Defines a class that represents an LR(1) state.
 /// </summary>
-public class LR1State :
-   IEquatable<LR1State>,
-   IEnumerable<LR1Item>
+public class LR1State : IEquatable<LR1State>, IEnumerable<LR1Item>
 {
     /// <summary>
     /// Gets the kernel of the LR(1) state.
@@ -25,6 +22,8 @@ public class LR1State :
     /// Gets the items of the LR(1) state.
     /// </summary>
     public LR1Item[] Items { get; }
+
+    private int? HashCache { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LR1State"/> class.
@@ -80,7 +79,7 @@ public class LR1State :
     /// <summary>
     /// Gets the signature of the LR(1) state.
     /// </summary>
-    public string Signature => GetSignature();
+    public string Signature => GetSignature(useLookaheads: true);
 
     /// <summary>
     /// Gets a value indicating whether the LR(1) state is a final state.
@@ -96,7 +95,7 @@ public class LR1State :
     public static string GetSignature(IEnumerable<LR1Item> kernel, bool useLookaheads = true)
     {
         var signatures = kernel
-            .Select(x => x.GetSignature(useLookaheads))
+            .Select(x => x.ComputeSignature(useLookaheads))
             .ToArray();
 
         return string.Join("; ", signatures);
@@ -115,26 +114,17 @@ public class LR1State :
     }
 
     /// <summary>
-    /// Determines whether the LR(1) state is an accepting state.
+    /// Determines whether the specified LR(1) state is equal to the current LR(1) state.
     /// </summary>
-    /// <param name="set">The production set to check against.</param>
-    /// <returns><c>true</c> if the state is an accepting state; otherwise, <c>false</c>.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the production set does not have an augmented production.</exception>
-    public bool IsAcceptingState(ProductionSet set)
+    /// <param name="other">The LR(1) state to compare with the current LR(1) state.</param>
+    /// <returns><c>true</c> if the specified LR(1) state is equal to the current LR(1) state; otherwise, <c>false</c>.</returns>
+    public bool Equals(LR1State? other)
     {
-        if (!IsFinalState)
-        {
-            return false;
-        }
+        return other is not null
+            && other.GetHashCode() == GetHashCode();
 
-        var augmentedProduction = set.TryGetAugmentedStartProduction();
-
-        if (augmentedProduction is null)
-        {
-            throw new InvalidOperationException("The production set does not have an augmented production.");
-        }
-
-        return Kernel[0].Production == augmentedProduction;
+        return other is not null
+            && other.GetSignature(useLookaheads: true) == GetSignature(useLookaheads: true);
     }
 
     /// <summary>
@@ -143,38 +133,13 @@ public class LR1State :
     /// <returns>The hash code for the current LR(1) state.</returns>
     public override int GetHashCode()
     {
-        unchecked
+        if (HashCache is not null)
         {
-            int hash = 17;
-
-            foreach (var item in Kernel)
-            {
-                hash = hash * 23 + item.GetHashCode();
-            }
-
-            return hash;
+            return HashCache.Value;
         }
-    }
 
-    /// <summary>
-    /// Determines whether the specified LR(1) state is equal to the current LR(1) state.
-    /// </summary>
-    /// <param name="other">The LR(1) state to compare with the current LR(1) state.</param>
-    /// <returns><c>true</c> if the specified LR(1) state is equal to the current LR(1) state; otherwise, <c>false</c>.</returns>
-    public bool Equals(LR1State? other)
-    {
-        return other is not null
-            && other.GetSignature(useLookaheads: true) == GetSignature(useLookaheads: true);
-    }
-
-    /// <summary>
-    /// Determines whether the specified object is equal to the current LR(1) state.
-    /// </summary>
-    /// <param name="obj">The object to compare with the current LR(1) state.</param>
-    /// <returns><c>true</c> if the specified object is equal to the current LR(1) state; otherwise, <c>false</c>.</returns>
-    public override bool Equals(object? obj)
-    {
-        return Equals(obj as LR1State);
+        HashCache = HashHelper.ComputeHash(Items);
+        return HashCache.Value;
     }
 
     /*

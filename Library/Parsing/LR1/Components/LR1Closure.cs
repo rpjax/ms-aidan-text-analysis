@@ -9,7 +9,7 @@ public class LR1Closure : LR1ItemCollection
     /// Initializes a new instance of the <see cref="LR1Closure"/> class.
     /// </summary>
     /// <param name="items">The LR(1) items that make up the closure.</param>
-    public LR1Closure(LR1Item[] items) : base(items)
+    public LR1Closure(params LR1Item[] items) : base(items)
     {
     }
 }
