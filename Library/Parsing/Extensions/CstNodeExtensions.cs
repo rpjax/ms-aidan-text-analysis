@@ -143,7 +143,7 @@ public static class CstNodeExtensions
     {
         CstNode? current = node;
 
-        while(true)
+        while (true)
         {
             if (current is null)
             {
@@ -170,7 +170,7 @@ public static class CstNodeExtensions
         var stack = new Stack<CstNode>();
 
         stack.Push(self);
-        
+
         while (stack.TryPop(out var node))
         {
             var children = node.GetChildren();
@@ -194,9 +194,9 @@ public static class CstNodeExtensions
         return leaves.ToArray();
     }
 
-    public static CstLeafNode[] GetAllTerminals(this CstNode self)
+    public static CstNode[] GetAllNodes(this CstNode self)
     {
-        var terminals = new List<CstInternalNode>();
+        var nodes = new List<CstNode>();
         var stack = new Stack<CstNode>();
 
         stack.Push(self);
@@ -204,25 +204,19 @@ public static class CstNodeExtensions
         while (stack.TryPop(out var node))
         {
             var children = node.GetChildren();
-            var terminalChildren = children
-                .Where(x => x.Name == "terminal")
-                .Cast<CstInternalNode>()
-                .ToArray();
 
-            var rest = children
-                .Except(terminalChildren)
-                .ToArray();
-
-            terminals.AddRange(terminalChildren);
-
-            foreach (var item in rest)
+            foreach (var item in children)
             {
+                if (nodes.Contains(item))
+                {
+                    continue;
+                }
+                nodes.Add(item);
                 stack.Push(item);
             }
         }
 
-        return terminals
-            .Select(x => x.Children.First().AsLeaf())
+        return nodes
             .ToArray();
     }
 

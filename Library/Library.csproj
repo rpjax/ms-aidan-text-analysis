@@ -7,7 +7,7 @@
     <RootNamespace>Aidan.TextAnalysis</RootNamespace>
     <PackageId>Aidan.TextAnalysis</PackageId>
     <Title>Parsers and tools</Title>
-    <Version>2.0.0-alpha.2</Version>
+    <Version>2.0.0-alpha.3</Version>
     <Authors>Rodrigo Pazzini Jacques</Authors>
     <Company>Aidan</Company>
     <AssemblyName>Aidan.TextAnalysis</AssemblyName>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aidan.Core" Version="1.4.0" />
+    <PackageReference Include="Aidan.Core" Version="1.5.0" />
   </ItemGroup>
 
   <ItemGroup>

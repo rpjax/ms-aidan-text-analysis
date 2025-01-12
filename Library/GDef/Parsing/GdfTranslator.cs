@@ -67,17 +67,40 @@ public class GDefTranslator
             return Array.Empty<GDefLexeme>();
         }
 
-        var lexemeLiterals = node.Children
-            .Skip(1)
-            .SelectMany(x => x.GetAllTerminals())
-            .Select(x => new { Value = x.GetValue().ToString() })
-            .Select(x => x.Value.Substring(1, x.Value.Length - 2))
+        /* 
+         * What do i need ? 
+         * I want to get all the string literals from the production rules
+         */
+        
+        var terminalLiterals = node.Children
+            .Where(x => x.Name == "production")
+            .SelectMany(x => x.GetAllNodes())
+            .Where(x => x.Name == "terminal")
+            .Select(x => x.GetChildren().ElementAt(0).AsLeaf())
+            .Select(x => x.GetValue().ToString())
+            .Where(x => x != "$")
+            .ToArray();
+
+        var lexemeLiterals = terminalLiterals
+            .Select(x => x.Substring(1, x.Length - 2))
             .Select(x => new GDefLexeme(
                 isIgnored: false,
                 charset: DefaultCharset,
                 name: x,
                 pattern: RegExpr.FromString(x)))
             .ToArray();
+
+        //var lexemeLiterals = node.Children
+        //    .Skip(1)
+        //    .SelectMany(x => x.GetAllTerminals())
+        //    .Select(x => new { Value = x.GetValue().ToString() })
+        //    .Select(x => x.Value.Substring(1, x.Value.Length - 2))
+        //    .Select(x => new GDefLexeme(
+        //        isIgnored: false,
+        //        charset: DefaultCharset,
+        //        name: x,
+        //        pattern: RegExpr.FromString(x)))
+        //    .ToArray();
 
         var lexemeDeclarations = lexerSettings.Children
             .Where(x => x.Name == "lexeme_declaration")

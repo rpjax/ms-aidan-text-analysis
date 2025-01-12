@@ -233,7 +233,7 @@ public class GDefLanguageGrammar : Grammar
 
             /* 
              *   terminal
-             *      : $string | lexeme 
+             *      : $string | lexeme_reference
              *      ;
              */
             new ProductionRule(
