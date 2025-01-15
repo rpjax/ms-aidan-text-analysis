@@ -1,6 +1,6 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Parsing;
+using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Tree;
 

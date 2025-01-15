@@ -40,7 +40,7 @@ public class OldToken : ITokenLegacy
 
     public override string ToString()
     {
-        if(Type == TokenType.Eoi)
+        if (Type == TokenType.Eoi)
         {
             return "EOI";
         }

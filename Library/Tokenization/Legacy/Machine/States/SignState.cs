@@ -1,5 +1,5 @@
-﻿using Aidan.TextAnalysis.Tokenization.Components;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.Machine;
 
@@ -8,7 +8,7 @@ public class SignState : IState
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ITransitionResult GetStateTransition(char? c)
     {
-        if(c is null)
+        if (c is null)
         {
             return new TransitionResult(TokenizerState.Punctuation, TokenizerAction.None);
         }

@@ -1,5 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Components;

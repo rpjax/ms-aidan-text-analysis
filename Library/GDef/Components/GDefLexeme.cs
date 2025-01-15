@@ -11,9 +11,9 @@ public class GDefLexeme
     public RegExpr Pattern { get; }
 
     public GDefLexeme(
-        bool isIgnored, 
-        Charset charset, 
-        string name, 
+        bool isIgnored,
+        Charset charset,
+        string name,
         RegExpr pattern)
     {
         IsIgnored = isIgnored;

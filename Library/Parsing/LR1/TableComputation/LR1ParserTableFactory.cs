@@ -1,10 +1,9 @@
-﻿using Aidan.Core;
-using Aidan.Core.Errors;
+﻿using Aidan.Core.Errors;
 using Aidan.Core.Exceptions;
+using Aidan.Core.Patterns;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
-using System;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.TableComputation;
 
@@ -178,12 +177,12 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
                 var e = new Exception();
 
                 var error = Error.Create()
-                    .WithTitle($"A {typesStr} conflict was found on state {GetStateId(state)} for the symbol {item.Key}.")
+                    .WithMessage($"A {typesStr} conflict was found on state {GetStateId(state)} for the symbol {item.Key}.")
                     .WithDetail("State Items", state.ToString())
                     .Build();
 
                 errors.Add(error);
-            }         
+            }
 
             throw new ErrorException(errors);
         }
@@ -228,7 +227,7 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
             var nextStateId = GetStateIdByKernel(gotoKernel);
 
             var keyValuePair = new KeyValuePair<ISymbol, LR1Action>(
-                key: symbol, 
+                key: symbol,
                 value: new LR1ShiftAction(nextStateId));
 
             actions.Add(keyValuePair);
@@ -262,7 +261,7 @@ public class LR1ParserTableFactory : IFactory<LR1ParserTable>
         if (isAcceptingState)
         {
             var acceptAction = new KeyValuePair<ISymbol, LR1Action>(
-                key: Eoi.Instance, 
+                key: Eoi.Instance,
                 value: new LR1AcceptAction());
 
             actions.Add(acceptAction);

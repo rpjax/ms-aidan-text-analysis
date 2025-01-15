@@ -13,7 +13,7 @@ public class FloatNumberState : IState
         {
             return new TransitionResult(TokenizerState.None, TokenizerAction.Read);
         }
-       
+
         return new TokenResult(TokenizerState.Initial, TokenType.Float);
     }
 }

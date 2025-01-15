@@ -1,5 +1,4 @@
-﻿using Aidan.Core;
-using Aidan.Core.Errors;
+﻿using Aidan.Core.Errors;
 using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.Experimental;
@@ -11,7 +10,7 @@ public interface ICharacterStream
     bool Advance();
     ICharacterStream Fork();
 }
-    
+
 public interface ITokenStream
 {
     ref ITokenLegacy? Peek(int offset);
@@ -39,7 +38,7 @@ public class CharacterStream : ICharacterStream
     {
         throw new NotImplementedException();
     }
-        
+
     public bool Advance()
     {
         throw new NotImplementedException();
@@ -78,7 +77,7 @@ public interface ITokenizerController
 
 public interface ITokenizerState
 {
-    
+
 }
 
 public class FastTokenizer : ITokenizer

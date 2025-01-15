@@ -31,9 +31,9 @@ public class StringState : IState
             return new TransitionResult(TokenizerState.None, TokenizerAction.Error);
         }
 
-        if(c == TokenizerAlphabet.Escape && !IsEscapedState)
+        if (c == TokenizerAlphabet.Escape && !IsEscapedState)
         {
-            IsEscapedState = true; 
+            IsEscapedState = true;
             return new TransitionResult(TokenizerState.None, TokenizerAction.Skip);
         }
 

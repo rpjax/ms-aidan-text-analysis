@@ -1,5 +1,5 @@
-﻿using Aidan.Core.Patterns;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+using Aidan.Core.Patterns;
 
 namespace Aidan.TextAnalysis.Tokenization.Experimental.RegexTokenization;
 
@@ -203,7 +203,7 @@ public class RegexTokenizer : IStringTokenizer
             {
                 var value = context.GetTokenValue();
                 var metadata = context.GetTokenMetadata();
-                    
+
                 yield return new Token(
                     type: "TODO",
                     value: value,

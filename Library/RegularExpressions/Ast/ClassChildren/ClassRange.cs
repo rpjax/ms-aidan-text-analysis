@@ -5,7 +5,7 @@ public class ClassRange : ClassChild
     public char Start { get; }
     public char End { get; }
 
-    public ClassRange(char start, char end) 
+    public ClassRange(char start, char end)
         : base(ClassChildType.CharacterRange)
     {
         Start = start;
@@ -25,18 +25,18 @@ public class ClassRange : ClassChild
     public override bool Equals(ClassChild? other)
     {
         return other is ClassRange range
-            && range.Start == Start 
+            && range.Start == Start
             && range.End == End;
     }
 
     public override IEnumerable<char> GetLiterals()
     {
-        var start = (int) Start;
-        var end = (int) End;
+        var start = (int)Start;
+        var end = (int)End;
 
         for (int i = start; i <= end; i++)
         {
-            yield return (char) i;
+            yield return (char)i;
         }
     }
 }

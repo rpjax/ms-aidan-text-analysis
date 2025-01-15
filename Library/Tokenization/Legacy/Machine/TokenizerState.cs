@@ -80,7 +80,7 @@ public enum TokenizerState
     /*
     * comments states.
     */
-    
+
     CppStyleCommentStart,
     CppStyleSingleLineComment,
     CppStyleMultiLineComment,

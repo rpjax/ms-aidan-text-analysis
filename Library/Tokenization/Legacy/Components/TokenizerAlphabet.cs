@@ -60,7 +60,7 @@ public static class TokenizerAlphabet
     {
         var type = LookupCharType(c);
 
-        return type == CharType.Digit 
+        return type == CharType.Digit
             || type == CharType.Letter;
     }
 

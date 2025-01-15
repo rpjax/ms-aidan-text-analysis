@@ -1,11 +1,11 @@
-﻿using Aidan.TextAnalysis.Tokenization.Components;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.Machine;
 
 public class SingleQuoteStringState : IState
 {
-    public SingleQuoteStringState() 
+    public SingleQuoteStringState()
     {
     }
 
@@ -17,7 +17,7 @@ public class SingleQuoteStringState : IState
             return new TransitionResult(TokenizerState.None, TokenizerAction.Error);
         }
 
-        if(c == TokenizerAlphabet.Escape)
+        if (c == TokenizerAlphabet.Escape)
         {
             //return new TransitionResult(TokenizerState.SingleQuoteStringEscape, TokenizerAction.Skip);
             return new TransitionResult(TokenizerState.SingleQuoteStringEscape, TokenizerAction.Read);

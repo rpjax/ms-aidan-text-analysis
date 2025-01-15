@@ -1,7 +1,6 @@
-﻿using Aidan.TextAnalysis.Helpers;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Helpers;
 using Aidan.TextAnalysis.Tokenization.Helpers;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 
 namespace Aidan.TextAnalysis.Tokenization.Extensions;
 
@@ -9,7 +8,7 @@ public static class TokenExtensions
 {
     public static string GetNormalizedStringValue(this OldToken token)
     {
-        if(token.Type != TokenType.String)
+        if (token.Type != TokenType.String)
         {
             throw new ArgumentException("Token is not a string token.");
         }
@@ -29,7 +28,7 @@ public static class TokenExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint ComputeFnv1aHash(this OldToken token, bool useValue = false)
     {
-        var value = useValue 
+        var value = useValue
             ? $"{TokenTypeHelper.ToString(token.Type)}{token.Value}"
             : TokenTypeHelper.ToString(token.Type);
 

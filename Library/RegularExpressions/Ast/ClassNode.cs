@@ -1,5 +1,5 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using System.Text;
+﻿using System.Text;
+using Aidan.TextAnalysis.Language.Components;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Tree;
 
@@ -52,7 +52,7 @@ public class ClassNode : RegExpr
         var sb = new StringBuilder();
 
         sb.Append('[');
-        
+
         if (IsNegated)
         {
             sb.Append('^');

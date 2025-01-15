@@ -10,7 +10,7 @@ public class TokenizerTable : ITokenizerTable
     /// <summary>
     /// The maximum allowed state ID.
     /// </summary>
-    public const uint MaxStateId = (uint) short.MaxValue;
+    public const uint MaxStateId = (uint)short.MaxValue;
 
     /// <summary>
     /// The maximum number of states allowed.

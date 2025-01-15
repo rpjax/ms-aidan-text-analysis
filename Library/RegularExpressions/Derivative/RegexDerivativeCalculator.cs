@@ -1,6 +1,6 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Tree;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
-using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Derivative;
 
@@ -39,7 +39,7 @@ public class RegexDerivativeCalculator
     {
         History = new CalculatorHistory();
     }
-  /// <summary>
+    /// <summary>
     /// Calculates the derivative of the given regular expression node with respect to the specified character.
     /// </summary>
     /// <param name="node">The regular expression node.</param>

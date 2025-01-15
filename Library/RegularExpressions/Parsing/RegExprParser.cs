@@ -26,7 +26,7 @@ public static class RegExprParser
 
     public static RegExpr Parse(string pattern, Charset charset)
     {
-        var parser = GetParser(); 
+        var parser = GetParser();
         var cst = parser.Parse(pattern);
         var reducer = new CstReducer(cst, ReduceWhitelist);
         var reducedCst = reducer.Execute();

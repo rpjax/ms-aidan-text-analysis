@@ -78,7 +78,7 @@ public enum CharSpecificType
     m,
     n,
     o,
-    p,  
+    p,
     q,
     r,
     s,

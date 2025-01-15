@@ -1,10 +1,10 @@
-﻿using Aidan.TextAnalysis.Language.Components;
+﻿using System.Collections;
+using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.Components;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.Components;
-using System.Collections;
-using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Parsing.Tree;
 

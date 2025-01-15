@@ -1,5 +1,5 @@
-﻿using Aidan.TextAnalysis.Tokenization.Components;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.Machine;
 
@@ -13,8 +13,8 @@ public class IdentifierState : IState
             return new TokenResult(TokenizerState.Initial, TokenType.Identifier);
         }
 
-        var isValidChar = false 
-            || TokenizerAlphabet.IsDigitOrLetter(c.Value) 
+        var isValidChar = false
+            || TokenizerAlphabet.IsDigitOrLetter(c.Value)
             || TokenizerAlphabet.IsUnderline(c.Value)
             || c == '′'
             ;

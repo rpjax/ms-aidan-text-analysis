@@ -1,7 +1,4 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using Aidan.TextAnalysis.Tokenization.Components;
-using Aidan.TextAnalysis.Tokenization.Experimental;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine.Builders;

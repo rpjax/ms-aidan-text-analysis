@@ -1,5 +1,5 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Language.Components;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 

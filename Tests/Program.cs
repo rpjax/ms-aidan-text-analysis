@@ -1,5 +1,5 @@
-﻿using Aidan.TextAnalysis.GDef;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Aidan.TextAnalysis.GDef;
 
 namespace Aidan.TextAnalysis.Tests;
 
@@ -35,7 +35,7 @@ assignment: 'var' $id '=' $id;
             ignoredChars: new char[] { '\0', '\n', ' ' });
 
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
-        var jsonGrammar = GDefService.CreateLR1Parser(rawJsonGrammar, ignoredChars);
+        var jsonParser = GDefService.CreateLR1Parser(rawJsonGrammar, ignoredChars);
 
         return;
 

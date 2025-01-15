@@ -1,6 +1,6 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Tree;
+﻿using Aidan.TextAnalysis.RegularExpressions.Derivative;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
-using Aidan.TextAnalysis.RegularExpressions.Derivative;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 
@@ -25,7 +25,7 @@ public class LexemeRegex : IEquatable<LexemeRegex>
     /// <param name="name">The name of the lexeme regex.</param>
     /// <param name="regex">The regex node of the lexeme regex.</param>
     public LexemeRegex(
-        string name, 
+        string name,
         RegExpr regex)
     {
         Name = name;

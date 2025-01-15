@@ -19,14 +19,14 @@ public class LR1Stack
 
     public int PeekState()
     {
-        if(Stack.Count == 0)
+        if (Stack.Count == 0)
         {
             throw new InvalidOperationException("The stack is empty.");
         }
 
         var state = Stack.Peek();
 
-        if(state is int _int)
+        if (state is int _int)
         {
             return _int;
         }
@@ -51,7 +51,7 @@ public class LR1Stack
 
     public void Pop()
     {
-        if(Stack.Count == 0)
+        if (Stack.Count == 0)
         {
             throw new InvalidOperationException("The stack is empty.");
         }

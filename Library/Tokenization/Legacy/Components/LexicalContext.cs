@@ -1,7 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Tokenization.Helpers;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Tokenization.Components;
 
@@ -35,7 +32,7 @@ public class LexicalContext : IDisposable
 
     public void Dispose()
     {
-      
+
     }
 
     /// <summary>

@@ -1,5 +1,4 @@
 ﻿using Aidan.TextAnalysis.GDef.Components;
-using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Automata;

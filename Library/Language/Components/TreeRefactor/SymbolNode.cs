@@ -1,7 +1,4 @@
-﻿using Aidan.TextAnalysis.Parsing.LR1.Components;
-using System.Xml.Linq;
-
-namespace Aidan.TextAnalysis.Language.Components.TreeRefactor;
+﻿namespace Aidan.TextAnalysis.Language.Components.TreeRefactor;
 
 public enum SymbolNodeType
 {
@@ -29,7 +26,7 @@ public abstract class SymbolNode
 
     public abstract override string ToString();
     public abstract bool ProducesEpsilon();
-    
+
 
     //public abstract IReadOnlyList<SymbolNode> GetChildren();
 
@@ -283,7 +280,7 @@ public class LRItem
     public SymbolNode SymbolAtCurrentPosition => GetSymbolAtPosition(Position);
 
     public LRItem(
-        NonTerminalNode nonTerminal, 
+        NonTerminalNode nonTerminal,
         uint position,
         IEnumerable<TerminalNode> lookaheads)
     {
@@ -337,7 +334,7 @@ public class LRItem
     {
         if (position >= NonTerminal.Children.Length)
         {
-            return null;    
+            return null;
         }
 
         return NonTerminal.Children[position];

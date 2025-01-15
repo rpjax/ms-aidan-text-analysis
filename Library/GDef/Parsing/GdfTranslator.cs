@@ -1,5 +1,4 @@
-﻿using Aidan.Core;
-using Aidan.Core.Errors;
+﻿using Aidan.Core.Errors;
 using Aidan.Core.Exceptions;
 using Aidan.TextAnalysis.GDef.Components;
 using Aidan.TextAnalysis.GDef.Tokenization;
@@ -71,7 +70,7 @@ public class GDefTranslator
          * What do i need ? 
          * I want to get all the string literals from the production rules
          */
-        
+
         var terminalLiterals = node.Children
             .Where(x => x.Name == "production")
             .SelectMany(x => x.GetAllNodes())
@@ -120,7 +119,7 @@ public class GDefTranslator
         if (nameGroups.Any())
         {
             var builder = Error.Create()
-                .WithTitle("Duplicate lexemes.");
+                .WithMessage("Duplicate lexemes.");
 
             foreach (var nameGroup in nameGroups)
             {

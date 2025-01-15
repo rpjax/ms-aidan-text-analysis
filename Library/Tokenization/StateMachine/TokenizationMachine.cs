@@ -1,5 +1,5 @@
-﻿using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine;
 
@@ -136,7 +136,7 @@ internal class TokenizationMachine
             /* lookup next state */
             TokenizerState? nextState = Table.LookUp(CurrentState.Id, Character);
 
-            if(nextState is null && CurrentState.IsRecursiveOnNoTransition)
+            if (nextState is null && CurrentState.IsRecursiveOnNoTransition)
             {
                 GoToState(CurrentState);
                 continue;

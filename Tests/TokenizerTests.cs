@@ -2,10 +2,10 @@
 using Aidan.TextAnalysis.GDef;
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Extensions;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
-using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
+using Aidan.TextAnalysis.RegularExpressions.Tree;
 using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
 namespace Aidan.TextAnalysis.Tests;
 

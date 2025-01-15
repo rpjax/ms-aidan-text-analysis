@@ -8,7 +8,7 @@ public class TableTransitionBuilder : TableTransitionBuilderBase<TableTransition
 
     public TableTransitionBuilder(
         TokenizerBuilder builder,
-        TokenizerState currentState) 
+        TokenizerState currentState)
         : base(
             currentState: currentState,
             charset: builder.GetCharset())

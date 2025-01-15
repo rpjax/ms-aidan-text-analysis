@@ -1,14 +1,12 @@
-﻿using Aidan.Core.Exceptions;
-using Aidan.Core;
+﻿using System.Runtime.CompilerServices;
+using Aidan.Core.Errors;
+using Aidan.Core.Exceptions;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
-using Aidan.TextAnalysis.Parsing.Components;
 using Aidan.TextAnalysis.Parsing.Core;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
-using Aidan.TextAnalysis.Tokenization;
-using System.Runtime.CompilerServices;
 using Aidan.TextAnalysis.Parsing.Tree;
-using Aidan.Core.Errors;
+using Aidan.TextAnalysis.Tokenization;
 
 namespace Aidan.TextAnalysis.Parsing.LR1;
 
@@ -34,8 +32,8 @@ public class LR1Parser : IStringParser
     /// <param name="tokenizer"> The lexer to tokenize the input text. </param>
     /// <param name="ignoredTokenTypes"> The set of token types to ignore. </param>
     public LR1Parser(
-        IGrammar grammar, 
-        IStringTokenizer tokenizer, 
+        IGrammar grammar,
+        IStringTokenizer tokenizer,
         string[]? ignoredTokenTypes = null)
     {
         Grammar = grammar;
@@ -52,11 +50,11 @@ public class LR1Parser : IStringParser
     public CstRootNode Parse(string text)
     {
         var tokens = Tokenizer.Tokenize(text);
-            
+
         using var inputStream = new LR1InputStream(
             tokens: tokens,
             ignoreSet: IgnoredTokenTypes);
-            
+
         var stack = new LR1ParserStack();
 
         var cstBuilder = new CstBuilder(
@@ -104,7 +102,7 @@ public class LR1Parser : IStringParser
         {
             // Build a detailed error using the Error class
             var error = Error.Create()
-                .WithTitle("Syntax Error")
+                .WithMessage("Syntax Error")
                 .WithDescription($"No action found in parsing table for state {currentState} and lookahead symbol '{lookahead}'.")
                 .WithDetail("Current State", currentState.ToString())
                 .WithDetail("Lookahead Symbol", lookahead.ToString())

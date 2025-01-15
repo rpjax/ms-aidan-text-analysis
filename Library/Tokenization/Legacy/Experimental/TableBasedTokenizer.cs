@@ -1,7 +1,4 @@
-﻿using Aidan.TextAnalysis.Tokenization.Components;
-using Aidan.TextAnalysis.Tokenization.Machine;
-
-namespace Aidan.TextAnalysis.Tokenization.Experimental;
+﻿namespace Aidan.TextAnalysis.Tokenization.Experimental;
 
 //*
 //* first aproach
@@ -51,7 +48,7 @@ namespace Aidan.TextAnalysis.Tokenization.Experimental;
 
 //    public TableBasedTokenizer()
 //    {
-      
+
 //    }
 
 //    public static string GetStateKey(string currentState, string? pattern)

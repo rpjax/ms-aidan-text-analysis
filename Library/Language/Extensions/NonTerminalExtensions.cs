@@ -1,6 +1,6 @@
-﻿using Aidan.TextAnalysis.Helpers;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Helpers;
 using Aidan.TextAnalysis.Language.Components;
-using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Language.Extensions;
 
