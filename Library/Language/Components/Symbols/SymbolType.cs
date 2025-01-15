@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Language.Components;
+﻿namespace Aidan.TextAnalysis.Language.Components.Symbols;
 
 /// <summary>
 /// Specifies the types of symbols used in text analysis.

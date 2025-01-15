@@ -1,4 +1,5 @@
-﻿using Aidan.TextAnalysis.Parsing.Tree;
+﻿using Aidan.TextAnalysis.Parsing.Tools;
+using Aidan.TextAnalysis.Parsing.Tree;
 
 namespace Aidan.TextAnalysis.Parsing.Extensions;
 

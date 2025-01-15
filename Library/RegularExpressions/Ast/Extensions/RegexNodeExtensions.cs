@@ -1,7 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
 using Aidan.TextAnalysis.RegularExpressions.Derivative;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 
 /// <summary>
 /// Provides extension methods for <see cref="RegExpr"/>.

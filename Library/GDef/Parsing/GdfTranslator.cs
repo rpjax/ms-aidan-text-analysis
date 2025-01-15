@@ -3,11 +3,13 @@ using Aidan.Core.Exceptions;
 using Aidan.TextAnalysis.GDef.Components;
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
+using Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 using Aidan.TextAnalysis.Parsing.Extensions;
 using Aidan.TextAnalysis.Parsing.Tree;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 
-namespace Aidan.TextAnalysis.GDef;
+namespace Aidan.TextAnalysis.GDef.Parsing;
 
 /// <summary>
 /// Represents a translator for converting a Concrete Syntax Tree (CST) to a grammar.

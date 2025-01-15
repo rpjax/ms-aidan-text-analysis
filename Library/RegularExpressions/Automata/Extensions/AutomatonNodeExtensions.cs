@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
+
+namespace Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
 
 /// <summary>
 /// Provides extension methods for <see cref="AutomatonState"/> and <see cref="LexemeRegex"/>.

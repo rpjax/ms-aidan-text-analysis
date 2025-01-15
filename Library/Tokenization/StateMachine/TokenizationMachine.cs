@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Tokenization.Components;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
 namespace Aidan.TextAnalysis.Tokenization.StateMachine;

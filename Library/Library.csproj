@@ -15,11 +15,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Tokenization\Lexers\**" />
+    <EmbeddedResource Remove="Tokenization\Lexers\**" />
+    <None Remove="Tokenization\Lexers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Aidan.Core" Version="1.6.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Tokenization\Lexers\GenericLexer\" />
+    <Folder Include="Tokenization\Extensions\" />
   </ItemGroup>
 
 </Project>

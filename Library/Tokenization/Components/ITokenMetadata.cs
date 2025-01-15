@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Tokenization;
+﻿namespace Aidan.TextAnalysis.Tokenization.Components;
 
 /// <summary>
 /// Provides metadata information for a token.

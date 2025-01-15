@@ -1,8 +1,8 @@
-﻿using Aidan.TextAnalysis.GDef;
+﻿using Aidan.TextAnalysis.GDef.Parsing;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tools;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Parsing;
 

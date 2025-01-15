@@ -2,9 +2,10 @@
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
+using Aidan.TextAnalysis.RegularExpressions.Automata.AutomatonComputation;
 using Aidan.TextAnalysis.Tokenization;
 
-namespace Aidan.TextAnalysis.GDef;
+namespace Aidan.TextAnalysis.GDef.Parsing;
 
 public class GDefService
 {

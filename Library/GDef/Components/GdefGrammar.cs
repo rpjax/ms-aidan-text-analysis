@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 
 namespace Aidan.TextAnalysis.GDef.Components;
 

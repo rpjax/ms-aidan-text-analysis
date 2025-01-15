@@ -1,7 +1,9 @@
 ﻿using Aidan.Core.Patterns;
 using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.ClassChildren;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Automata.AutomatonComputation;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 

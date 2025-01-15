@@ -1,4 +1,6 @@
-namespace Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols.Macros;
+
+namespace Aidan.TextAnalysis.Language.Components.Symbols;
 
 /// <summary>
 /// Represents a macro symbol within a context-free grammar. <br/>

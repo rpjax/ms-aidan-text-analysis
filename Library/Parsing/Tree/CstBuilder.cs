@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.Components;
-using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Parsing.Tree;

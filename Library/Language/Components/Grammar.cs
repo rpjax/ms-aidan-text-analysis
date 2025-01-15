@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 
 namespace Aidan.TextAnalysis.Language.Components;
 

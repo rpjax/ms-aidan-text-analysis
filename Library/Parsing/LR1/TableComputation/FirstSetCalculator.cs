@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 using Aidan.TextAnalysis.Language.Extensions;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.TableComputation;

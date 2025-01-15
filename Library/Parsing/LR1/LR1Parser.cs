@@ -55,7 +55,7 @@ public class LR1Parser : IStringParser
             tokens: tokens,
             ignoreSet: IgnoredTokenTypes);
 
-        var stack = new LR1ParserStack();
+        var stack = new LR1Stack();
 
         var cstBuilder = new CstBuilder(
             includeEpsilons: false

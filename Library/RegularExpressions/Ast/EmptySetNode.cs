@@ -1,6 +1,7 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
 /// Represents an empty set node in a regex, which matches nothing (∅).

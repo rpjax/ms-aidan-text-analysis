@@ -1,13 +1,13 @@
 ﻿using Aidan.Core.Patterns;
-using Aidan.TextAnalysis.GDef;
+using Aidan.TextAnalysis.GDef.Parsing;
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
-namespace Aidan.TextAnalysis.Tests;
+namespace Tests;
 
 public class DebugTokenizerBuilder : IBuilder<Tokenizer>
 {

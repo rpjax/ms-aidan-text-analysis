@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
 
 /// <summary>
 /// Represents a node in an automaton used for regular expression analysis.

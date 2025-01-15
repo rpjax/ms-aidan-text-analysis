@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Tokenization;
+﻿using Aidan.TextAnalysis.Tokenization.Components;
+
+namespace Aidan.TextAnalysis.Tokenization;
 
 /// <summary>
 /// Represents a string tokenizer.

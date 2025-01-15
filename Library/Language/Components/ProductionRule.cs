@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using Aidan.TextAnalysis.Helpers;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 using Aidan.TextAnalysis.Language.Extensions;
 
 namespace Aidan.TextAnalysis.Language.Components;

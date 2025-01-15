@@ -1,6 +1,6 @@
-﻿using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Language.Components.Symbols;
 
-namespace Aidan.TextAnalysis.Tokenization;
+namespace Aidan.TextAnalysis.Tokenization.Components;
 
 /// <summary>
 /// Represents a new token produced by the lexical Analyzer, using a lexeme production rule.

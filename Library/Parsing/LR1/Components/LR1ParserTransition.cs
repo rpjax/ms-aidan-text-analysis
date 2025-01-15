@@ -1,4 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Language.Components.Symbols;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 

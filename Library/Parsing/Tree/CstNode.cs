@@ -1,5 +1,5 @@
 ﻿using Aidan.Core.Patterns;
-using Aidan.TextAnalysis.Tokenization;
+using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Parsing.Tree;
 

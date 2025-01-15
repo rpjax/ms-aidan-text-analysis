@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
+
+namespace Aidan.TextAnalysis.RegularExpressions.Automata;
 
 /// <summary>
 /// Represents a deterministic finite automaton (DFA) for regular expressions.

@@ -1,9 +1,10 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Derivative;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+namespace Aidan.TextAnalysis.RegularExpressions.Automata.AutomatonComputation;
 
 /// <summary>
 /// Responsible for calculating the DFA (Deterministic Finite Automaton) from a set of lexemes and ignored characters.

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 
-namespace Aidan.TextAnalysis.Tests;
+namespace Tests;
 
 public class Benchmark
 {

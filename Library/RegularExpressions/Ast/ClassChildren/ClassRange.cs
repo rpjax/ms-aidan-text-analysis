@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Ast.ClassChildren;
 
 public class ClassRange : ClassChild
 {

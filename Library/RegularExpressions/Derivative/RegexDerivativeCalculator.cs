@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Derivative;
 

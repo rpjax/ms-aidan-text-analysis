@@ -1,8 +1,8 @@
-﻿using Aidan.TextAnalysis.RegularExpressions.Derivative;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Derivative;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+namespace Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
 
 /// <summary>
 /// Represents a lexeme regular expression with a name and a regex node.

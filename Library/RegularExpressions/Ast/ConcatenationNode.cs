@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
+
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
 /// Represents a concatenation node in a regex, matching a sequence of patterns.

@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Language;
+﻿namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
 /// Provides constants for Greek letters.

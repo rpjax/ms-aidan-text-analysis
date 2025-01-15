@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
-using Aidan.TextAnalysis.GDef;
+using Aidan.TextAnalysis.GDef.Parsing;
 
-namespace Aidan.TextAnalysis.Tests;
+namespace Tests;
 
 public static class Program
 {

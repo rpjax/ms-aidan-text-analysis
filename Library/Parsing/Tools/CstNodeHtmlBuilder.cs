@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Aidan.TextAnalysis.Parsing.Tree;
 
-namespace Aidan.TextAnalysis.Parsing.Extensions;
+namespace Aidan.TextAnalysis.Parsing.Tools;
 
 public class CstNodeHtmlBuilder
 {

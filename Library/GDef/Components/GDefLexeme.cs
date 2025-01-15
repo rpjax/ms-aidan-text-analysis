@@ -1,5 +1,5 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 
 namespace Aidan.TextAnalysis.GDef.Components;
 
