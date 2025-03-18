@@ -1,6 +1,6 @@
 ﻿using Aidan.TextAnalysis.Helpers;
 
-namespace Aidan.TextAnalysis.Language.Components;
+namespace Aidan.TextAnalysis.Language.Components.Symbols;
 
 /// <summary>
 /// Represents an epsilon(ε) symbol in a context-free grammar.

@@ -1,7 +1,8 @@
-﻿using Aidan.TextAnalysis.Helpers;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Helpers;
 using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 using Aidan.TextAnalysis.Language.Extensions;
-using System.Runtime.CompilerServices;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 

@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.Language.Components.Symbols;
+
+namespace Aidan.TextAnalysis.Language.Components;
 
 /// <summary>
 /// Provides a way to compare two <see cref="ISymbol"/> objects for equality.

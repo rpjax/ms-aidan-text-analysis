@@ -1,4 +1,6 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
+
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 /// <summary>
 /// Represents a union node in a regex, matching either of two patterns.

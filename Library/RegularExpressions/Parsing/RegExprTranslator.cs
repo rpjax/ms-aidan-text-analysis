@@ -1,9 +1,9 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.Parsing.Components;
+﻿using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.Extensions;
 using Aidan.TextAnalysis.Parsing.Tree;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using System.Runtime.CompilerServices;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.ClassChildren;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Parsing;
 
@@ -14,7 +14,7 @@ public class RegExprTranslator
     private Dictionary<char, char> EscapedCharsMap { get; }
 
     public RegExprTranslator(
-        Charset charset, 
+        Charset charset,
         Dictionary<string, RegExpr>? fragments)
     {
         Charset = charset;
@@ -131,7 +131,7 @@ public class RegExprTranslator
             throw new InvalidOperationException();
         }
 
-        return RegExpr.Concatenation(quantifiers);      
+        return RegExpr.Concatenation(quantifiers);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

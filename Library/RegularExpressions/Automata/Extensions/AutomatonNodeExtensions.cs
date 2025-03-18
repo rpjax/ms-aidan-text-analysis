@@ -1,4 +1,4 @@
-﻿using Aidan.TextAnalysis.Language.Components;
+﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
 

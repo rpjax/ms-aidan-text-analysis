@@ -1,6 +1,6 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast.ClassChildren;
 
 public class ClassSet : ClassChild
 {

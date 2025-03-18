@@ -1,5 +1,6 @@
 ﻿using Aidan.Core.Extensions;
 using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 
 namespace Aidan.TextAnalysis.Language.Extensions;
 

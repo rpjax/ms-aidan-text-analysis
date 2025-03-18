@@ -1,5 +1,5 @@
-﻿using Aidan.TextAnalysis.Helpers;
-using System.Collections;
+﻿using System.Collections;
+using Aidan.TextAnalysis.Helpers;
 
 namespace Aidan.TextAnalysis.Parsing.LR1.Components;
 

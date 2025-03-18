@@ -1,7 +1,7 @@
 using Aidan.TextAnalysis.Helpers;
 using Aidan.TextAnalysis.Language.Extensions;
 
-namespace Aidan.TextAnalysis.Language.Components;
+namespace Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 
 /// <summary>
 /// Represents a repetition macro. It is analoguous to EBNF's "{ }" operator.

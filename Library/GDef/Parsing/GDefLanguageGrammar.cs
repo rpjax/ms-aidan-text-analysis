@@ -1,7 +1,9 @@
 using Aidan.TextAnalysis.GDef.Tokenization;
 using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
+using Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 
-namespace Aidan.TextAnalysis.GDef;
+namespace Aidan.TextAnalysis.GDef.Parsing;
 
 /// <summary>
 /// Represents the grammar for the Grammar Definition Format (GDef).
@@ -233,7 +235,7 @@ public class GDefLanguageGrammar : Grammar
 
             /* 
              *   terminal
-             *      : $string | lexeme 
+             *      : $string | lexeme_reference
              *      ;
              */
             new ProductionRule(

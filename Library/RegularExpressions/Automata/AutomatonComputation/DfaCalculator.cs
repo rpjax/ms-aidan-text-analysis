@@ -1,10 +1,10 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using Aidan.TextAnalysis.RegularExpressions.Tree.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Extensions;
 using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+using Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
 using Aidan.TextAnalysis.RegularExpressions.Derivative;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+namespace Aidan.TextAnalysis.RegularExpressions.Automata.AutomatonComputation;
 
 /// <summary>
 /// Responsible for calculating the DFA (Deterministic Finite Automaton) from a set of lexemes and ignored characters.
@@ -99,7 +99,7 @@ public class DfaCalculator
 
         var lexemes = state.Regexes;
         var transitions = new List<AutomatonTransition>();
-        
+
         foreach (var c in state.ComputeAlphabet())
         {
             var derivatives = lexemes
@@ -138,7 +138,7 @@ public class DfaCalculator
     /// <param name="c">The character to derive with respect to.</param>
     /// <returns>A <see cref="RegExpr"/> representing the derivative of the regex.</returns>
     private RegExpr ComputeDerivative(
-        RegExpr regex, 
+        RegExpr regex,
         char c)
     {
         var calculator = new RegexDerivativeCalculator();

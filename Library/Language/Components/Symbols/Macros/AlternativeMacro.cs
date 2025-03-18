@@ -1,6 +1,6 @@
 using Aidan.TextAnalysis.Helpers;
 
-namespace Aidan.TextAnalysis.Language.Components;
+namespace Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 
 /// <summary>
 /// Represents an expanded alternative macro. It is used to represent a set of alternatives in a grammar.

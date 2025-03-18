@@ -1,10 +1,7 @@
-﻿using Aidan.TextAnalysis.GDef;
-using Aidan.TextAnalysis.Language.Components.TreeRefactor;
-using Aidan.TextAnalysis.Parsing.LR1.Debug.Grammars;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Aidan.TextAnalysis.GDef.Parsing;
 
-namespace Aidan.TextAnalysis.Tests;
+namespace Tests;
 
 public static class Program
 {
@@ -28,8 +25,17 @@ start
 
     public static void Main(string[] args)
     {
+        var parser = GDefService.CreateLR1Parser(
+            rawGrammar: @"
+lexeme id = '[A-z]+';
+
+root: assignment;
+assignment: 'var' $id '=' $id;
+",
+            ignoredChars: new char[] { '\0', '\n', ' ' });
+
         var ignoredChars = new char[] { ' ', '\t', '\n', '\r', '\0' };
-        var jsonGrammar = GDefService.CreateLR1Parser(rawJsonGrammar, ignoredChars);
+        var jsonParser = GDefService.CreateLR1Parser(rawJsonGrammar, ignoredChars);
 
         return;
 

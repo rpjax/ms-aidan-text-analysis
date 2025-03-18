@@ -1,4 +1,5 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
 

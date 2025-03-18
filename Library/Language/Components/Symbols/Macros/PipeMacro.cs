@@ -1,6 +1,6 @@
 using Aidan.TextAnalysis.Helpers;
 
-namespace Aidan.TextAnalysis.Language.Components;
+namespace Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 
 /// <summary>
 /// Represents the alternative macro symbol.

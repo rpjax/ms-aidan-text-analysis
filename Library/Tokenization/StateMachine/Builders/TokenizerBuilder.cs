@@ -21,7 +21,7 @@ public class TokenizerBuilder : IBuilder<Tokenizer>
     }
 
     public TokenizerBuilder(
-        ITokenizerTable table, 
+        ITokenizerTable table,
         IEnumerable<char> charset)
     {
         var entries = table.GetEntries();

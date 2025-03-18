@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
 
 /// <summary>
 /// Represents the type of a regex node.

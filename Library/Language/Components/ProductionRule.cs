@@ -1,7 +1,7 @@
-﻿using Aidan.TextAnalysis.Helpers;
+﻿using System.Collections;
+using Aidan.TextAnalysis.Helpers;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 using Aidan.TextAnalysis.Language.Extensions;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
-using System.Collections;
 
 namespace Aidan.TextAnalysis.Language.Components;
 

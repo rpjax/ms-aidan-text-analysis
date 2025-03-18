@@ -1,8 +1,9 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.Language.Components.Symbols;
 using Aidan.TextAnalysis.Language.Extensions;
 using Aidan.TextAnalysis.Parsing.LR1.Components;
 
-namespace Aidan.TextAnalysis.Parsing.LR1.Tools;
+namespace Aidan.TextAnalysis.Parsing.LR1.Legacy;
 
 /// <summary>
 /// Provides a set of tools for working with LR(1) parsers. <br/>

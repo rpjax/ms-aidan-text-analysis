@@ -1,6 +1,6 @@
 using Aidan.TextAnalysis.Helpers;
 
-namespace Aidan.TextAnalysis.Language.Components;
+namespace Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 
 /// <summary>
 /// Represents an option macro. It is analoguous to EBNF's "[ ]" operator.

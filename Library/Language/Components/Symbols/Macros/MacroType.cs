@@ -1,4 +1,4 @@
-namespace Aidan.TextAnalysis.Language.Components;
+namespace Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 
 /*
     Macros are expanded recursively, one at a time, left to right. The order of expansion is as follows:

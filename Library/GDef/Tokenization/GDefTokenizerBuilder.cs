@@ -1,7 +1,9 @@
 ﻿using Aidan.Core.Patterns;
 using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
+using Aidan.TextAnalysis.RegularExpressions.Ast.ClassChildren;
 using Aidan.TextAnalysis.RegularExpressions.Automata;
+using Aidan.TextAnalysis.RegularExpressions.Automata.AutomatonComputation;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 
@@ -79,7 +81,7 @@ public class GDefTokenizerBuilder : IBuilder<Tokenizer>
         var doubleQuote = '\"';
         var escapeBar = '\\';
         var charset = Charset.Compute(CharsetType.ExtendedAscii);
-       
+
         var singleQuotePattern = new ConcatenationNode(
             new LiteralNode(singleQuote),
             new ConcatenationNode(
@@ -278,7 +280,7 @@ public class GDefTokenizerBuilder : IBuilder<Tokenizer>
         builder.FromState("c_style_inline_comment")
             .OnCharacter('\n')
             .GoTo(Comment);
-        
+
         builder.FromState(barSeen)
             .OnCharacter('*')
             .GoTo("c_style_block_comment");

@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Tokenization;
+﻿namespace Aidan.TextAnalysis.Tokenization.Components;
 
 /// <summary>
 /// Represents the set of information associated with a token.
@@ -15,7 +15,7 @@ public struct TokenMetadata : ITokenMetadata
     /// </summary>
     /// <param name="position"></param>
     public TokenMetadata(TokenPosition position)
-    {       
+    {
         Position = position;
     }
 

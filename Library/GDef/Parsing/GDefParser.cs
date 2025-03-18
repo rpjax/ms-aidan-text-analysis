@@ -4,7 +4,7 @@ using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tools;
 using Aidan.TextAnalysis.Parsing.Tree;
 
-namespace Aidan.TextAnalysis.GDef;
+namespace Aidan.TextAnalysis.GDef.Parsing;
 
 /// <summary>
 /// Reconizes and parses GDF (Grammar Definition Format) files.

@@ -1,10 +1,10 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Ast.ClassChildren;
 
 public class ClassLiteral : ClassChild
 {
     public char Character { get; }
 
-    public ClassLiteral(char character) 
+    public ClassLiteral(char character)
         : base(ClassChildType.Literal)
     {
         Character = character;

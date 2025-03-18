@@ -1,4 +1,5 @@
-﻿using Aidan.TextAnalysis.Tokenization;
+﻿using Aidan.Core.Patterns;
+using Aidan.TextAnalysis.Tokenization.Components;
 
 namespace Aidan.TextAnalysis.Parsing.Tree;
 
@@ -26,7 +27,7 @@ public enum CstNodeType
 /// <summary>
 /// Represents a node in the concrete syntax tree (CST).
 /// </summary>
-public abstract class CstNode
+public abstract class CstNode : ITree<CstNode>
 {
     /// <summary>
     /// Gets the type of the node.
@@ -94,7 +95,7 @@ public abstract class CstNode
     /// Gets the children of the node.
     /// </summary>
     /// <returns>An enumerable collection of child nodes.</returns>
-    public abstract IEnumerable<CstNode> GetChildren();
+    public abstract IReadOnlyList<CstNode> GetChildren();
 
     /// <summary>
     /// Accepts a visitor.
@@ -135,7 +136,7 @@ public class CstRootNode : CstNode
     }
 
     /// <inheritdoc/>
-    public override IEnumerable<CstNode> GetChildren()
+    public override IReadOnlyList<CstNode> GetChildren()
     {
         return Children;
     }
@@ -184,7 +185,7 @@ public class CstInternalNode : CstNode
     }
 
     /// <inheritdoc/>
-    public override IEnumerable<CstNode> GetChildren()
+    public override IReadOnlyList<CstNode> GetChildren()
     {
         return Children;
     }
@@ -233,9 +234,9 @@ public class CstLeafNode : CstNode
     }
 
     /// <inheritdoc/>
-    public override IEnumerable<CstNode> GetChildren()
+    public override IReadOnlyList<CstNode> GetChildren()
     {
-        yield break;
+        return Array.Empty<CstNode>();
     }
 
     /// <inheritdoc/>

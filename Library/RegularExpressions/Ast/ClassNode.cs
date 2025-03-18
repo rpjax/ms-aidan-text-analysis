@@ -1,7 +1,8 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using System.Text;
+﻿using System.Text;
+using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 public enum ClassChildType
 {
@@ -52,7 +53,7 @@ public class ClassNode : RegExpr
         var sb = new StringBuilder();
 
         sb.Append('[');
-        
+
         if (IsNegated)
         {
             sb.Append('^');

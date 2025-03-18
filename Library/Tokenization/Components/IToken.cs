@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.Tokenization;
+﻿namespace Aidan.TextAnalysis.Tokenization.Components;
 
 /// <summary>
 /// Represents a token produced by the lexical analyzer, using a lexeme production rule.

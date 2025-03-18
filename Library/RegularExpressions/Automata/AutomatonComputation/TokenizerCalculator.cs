@@ -1,10 +1,9 @@
-﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
+﻿using Aidan.TextAnalysis.RegularExpressions.Automata.Extensions;
 using Aidan.TextAnalysis.Tokenization;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Builders;
 using Aidan.TextAnalysis.Tokenization.StateMachine.Components;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+namespace Aidan.TextAnalysis.RegularExpressions.Automata.AutomatonComputation;
 
 /// <summary>
 /// Responsible for calculating the tokenizer table and creating a tokenizer.

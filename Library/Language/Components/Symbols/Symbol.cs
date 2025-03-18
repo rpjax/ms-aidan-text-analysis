@@ -1,4 +1,4 @@
-namespace Aidan.TextAnalysis.Language.Components;
+namespace Aidan.TextAnalysis.Language.Components.Symbols;
 
 /// <summary>
 /// Represents a symbol in the language.

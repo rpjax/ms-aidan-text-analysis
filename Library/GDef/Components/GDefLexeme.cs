@@ -1,5 +1,5 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 
 namespace Aidan.TextAnalysis.GDef.Components;
 
@@ -11,9 +11,9 @@ public class GDefLexeme
     public RegExpr Pattern { get; }
 
     public GDefLexeme(
-        bool isIgnored, 
-        Charset charset, 
-        string name, 
+        bool isIgnored,
+        Charset charset,
+        string name,
         RegExpr pattern)
     {
         IsIgnored = isIgnored;

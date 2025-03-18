@@ -40,7 +40,7 @@ public class LR1StateCollection : IEnumerable<LR1State>
         {
             if (States[i].Equals(state))
             {
-                if(index != -1)
+                if (index != -1)
                 {
                     throw new InvalidOperationException("The state is not unique. This error represents a bug in the LR1 state collection computation.");
                 }

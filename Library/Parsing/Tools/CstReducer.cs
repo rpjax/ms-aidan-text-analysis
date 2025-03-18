@@ -33,7 +33,7 @@ public class CstReducer
 
         while (true)
         {
-            var shouldReduceRoot = rootChildren.Length == 1 
+            var shouldReduceRoot = rootChildren.Length == 1
                 && !NonTerminalWhitelist.Contains(Root.Name);
 
             if (shouldReduceRoot && rootChildren[0] is CstInternalNode internalNode)

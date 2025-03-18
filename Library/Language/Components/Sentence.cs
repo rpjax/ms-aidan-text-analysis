@@ -1,6 +1,7 @@
-using Aidan.TextAnalysis.Helpers;
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
+using Aidan.TextAnalysis.Helpers;
+using Aidan.TextAnalysis.Language.Components.Symbols;
+using Aidan.TextAnalysis.Language.Components.Symbols.Macros;
 
 namespace Aidan.TextAnalysis.Language.Components;
 

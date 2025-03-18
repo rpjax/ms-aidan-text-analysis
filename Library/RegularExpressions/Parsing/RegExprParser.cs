@@ -1,8 +1,8 @@
-﻿using Aidan.TextAnalysis.GDef;
+﻿using Aidan.TextAnalysis.GDef.Parsing;
 using Aidan.TextAnalysis.Language.Components;
 using Aidan.TextAnalysis.Parsing.LR1;
 using Aidan.TextAnalysis.Parsing.Tools;
-using Aidan.TextAnalysis.RegularExpressions.Tree;
+using Aidan.TextAnalysis.RegularExpressions.Ast;
 
 namespace Aidan.TextAnalysis.RegularExpressions.Parsing;
 
@@ -26,7 +26,7 @@ public static class RegExprParser
 
     public static RegExpr Parse(string pattern, Charset charset)
     {
-        var parser = GetParser(); 
+        var parser = GetParser();
         var cst = parser.Parse(pattern);
         var reducer = new CstReducer(cst, ReduceWhitelist);
         var reducedCst = reducer.Execute();

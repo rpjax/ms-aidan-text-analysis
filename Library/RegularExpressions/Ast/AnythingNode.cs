@@ -1,6 +1,7 @@
 ﻿using Aidan.TextAnalysis.Language.Components;
+using Aidan.TextAnalysis.RegularExpressions.Ast.Enums;
 
-namespace Aidan.TextAnalysis.RegularExpressions.Tree;
+namespace Aidan.TextAnalysis.RegularExpressions.Ast;
 
 public class AnythingNode : RegExpr
 {

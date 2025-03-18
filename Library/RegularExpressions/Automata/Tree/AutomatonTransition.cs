@@ -1,4 +1,4 @@
-﻿namespace Aidan.TextAnalysis.RegularExpressions.Automata;
+﻿namespace Aidan.TextAnalysis.RegularExpressions.Automata.Tree;
 
 /// <summary>
 /// Represents a transition in an automaton.

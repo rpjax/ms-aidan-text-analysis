@@ -4,8 +4,8 @@ namespace Aidan.TextAnalysis.GDef.Tokenization;
 
 public static class GDefTokenizers
 {
-    public static Tokenizer GrammarTokenizer { get; } 
-    public static Tokenizer RegexTokenizer { get; } 
+    public static Tokenizer GrammarTokenizer { get; }
+    public static Tokenizer RegexTokenizer { get; }
 
     static GDefTokenizers()
     {
