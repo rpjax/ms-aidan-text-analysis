@@ -20,10 +20,10 @@ public class LR1Parser : IStringParser
         "comment"
     };
 
-    private IGrammar Grammar { get; }
-    private IStringTokenizer Tokenizer { get; }
-    private ILR1ParserTable Table { get; }
-    private string[] IgnoredTokenTypes { get; }
+    private IGrammar _grammar { get; }
+    private IStringTokenizer _tokenizer { get; }
+    private LR1ParserTable _table { get; }
+    private string[] _ignoredTokenTypes { get; }
 
     /// <summary>
     /// Creates a new instance of <see cref="LR1Parser"/>. It automatically transforms the grammar to LR(1) and creates a parsing table.
@@ -36,10 +36,10 @@ public class LR1Parser : IStringParser
         IStringTokenizer tokenizer,
         string[]? ignoredTokenTypes = null)
     {
-        Grammar = grammar;
-        Tokenizer = tokenizer;
-        Table = LR1ParserTable.Create(Grammar);
-        IgnoredTokenTypes = ignoredTokenTypes ?? DefaultIgnoreSet;
+        _grammar = grammar;
+        _tokenizer = tokenizer;
+        _table = LR1ParserTable.Create(_grammar);
+        _ignoredTokenTypes = ignoredTokenTypes ?? DefaultIgnoreSet;
     }
 
     /// <summary>
@@ -49,11 +49,11 @@ public class LR1Parser : IStringParser
     /// <returns></returns>
     public CstRootNode Parse(string text)
     {
-        var tokens = Tokenizer.Tokenize(text);
+        var tokens = _tokenizer.Tokenize(text);
 
         using var inputStream = new LR1InputStream(
             tokens: tokens,
-            ignoreSet: IgnoredTokenTypes);
+            ignoreSet: _ignoredTokenTypes);
 
         var stack = new LR1Stack();
 
@@ -96,7 +96,7 @@ public class LR1Parser : IStringParser
         var currentState = context.Stack.GetCurrentState();
         var lookahead = context.InputStream.GetLookaheadSymbol();
 
-        var action = Table.Lookup(currentState, lookahead);
+        var action = _table.Lookup(currentState, lookahead);
 
         if (action is null)
         {
@@ -174,7 +174,7 @@ public class LR1Parser : IStringParser
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Reduce(LR1ParserContext context, LR1ReduceAction reduceAction)
     {
-        var production = Table.LookupProduction(reduceAction.ProductionIndex);
+        var production = _table.LookupProduction(reduceAction.ProductionIndex);
 
         if (production.IsEpsilonProduction())
         {
@@ -205,7 +205,7 @@ public class LR1Parser : IStringParser
 
         context.Stack.PushSymbol(nonTerminal);
 
-        var action = Table.Lookup(currentState, nonTerminal);
+        var action = _table.Lookup(currentState, nonTerminal);
 
         if (action is null)
         {
@@ -251,7 +251,7 @@ public class LR1Parser : IStringParser
 
         context.Stack.PushSymbol(nonTerminal);
 
-        var action = Table.Lookup(currentState, nonTerminal);
+        var action = _table.Lookup(currentState, nonTerminal);
 
         if (action is null)
         {
